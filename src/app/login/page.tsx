@@ -24,12 +24,12 @@ export default function LoginPage() {
     };
 
     return (
-        <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-gray-900 via-gray-800 to-black p-4">
+        <div className="flex min-h-screen items-center justify-center bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-primary/20 via-background to-background p-4">
             <div className="absolute inset-0 bg-[url('/grid.svg')] bg-center [mask-image:linear-gradient(180deg,white,rgba(255,255,255,0))]" />
-            <Card className="w-full max-w-md border-gray-800 bg-gray-900/50 backdrop-blur-xl">
+            <Card className="w-full max-w-md border-border bg-card/50 backdrop-blur-xl">
                 <CardHeader className="space-y-1">
-                    <CardTitle className="text-2xl font-bold text-center text-white">Admin Access</CardTitle>
-                    <CardDescription className="text-center text-gray-400">
+                    <CardTitle className="text-2xl font-bold text-center text-foreground">Admin Access</CardTitle>
+                    <CardDescription className="text-center text-muted-foreground">
                         Enter your credentials to access the control panel
                     </CardDescription>
                 </CardHeader>
@@ -37,11 +37,11 @@ export default function LoginPage() {
                     <form onSubmit={handleLogin} className="space-y-4">
                         <div className="space-y-2">
                             <div className="relative">
-                                <Mail className="absolute left-3 top-3 h-4 w-4 text-gray-500" />
+                                <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                                 <Input
                                     type="email"
                                     placeholder="admin@example.com"
-                                    className="pl-9 bg-gray-950/50 border-gray-800 text-white placeholder:text-gray-500 focus:border-blue-500/50 focus:ring-blue-500/20"
+                                    className="pl-9 bg-background/50 border-input text-foreground placeholder:text-muted-foreground focus:border-primary/50 focus:ring-primary/20"
                                     value={email}
                                     onChange={(e) => setEmail(e.target.value)}
                                     required
@@ -50,11 +50,11 @@ export default function LoginPage() {
                         </div>
                         <div className="space-y-2">
                             <div className="relative">
-                                <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-500" />
+                                <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                                 <Input
                                     type="password"
                                     placeholder="••••••••"
-                                    className="pl-9 bg-gray-950/50 border-gray-800 text-white placeholder:text-gray-500 focus:border-blue-500/50 focus:ring-blue-500/20"
+                                    className="pl-9 bg-background/50 border-input text-foreground placeholder:text-muted-foreground focus:border-primary/50 focus:ring-primary/20"
                                     value={password}
                                     onChange={(e) => setPassword(e.target.value)}
                                     required
@@ -63,7 +63,7 @@ export default function LoginPage() {
                         </div>
                         <Button
                             type="submit"
-                            className="w-full bg-blue-600 hover:bg-blue-500 text-white shadow-lg shadow-blue-500/20 transition-all duration-200"
+                            className="w-full shadow-lg shadow-primary/20 transition-all duration-200"
                             disabled={loading}
                         >
                             {loading ? "Authenticating..." : "Sign In"}
@@ -71,7 +71,7 @@ export default function LoginPage() {
                     </form>
                 </CardContent>
                 <CardFooter className="flex justify-center">
-                    <p className="text-xs text-gray-500">
+                    <p className="text-xs text-muted-foreground">
                         Protected by secure encryption
                     </p>
                 </CardFooter>

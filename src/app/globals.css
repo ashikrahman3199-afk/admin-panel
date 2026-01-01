@@ -6,82 +6,99 @@
 }
 
 :root {
-  --background: 210 40% 98%;
-  /* Soft white/gray */
-  --foreground: 222.2 84% 4.9%;
-  /* Dark text */
+  --background: 260 50% 98%;
+  /* Soft Lilac White */
+  --foreground: 260 50% 10%;
+  /* Deep Purple Black */
 
   --card: 0 0% 100%;
-  --card-foreground: 222.2 84% 4.9%;
+  --card-foreground: 260 50% 10%;
 
   --popover: 0 0% 100%;
-  --popover-foreground: 222.2 84% 4.9%;
+  --popover-foreground: 260 50% 10%;
 
-  --primary: 246 80% 60%;
-  /* Vibrant Indigo/Violet */
-  --primary-foreground: 210 40% 98%;
+  --primary: 265 89% 66%;
+  /* Vibrant Vivid Violet */
+  --primary-foreground: 0 0% 100%;
 
-  --secondary: 210 40% 96.1%;
-  --secondary-foreground: 222.2 47.4% 11.2%;
+  --secondary: 260 30% 94%;
+  --secondary-foreground: 260 50% 30%;
 
-  --muted: 210 40% 96.1%;
-  --muted-foreground: 215.4 16.3% 46.9%;
+  --muted: 260 30% 94%;
+  --muted-foreground: 260 20% 50%;
 
-  --accent: 210 40% 96.1%;
-  --accent-foreground: 222.2 47.4% 11.2%;
+  --accent: 260 30% 92%;
+  --accent-foreground: 260 50% 15%;
 
   --destructive: 0 84.2% 60.2%;
-  --destructive-foreground: 210 40% 98%;
+  --destructive-foreground: 0 0% 98%;
 
-  --border: 214.3 31.8% 91.4%;
-  --input: 214.3 31.8% 91.4%;
-  --ring: 246 80% 60%;
+  --border: transparent;
+  --input: 260 20% 92%;
+  --ring: 265 89% 66%;
 
-  --radius: 0.75rem;
+  --radius: 1rem;
+  /* Curvier Radius */
 }
 
 .dark {
-  --background: 222.2 84% 4.9%;
-  --foreground: 210 40% 98%;
+  --background: 260 50% 5%;
+  /* Deepest Void Purple */
+  --foreground: 260 20% 98%;
 
-  --card: 222.2 84% 4.9%;
-  --card-foreground: 210 40% 98%;
+  --card: 260 50% 8%;
+  /* Dark Purple Surface */
+  --card-foreground: 260 20% 98%;
 
-  --popover: 222.2 84% 4.9%;
-  --popover-foreground: 210 40% 98%;
+  --popover: 260 50% 8%;
+  --popover-foreground: 260 20% 98%;
 
-  --primary: 210 40% 98%;
-  --primary-foreground: 222.2 47.4% 11.2%;
+  --primary: 265 89% 66%;
+  /* Neon Violet */
+  --primary-foreground: 0 0% 100%;
 
-  --secondary: 217.2 32.6% 17.5%;
-  --secondary-foreground: 210 40% 98%;
+  --secondary: 260 30% 15%;
+  --secondary-foreground: 260 20% 98%;
 
-  --muted: 217.2 32.6% 17.5%;
-  --muted-foreground: 215 20.2% 65.1%;
+  --muted: 260 30% 15%;
+  --muted-foreground: 260 20% 65%;
 
-  --accent: 217.2 32.6% 17.5%;
-  --accent-foreground: 210 40% 98%;
+  --accent: 260 30% 15%;
+  --accent-foreground: 260 20% 98%;
 
   --destructive: 0 62.8% 30.6%;
-  --destructive-foreground: 210 40% 98%;
+  --destructive-foreground: 260 20% 98%;
 
-  --border: 217.2 32.6% 17.5%;
-  --input: 217.2 32.6% 17.5%;
-  --ring: 212.7 26.8% 83.9%;
+  --border: 260 30% 15%;
+  --input: 260 30% 15%;
+  --ring: 265 89% 66%;
 }
 
 body {
   background-color: hsl(var(--background));
+  background-image:
+    radial-gradient(at 0% 0%, hsla(253, 90%, 60%, 0.2) 0, transparent 50%),
+    radial-gradient(at 100% 0%, hsla(190, 90%, 60%, 0.2) 0, transparent 50%),
+    radial-gradient(at 50% 100%, hsla(320, 90%, 60%, 0.2) 0, transparent 50%),
+    radial-gradient(at 0% 100%, hsla(280, 90%, 60%, 0.1) 0, transparent 50%),
+    radial-gradient(at 100% 100%, hsla(220, 90%, 60%, 0.1) 0, transparent 50%);
+  background-attachment: fixed;
   color: hsl(var(--foreground));
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
-@layer utilities {
-  .glass {
-    background: rgba(255, 255, 255, 0.7);
-    backdrop-filter: blur(10px);
-    border: 1px solid rgba(255, 255, 255, 0.5);
+/* Light mode background override for extra vibrancy */
+@media (prefers-color-scheme: light) {
+  body:not(.dark) {
+    background-image:
+      radial-gradient(at 0% 0%, hsla(260, 100%, 75%, 0.35) 0, transparent 50%),
+      radial-gradient(at 100% 0%, hsla(180, 100%, 75%, 0.35) 0, transparent 50%),
+      radial-gradient(at 50% 100%, hsla(330, 100%, 85%, 0.3) 0, transparent 50%);
   }
+}
+
+@layer utilities {
+  /* Utilities removed to avoid @apply errors with custom variables */
 }
