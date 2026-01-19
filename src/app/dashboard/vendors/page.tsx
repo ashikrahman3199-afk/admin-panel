@@ -53,6 +53,8 @@ const vendors = [
 
 export default function VendorsPage() {
     const [vendorsList, setVendorsList] = React.useState(vendors);
+    const [isOnboardDialogOpen, setIsOnboardDialogOpen] = React.useState(false);
+    const [newVendor, setNewVendor] = React.useState({ businessName: "", contact: "", location: "" });
 
     const handleApprove = (id: string, name: string) => {
         setVendorsList(prev => prev.map(vendor =>
@@ -68,6 +70,18 @@ export default function VendorsPage() {
         toast.error("Vendor Rejected", { description: `${name} has been rejected.` });
     };
 
+    const handleOnboardVendor = () => {
+        if (!newVendor.businessName || !newVendor.contact) {
+            toast.error("Validation Error", { description: "Business Name and Contact are required." });
+            return;
+        }
+        const id = `VND00${vendorsList.length + 1}`;
+        setVendorsList([...vendorsList, { ...newVendor, id, status: "Pending", inventory: 0 }]);
+        setIsOnboardDialogOpen(false);
+        setNewVendor({ businessName: "", contact: "", location: "" });
+        toast.success("Vendor Onboarded", { description: `${newVendor.businessName} has been added.` });
+    };
+
     return (
         <div className="space-y-6">
             <div className="flex items-center justify-between">
@@ -77,7 +91,7 @@ export default function VendorsPage() {
                         Oversee vendor accounts, verification, and inventory.
                     </p>
                 </div>
-                <Dialog>
+                <Dialog open={isOnboardDialogOpen} onOpenChange={setIsOnboardDialogOpen}>
                     <DialogTrigger asChild>
                         <Button className="rounded-full shadow-lg shadow-primary/20 hover:shadow-primary/40 transition-all">Onboard Vendor</Button>
                     </DialogTrigger>
@@ -89,19 +103,37 @@ export default function VendorsPage() {
                         <div className="grid gap-4 py-4">
                             <div className="grid grid-cols-4 items-center gap-4">
                                 <span className="text-right text-sm font-medium">Business</span>
-                                <Input id="business" placeholder="Vendor Co." className="col-span-3" />
+                                <Input
+                                    id="business"
+                                    placeholder="Vendor Co."
+                                    className="col-span-3"
+                                    value={newVendor.businessName}
+                                    onChange={(e) => setNewVendor({ ...newVendor, businessName: e.target.value })}
+                                />
                             </div>
                             <div className="grid grid-cols-4 items-center gap-4">
                                 <span className="text-right text-sm font-medium">Contact</span>
-                                <Input id="contact" placeholder="Jane Doe" className="col-span-3" />
+                                <Input
+                                    id="contact"
+                                    placeholder="Jane Doe"
+                                    className="col-span-3"
+                                    value={newVendor.contact}
+                                    onChange={(e) => setNewVendor({ ...newVendor, contact: e.target.value })}
+                                />
                             </div>
                             <div className="grid grid-cols-4 items-center gap-4">
                                 <span className="text-right text-sm font-medium">Location</span>
-                                <Input id="location" placeholder="City, State" className="col-span-3" />
+                                <Input
+                                    id="location"
+                                    placeholder="City, State"
+                                    className="col-span-3"
+                                    value={newVendor.location}
+                                    onChange={(e) => setNewVendor({ ...newVendor, location: e.target.value })}
+                                />
                             </div>
                         </div>
                         <DialogFooter>
-                            <Button type="submit">Complete Onboarding</Button>
+                            <Button type="submit" onClick={handleOnboardVendor}>Complete Onboarding</Button>
                         </DialogFooter>
                     </DialogContent>
                 </Dialog>
@@ -173,8 +205,10 @@ export default function VendorsPage() {
                                                 </Table>
                                             </div>
                                             <DialogFooter className="mt-4">
-                                                <Button variant="outline" className="rounded-full border-none bg-white/5 hover:bg-white/10">Close</Button>
-                                                <Button variant="default" className="rounded-full">View All Services</Button>
+                                                <DialogTrigger asChild>
+                                                    <Button variant="outline" className="rounded-full border-none bg-white/5 hover:bg-white/10">Close</Button>
+                                                </DialogTrigger>
+                                                <Button variant="default" className="rounded-full" onClick={() => toast.info("Navigating", { description: "Redirecting to full service list..." })}>View All Services</Button>
                                             </DialogFooter>
                                         </DialogContent>
                                     </Dialog>

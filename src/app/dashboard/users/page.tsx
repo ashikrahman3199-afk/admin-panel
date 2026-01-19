@@ -1,3 +1,6 @@
+"use client";
+
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -9,7 +12,7 @@ import {
     TableHeader,
     TableRow,
 } from "@/components/ui/table";
-import { MoreHorizontal } from "lucide-react";
+import { MoreHorizontal, Plus } from "lucide-react";
 import {
     Dialog,
     DialogContent,
@@ -28,8 +31,10 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { toast } from "sonner";
+import { Label } from "@/components/ui/label";
 
-const users = [
+const initialUsers = [
     {
         id: "USR001",
         name: "Alice Johnson",
@@ -65,6 +70,52 @@ const users = [
 ];
 
 export default function UsersPage() {
+    const [users, setUsers] = useState(initialUsers);
+    const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+    const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+    const [isActivityDialogOpen, setIsActivityDialogOpen] = useState(false);
+    const [selectedUser, setSelectedUser] = useState<typeof initialUsers[0] | null>(null);
+
+    // Form states
+    const [newUser, setNewUser] = useState({ name: "", email: "", role: "Client" });
+    const [editUser, setEditUser] = useState({ name: "", email: "", role: "" });
+
+    const handleAddUser = () => {
+        if (!newUser.name || !newUser.email) {
+            toast.error("Validation Error", { description: "Name and Email are required." });
+            return;
+        }
+        const id = `USR00${users.length + 1}`;
+        const date = new Date().toISOString().split('T')[0];
+        setUsers([...users, { ...newUser, id, status: "Active", joined: date }]);
+        setIsAddDialogOpen(false);
+        setNewUser({ name: "", email: "", role: "Client" });
+        toast.success("User Added", { description: `${newUser.name} has been successfully added.` });
+    };
+
+    const handleDeleteUser = (id: string) => {
+        setUsers(users.filter(u => u.id !== id));
+        toast.success("User Deleted", { description: "The user has been removed from the system." });
+    };
+
+    const openEditDialog = (user: typeof initialUsers[0]) => {
+        setSelectedUser(user);
+        setEditUser({ name: user.name, email: user.email, role: user.role });
+        setIsEditDialogOpen(true);
+    };
+
+    const handleEditUser = () => {
+        if (!selectedUser) return;
+        setUsers(users.map(u => u.id === selectedUser.id ? { ...u, ...editUser } : u));
+        setIsEditDialogOpen(false);
+        toast.success("User Updated", { description: "User details have been updated." });
+    };
+
+    const openActivityConfirm = (user: typeof initialUsers[0]) => {
+        setSelectedUser(user);
+        setIsActivityDialogOpen(true);
+    }
+
     return (
         <div className="space-y-6">
             <div className="flex items-center justify-between">
@@ -74,9 +125,11 @@ export default function UsersPage() {
                         Manage system users, roles, and access permissions.
                     </p>
                 </div>
-                <Dialog>
+                <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
                     <DialogTrigger asChild>
-                        <Button className="rounded-full shadow-lg shadow-primary/20 hover:shadow-primary/40 transition-all">Add New User</Button>
+                        <Button className="rounded-full shadow-lg shadow-primary/20 hover:shadow-primary/40 transition-all">
+                            <Plus className="mr-2 h-4 w-4" /> Add New User
+                        </Button>
                     </DialogTrigger>
                     <DialogContent>
                         <DialogHeader>
@@ -85,20 +138,38 @@ export default function UsersPage() {
                         </DialogHeader>
                         <div className="grid gap-4 py-4">
                             <div className="grid grid-cols-4 items-center gap-4">
-                                <span className="text-right text-sm font-medium">Name</span>
-                                <Input id="name" placeholder="John Doe" className="col-span-3" />
+                                <Label htmlFor="name" className="text-right">Name</Label>
+                                <Input
+                                    id="name"
+                                    placeholder="John Doe"
+                                    className="col-span-3"
+                                    value={newUser.name}
+                                    onChange={(e) => setNewUser({ ...newUser, name: e.target.value })}
+                                />
                             </div>
                             <div className="grid grid-cols-4 items-center gap-4">
-                                <span className="text-right text-sm font-medium">Email</span>
-                                <Input id="email" placeholder="john@example.com" className="col-span-3" />
+                                <Label htmlFor="email" className="text-right">Email</Label>
+                                <Input
+                                    id="email"
+                                    placeholder="john@example.com"
+                                    className="col-span-3"
+                                    value={newUser.email}
+                                    onChange={(e) => setNewUser({ ...newUser, email: e.target.value })}
+                                />
                             </div>
                             <div className="grid grid-cols-4 items-center gap-4">
-                                <span className="text-right text-sm font-medium">Role</span>
-                                <Input id="role" placeholder="Client" className="col-span-3" />
+                                <Label htmlFor="role" className="text-right">Role</Label>
+                                <Input
+                                    id="role"
+                                    placeholder="Client"
+                                    className="col-span-3"
+                                    value={newUser.role}
+                                    onChange={(e) => setNewUser({ ...newUser, role: e.target.value })}
+                                />
                             </div>
                         </div>
                         <DialogFooter>
-                            <Button type="submit">Create User</Button>
+                            <Button type="submit" onClick={handleAddUser}>Create User</Button>
                         </DialogFooter>
                     </DialogContent>
                 </Dialog>
@@ -150,10 +221,10 @@ export default function UsersPage() {
                                             </Button>
                                         </DropdownMenuTrigger>
                                         <DropdownMenuContent align="end" className="rounded-xl border-none bg-popover/80 backdrop-blur-xl shadow-2xl">
-                                            <DropdownMenuItem>Edit Details</DropdownMenuItem>
-                                            <DropdownMenuItem>View Activity</DropdownMenuItem>
+                                            <DropdownMenuItem onClick={() => openEditDialog(user)}>Edit Details</DropdownMenuItem>
+                                            <DropdownMenuItem onClick={() => openActivityConfirm(user)}>View Activity</DropdownMenuItem>
                                             <DropdownMenuSeparator className="bg-white/10" />
-                                            <DropdownMenuItem className="text-red-500 focus:text-red-500 focus:bg-red-500/10">Delete User</DropdownMenuItem>
+                                            <DropdownMenuItem className="text-red-500 focus:text-red-500 focus:bg-red-500/10" onClick={() => handleDeleteUser(user.id)}>Delete User</DropdownMenuItem>
                                         </DropdownMenuContent>
                                     </DropdownMenu>
                                 </TableCell>
@@ -162,6 +233,75 @@ export default function UsersPage() {
                     </TableBody>
                 </Table>
             </div>
+
+            {/* Edit Dialog */}
+            <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Edit User</DialogTitle>
+                        <DialogDescription>Update user information.</DialogDescription>
+                    </DialogHeader>
+                    <div className="grid gap-4 py-4">
+                        <div className="grid grid-cols-4 items-center gap-4">
+                            <Label htmlFor="edit-name" className="text-right">Name</Label>
+                            <Input
+                                id="edit-name"
+                                value={editUser.name}
+                                onChange={(e) => setEditUser({ ...editUser, name: e.target.value })}
+                                className="col-span-3"
+                            />
+                        </div>
+                        <div className="grid grid-cols-4 items-center gap-4">
+                            <Label htmlFor="edit-email" className="text-right">Email</Label>
+                            <Input
+                                id="edit-email"
+                                value={editUser.email}
+                                onChange={(e) => setEditUser({ ...editUser, email: e.target.value })}
+                                className="col-span-3"
+                            />
+                        </div>
+                        <div className="grid grid-cols-4 items-center gap-4">
+                            <Label htmlFor="edit-role" className="text-right">Role</Label>
+                            <Input
+                                id="edit-role"
+                                value={editUser.role}
+                                onChange={(e) => setEditUser({ ...editUser, role: e.target.value })}
+                                className="col-span-3"
+                            />
+                        </div>
+                    </div>
+                    <DialogFooter>
+                        <Button type="submit" onClick={handleEditUser}>Save Changes</Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
+            {/* Activity Dialog */}
+            <Dialog open={isActivityDialogOpen} onOpenChange={setIsActivityDialogOpen}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>User Activity</DialogTitle>
+                        <DialogDescription>Recent activity for {selectedUser?.name}</DialogDescription>
+                    </DialogHeader>
+                    <div className="space-y-4">
+                        <div className="flex items-center justify-between text-sm py-2 border-b border-white/5">
+                            <span>Logged In</span>
+                            <span className="text-muted-foreground">Today at 9:00 AM</span>
+                        </div>
+                        <div className="flex items-center justify-between text-sm py-2 border-b border-white/5">
+                            <span>Updated Profile</span>
+                            <span className="text-muted-foreground">Yesterday</span>
+                        </div>
+                        <div className="flex items-center justify-between text-sm py-2 border-b border-white/5">
+                            <span>Created Campaign</span>
+                            <span className="text-muted-foreground">2 days ago</span>
+                        </div>
+                    </div>
+                    <DialogFooter>
+                        <Button variant="outline" onClick={() => setIsActivityDialogOpen(false)}>Close</Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </div>
     );
 }

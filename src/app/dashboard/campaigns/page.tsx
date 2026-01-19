@@ -29,6 +29,10 @@ const campaigns = [
         spent: "$12,400",
         status: "Active",
         progress: 25,
+        progressImages: [
+            "https://images.unsplash.com/photo-1557804506-669a67965ba0?w=800&auto=format&fit=crop&q=60",
+            "https://images.unsplash.com/photo-1559136555-9303baea8ebd?w=800&auto=format&fit=crop&q=60",
+        ]
     },
     {
         id: "CMP002",
@@ -38,6 +42,7 @@ const campaigns = [
         spent: "$0",
         status: "Pending Approval",
         progress: 0,
+        progressImages: []
     },
     {
         id: "CMP003",
@@ -47,6 +52,11 @@ const campaigns = [
         spent: "$25,000",
         status: "Completed",
         progress: 100,
+        progressImages: [
+            "https://images.unsplash.com/photo-1542744173-8e7e53415bb0?w=800&auto=format&fit=crop&q=60",
+            "https://images.unsplash.com/photo-1557804506-669a67965ba0?w=800&auto=format&fit=crop&q=60",
+            "https://images.unsplash.com/photo-1559136555-9303baea8ebd?w=800&auto=format&fit=crop&q=60",
+        ]
     },
 ];
 
@@ -71,6 +81,7 @@ export default function CampaignsPage() {
                             <TableHead className="text-muted-foreground/70">Client</TableHead>
                             <TableHead className="text-muted-foreground/70">Budget</TableHead>
                             <TableHead className="w-[200px] text-muted-foreground/70">Progress</TableHead>
+                            <TableHead className="text-muted-foreground/70">Work Updates</TableHead>
                             <TableHead className="text-muted-foreground/70">Status</TableHead>
                             <TableHead className="text-right text-muted-foreground/70">Actions</TableHead>
                         </TableRow>
@@ -95,6 +106,43 @@ export default function CampaignsPage() {
                                             )}
                                         />
                                         <span className="text-xs text-muted-foreground font-medium">{campaign.progress}%</span>
+                                    </div>
+                                </TableCell>
+                                <TableCell>
+                                    <div className="flex items-center">
+                                        {campaign.progressImages.length > 0 ? (
+                                            <Dialog>
+                                                <DialogTrigger asChild>
+                                                    <div className="flex -space-x-2 cursor-pointer hover:scale-105 transition-transform">
+                                                        {campaign.progressImages.slice(0, 3).map((img, i) => (
+                                                            <div key={i} className="relative w-8 h-8 rounded-full border-2 border-background overflow-hidden hover:z-20 transition-all">
+                                                                <img src={img} alt="Progress" className="w-full h-full object-cover" />
+                                                            </div>
+                                                        ))}
+                                                        {campaign.progressImages.length > 3 && (
+                                                            <div className="flex items-center justify-center w-8 h-8 rounded-full border-2 border-background bg-muted text-[10px] font-bold z-10">
+                                                                +{campaign.progressImages.length - 3}
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                </DialogTrigger>
+                                                <DialogContent className="max-w-3xl bg-card/90 backdrop-blur-xl border-none shadow-2xl rounded-2xl">
+                                                    <DialogHeader>
+                                                        <DialogTitle>Progress Updates - {campaign.name}</DialogTitle>
+                                                        <DialogDescription>Latest proof of work uploaded by vendor.</DialogDescription>
+                                                    </DialogHeader>
+                                                    <div className="grid grid-cols-2 md:grid-cols-3 gap-4 py-4">
+                                                        {campaign.progressImages.map((img, i) => (
+                                                            <div key={i} className="relative aspect-video rounded-xl overflow-hidden group/img">
+                                                                <img src={img} alt={`Progress ${i + 1}`} className="w-full h-full object-cover transition-transform group-hover/img:scale-105" />
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                </DialogContent>
+                                            </Dialog>
+                                        ) : (
+                                            <span className="text-xs text-muted-foreground italic">No updates</span>
+                                        )}
                                     </div>
                                 </TableCell>
                                 <TableCell>

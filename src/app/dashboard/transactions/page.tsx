@@ -212,7 +212,7 @@ export default function TransactionsPage() {
                                                 </div>
                                             </div>
                                             <DialogFooter>
-                                                <Button type="submit" className="w-full rounded-full">Download PDF</Button>
+                                                <Button type="submit" className="w-full rounded-full" onClick={() => toast.success("Download Started", { description: `Receipt for ${txn.id} is downloading.` })}>Download PDF</Button>
                                             </DialogFooter>
                                         </DialogContent>
                                     </Dialog>
