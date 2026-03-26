@@ -1,0 +1,480 @@
+type Vendor @aws_api_key @aws_iam @aws_cognito_user_pools {
+  businessName: String!
+  contact: String!
+  location: String
+  status: VendorStatus
+  inventory(filter: ModelServiceFilterInput, sortDirection: ModelSortDirection, limit: Int, nextToken: String): ModelServiceConnection
+  owner: String
+  id: ID!
+  createdAt: AWSDateTime!
+  updatedAt: AWSDateTime!
+}
+
+type Service @aws_api_key @aws_iam @aws_cognito_user_pools {
+  name: String!
+  type: String!
+  price: Float!
+  description: String
+  status: ServiceStatus
+  vendorId: ID
+  vendor: Vendor
+  id: ID!
+  createdAt: AWSDateTime!
+  updatedAt: AWSDateTime!
+  owner: String
+}
+
+type UserProfile @aws_iam @aws_cognito_user_pools {
+  email: String!
+  name: String
+  role: UserProfileRole
+  status: UserProfileStatus
+  profileId: ID
+  id: ID!
+  createdAt: AWSDateTime!
+  updatedAt: AWSDateTime!
+  owner: String
+}
+
+enum VendorStatus {
+  PENDING
+  VERIFIED
+  REJECTED
+}
+
+enum ServiceStatus {
+  PENDING_REVIEW
+  APPROVED
+  REJECTED
+}
+
+enum UserProfileRole {
+  ADMIN
+  VENDOR
+  USER
+}
+
+enum UserProfileStatus {
+  ACTIVE
+  INACTIVE
+}
+
+input AmplifyAIConversationTurnErrorInput {
+  errorType: String!
+  message: String!
+}
+
+input ModelStringInput {
+  ne: String
+  eq: String
+  le: String
+  lt: String
+  ge: String
+  gt: String
+  contains: String
+  notContains: String
+  between: [String]
+  beginsWith: String
+  attributeExists: Boolean
+  attributeType: ModelAttributeTypes
+  size: ModelSizeInput
+}
+
+input ModelIntInput {
+  ne: Int
+  eq: Int
+  le: Int
+  lt: Int
+  ge: Int
+  gt: Int
+  between: [Int]
+  attributeExists: Boolean
+  attributeType: ModelAttributeTypes
+}
+
+input ModelFloatInput {
+  ne: Float
+  eq: Float
+  le: Float
+  lt: Float
+  ge: Float
+  gt: Float
+  between: [Float]
+  attributeExists: Boolean
+  attributeType: ModelAttributeTypes
+}
+
+input ModelBooleanInput {
+  ne: Boolean
+  eq: Boolean
+  attributeExists: Boolean
+  attributeType: ModelAttributeTypes
+}
+
+input ModelIDInput {
+  ne: ID
+  eq: ID
+  le: ID
+  lt: ID
+  ge: ID
+  gt: ID
+  contains: ID
+  notContains: ID
+  between: [ID]
+  beginsWith: ID
+  attributeExists: Boolean
+  attributeType: ModelAttributeTypes
+  size: ModelSizeInput
+}
+
+input ModelSubscriptionStringInput {
+  ne: String
+  eq: String
+  le: String
+  lt: String
+  ge: String
+  gt: String
+  contains: String
+  notContains: String
+  between: [String]
+  beginsWith: String
+  in: [String]
+  notIn: [String]
+}
+
+input ModelSubscriptionIntInput {
+  ne: Int
+  eq: Int
+  le: Int
+  lt: Int
+  ge: Int
+  gt: Int
+  between: [Int]
+  in: [Int]
+  notIn: [Int]
+}
+
+input ModelSubscriptionFloatInput {
+  ne: Float
+  eq: Float
+  le: Float
+  lt: Float
+  ge: Float
+  gt: Float
+  between: [Float]
+  in: [Float]
+  notIn: [Float]
+}
+
+input ModelSubscriptionBooleanInput {
+  ne: Boolean
+  eq: Boolean
+}
+
+input ModelSubscriptionIDInput {
+  ne: ID
+  eq: ID
+  le: ID
+  lt: ID
+  ge: ID
+  gt: ID
+  contains: ID
+  notContains: ID
+  between: [ID]
+  beginsWith: ID
+  in: [ID]
+  notIn: [ID]
+}
+
+enum ModelAttributeTypes {
+  binary
+  binarySet
+  bool
+  list
+  map
+  number
+  numberSet
+  string
+  stringSet
+  _null
+}
+
+input ModelSizeInput {
+  ne: Int
+  eq: Int
+  le: Int
+  lt: Int
+  ge: Int
+  gt: Int
+  between: [Int]
+}
+
+enum ModelSortDirection {
+  ASC
+  DESC
+}
+
+type ModelVendorConnection @aws_api_key @aws_iam @aws_cognito_user_pools {
+  items: [Vendor]!
+  nextToken: String
+}
+
+input ModelVendorStatusInput {
+  eq: VendorStatus
+  ne: VendorStatus
+}
+
+input ModelVendorFilterInput {
+  businessName: ModelStringInput
+  contact: ModelStringInput
+  location: ModelStringInput
+  status: ModelVendorStatusInput
+  owner: ModelStringInput
+  id: ModelIDInput
+  createdAt: ModelStringInput
+  updatedAt: ModelStringInput
+  and: [ModelVendorFilterInput]
+  or: [ModelVendorFilterInput]
+  not: ModelVendorFilterInput
+}
+
+type Query {
+  getVendor(id: ID!): Vendor @aws_api_key @aws_iam @aws_cognito_user_pools
+  listVendors(filter: ModelVendorFilterInput, limit: Int, nextToken: String): ModelVendorConnection @aws_api_key @aws_iam @aws_cognito_user_pools
+  getService(id: ID!): Service @aws_api_key @aws_iam @aws_cognito_user_pools
+  listServices(filter: ModelServiceFilterInput, limit: Int, nextToken: String): ModelServiceConnection @aws_api_key @aws_iam @aws_cognito_user_pools
+  getUserProfile(id: ID!): UserProfile @aws_iam @aws_cognito_user_pools
+  listUserProfiles(filter: ModelUserProfileFilterInput, limit: Int, nextToken: String): ModelUserProfileConnection @aws_iam @aws_cognito_user_pools
+}
+
+input ModelVendorConditionInput {
+  businessName: ModelStringInput
+  contact: ModelStringInput
+  location: ModelStringInput
+  status: ModelVendorStatusInput
+  owner: ModelStringInput
+  and: [ModelVendorConditionInput]
+  or: [ModelVendorConditionInput]
+  not: ModelVendorConditionInput
+  createdAt: ModelStringInput
+  updatedAt: ModelStringInput
+}
+
+input CreateVendorInput {
+  businessName: String!
+  contact: String!
+  location: String
+  status: VendorStatus
+  owner: String
+  id: ID
+}
+
+input UpdateVendorInput {
+  businessName: String
+  contact: String
+  location: String
+  status: VendorStatus
+  owner: String
+  id: ID!
+}
+
+input DeleteVendorInput {
+  id: ID!
+}
+
+type Mutation {
+  createVendor(input: CreateVendorInput!, condition: ModelVendorConditionInput): Vendor @aws_iam @aws_cognito_user_pools
+  updateVendor(input: UpdateVendorInput!, condition: ModelVendorConditionInput): Vendor @aws_iam @aws_cognito_user_pools
+  deleteVendor(input: DeleteVendorInput!, condition: ModelVendorConditionInput): Vendor @aws_iam @aws_cognito_user_pools
+  createService(input: CreateServiceInput!, condition: ModelServiceConditionInput): Service @aws_iam @aws_cognito_user_pools
+  updateService(input: UpdateServiceInput!, condition: ModelServiceConditionInput): Service @aws_iam @aws_cognito_user_pools
+  deleteService(input: DeleteServiceInput!, condition: ModelServiceConditionInput): Service @aws_iam @aws_cognito_user_pools
+  createUserProfile(input: CreateUserProfileInput!, condition: ModelUserProfileConditionInput): UserProfile @aws_iam @aws_cognito_user_pools
+  updateUserProfile(input: UpdateUserProfileInput!, condition: ModelUserProfileConditionInput): UserProfile @aws_iam @aws_cognito_user_pools
+  deleteUserProfile(input: DeleteUserProfileInput!, condition: ModelUserProfileConditionInput): UserProfile @aws_iam @aws_cognito_user_pools
+}
+
+input ModelSubscriptionVendorFilterInput {
+  businessName: ModelSubscriptionStringInput
+  contact: ModelSubscriptionStringInput
+  location: ModelSubscriptionStringInput
+  status: ModelSubscriptionStringInput
+  id: ModelSubscriptionIDInput
+  createdAt: ModelSubscriptionStringInput
+  updatedAt: ModelSubscriptionStringInput
+  and: [ModelSubscriptionVendorFilterInput]
+  or: [ModelSubscriptionVendorFilterInput]
+  owner: ModelStringInput
+}
+
+type Subscription {
+  onCreateVendor(filter: ModelSubscriptionVendorFilterInput, owner: String): Vendor @aws_subscribe(mutations: ["createVendor"]) @aws_api_key @aws_iam @aws_cognito_user_pools
+  onUpdateVendor(filter: ModelSubscriptionVendorFilterInput, owner: String): Vendor @aws_subscribe(mutations: ["updateVendor"]) @aws_api_key @aws_iam @aws_cognito_user_pools
+  onDeleteVendor(filter: ModelSubscriptionVendorFilterInput, owner: String): Vendor @aws_subscribe(mutations: ["deleteVendor"]) @aws_api_key @aws_iam @aws_cognito_user_pools
+  onCreateService(filter: ModelSubscriptionServiceFilterInput, owner: String): Service @aws_subscribe(mutations: ["createService"]) @aws_api_key @aws_iam @aws_cognito_user_pools
+  onUpdateService(filter: ModelSubscriptionServiceFilterInput, owner: String): Service @aws_subscribe(mutations: ["updateService"]) @aws_api_key @aws_iam @aws_cognito_user_pools
+  onDeleteService(filter: ModelSubscriptionServiceFilterInput, owner: String): Service @aws_subscribe(mutations: ["deleteService"]) @aws_api_key @aws_iam @aws_cognito_user_pools
+  onCreateUserProfile(filter: ModelSubscriptionUserProfileFilterInput, owner: String): UserProfile @aws_subscribe(mutations: ["createUserProfile"]) @aws_iam @aws_cognito_user_pools
+  onUpdateUserProfile(filter: ModelSubscriptionUserProfileFilterInput, owner: String): UserProfile @aws_subscribe(mutations: ["updateUserProfile"]) @aws_iam @aws_cognito_user_pools
+  onDeleteUserProfile(filter: ModelSubscriptionUserProfileFilterInput, owner: String): UserProfile @aws_subscribe(mutations: ["deleteUserProfile"]) @aws_iam @aws_cognito_user_pools
+}
+
+type ModelServiceConnection @aws_api_key @aws_iam @aws_cognito_user_pools {
+  items: [Service]!
+  nextToken: String
+}
+
+input ModelServiceStatusInput {
+  eq: ServiceStatus
+  ne: ServiceStatus
+}
+
+input ModelServiceFilterInput {
+  name: ModelStringInput
+  type: ModelStringInput
+  price: ModelFloatInput
+  description: ModelStringInput
+  status: ModelServiceStatusInput
+  vendorId: ModelIDInput
+  id: ModelIDInput
+  createdAt: ModelStringInput
+  updatedAt: ModelStringInput
+  and: [ModelServiceFilterInput]
+  or: [ModelServiceFilterInput]
+  not: ModelServiceFilterInput
+  owner: ModelStringInput
+}
+
+input ModelServiceConditionInput {
+  name: ModelStringInput
+  type: ModelStringInput
+  price: ModelFloatInput
+  description: ModelStringInput
+  status: ModelServiceStatusInput
+  vendorId: ModelIDInput
+  and: [ModelServiceConditionInput]
+  or: [ModelServiceConditionInput]
+  not: ModelServiceConditionInput
+  createdAt: ModelStringInput
+  updatedAt: ModelStringInput
+  owner: ModelStringInput
+}
+
+input CreateServiceInput {
+  name: String!
+  type: String!
+  price: Float!
+  description: String
+  status: ServiceStatus
+  vendorId: ID
+  id: ID
+}
+
+input UpdateServiceInput {
+  name: String
+  type: String
+  price: Float
+  description: String
+  status: ServiceStatus
+  vendorId: ID
+  id: ID!
+}
+
+input DeleteServiceInput {
+  id: ID!
+}
+
+input ModelSubscriptionServiceFilterInput {
+  name: ModelSubscriptionStringInput
+  type: ModelSubscriptionStringInput
+  price: ModelSubscriptionFloatInput
+  description: ModelSubscriptionStringInput
+  status: ModelSubscriptionStringInput
+  vendorId: ModelSubscriptionIDInput
+  id: ModelSubscriptionIDInput
+  createdAt: ModelSubscriptionStringInput
+  updatedAt: ModelSubscriptionStringInput
+  and: [ModelSubscriptionServiceFilterInput]
+  or: [ModelSubscriptionServiceFilterInput]
+  owner: ModelStringInput
+}
+
+type ModelUserProfileConnection @aws_iam @aws_cognito_user_pools {
+  items: [UserProfile]!
+  nextToken: String
+}
+
+input ModelUserProfileRoleInput {
+  eq: UserProfileRole
+  ne: UserProfileRole
+}
+
+input ModelUserProfileStatusInput {
+  eq: UserProfileStatus
+  ne: UserProfileStatus
+}
+
+input ModelUserProfileFilterInput {
+  email: ModelStringInput
+  name: ModelStringInput
+  role: ModelUserProfileRoleInput
+  status: ModelUserProfileStatusInput
+  profileId: ModelIDInput
+  id: ModelIDInput
+  createdAt: ModelStringInput
+  updatedAt: ModelStringInput
+  and: [ModelUserProfileFilterInput]
+  or: [ModelUserProfileFilterInput]
+  not: ModelUserProfileFilterInput
+  owner: ModelStringInput
+}
+
+input ModelUserProfileConditionInput {
+  email: ModelStringInput
+  name: ModelStringInput
+  role: ModelUserProfileRoleInput
+  status: ModelUserProfileStatusInput
+  profileId: ModelIDInput
+  and: [ModelUserProfileConditionInput]
+  or: [ModelUserProfileConditionInput]
+  not: ModelUserProfileConditionInput
+  createdAt: ModelStringInput
+  updatedAt: ModelStringInput
+  owner: ModelStringInput
+}
+
+input CreateUserProfileInput {
+  email: String!
+  name: String
+  role: UserProfileRole
+  status: UserProfileStatus
+  profileId: ID
+  id: ID
+}
+
+input UpdateUserProfileInput {
+  email: String
+  name: String
+  role: UserProfileRole
+  status: UserProfileStatus
+  profileId: ID
+  id: ID!
+}
+
+input DeleteUserProfileInput {
+  id: ID!
+}
+
+input ModelSubscriptionUserProfileFilterInput {
+  email: ModelSubscriptionStringInput
+  name: ModelSubscriptionStringInput
+  role: ModelSubscriptionStringInput
+  status: ModelSubscriptionStringInput
+  profileId: ModelSubscriptionIDInput
+  id: ModelSubscriptionIDInput
+  createdAt: ModelSubscriptionStringInput
+  updatedAt: ModelSubscriptionStringInput
+  and: [ModelSubscriptionUserProfileFilterInput]
+  or: [ModelSubscriptionUserProfileFilterInput]
+  owner: ModelStringInput
+}

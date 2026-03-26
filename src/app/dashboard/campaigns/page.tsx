@@ -1,3 +1,5 @@
+"use client";
+
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
@@ -20,47 +22,22 @@ import {
 } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
 
-const campaigns = [
-    {
-        id: "CMP001",
-        name: "Summer Sale 2024",
-        client: "Nike",
-        budget: "$50,000",
-        spent: "$12,400",
-        status: "Active",
-        progress: 25,
-        progressImages: [
-            "https://images.unsplash.com/photo-1557804506-669a67965ba0?w=800&auto=format&fit=crop&q=60",
-            "https://images.unsplash.com/photo-1559136555-9303baea8ebd?w=800&auto=format&fit=crop&q=60",
-        ]
-    },
-    {
-        id: "CMP002",
-        name: "Product Launch X",
-        client: "Apple",
-        budget: "$150,000",
-        spent: "$0",
-        status: "Pending Approval",
-        progress: 0,
-        progressImages: []
-    },
-    {
-        id: "CMP003",
-        name: "Holiday Special",
-        client: "Starbucks",
-        budget: "$25,000",
-        spent: "$25,000",
-        status: "Completed",
-        progress: 100,
-        progressImages: [
-            "https://images.unsplash.com/photo-1542744173-8e7e53415bb0?w=800&auto=format&fit=crop&q=60",
-            "https://images.unsplash.com/photo-1557804506-669a67965ba0?w=800&auto=format&fit=crop&q=60",
-            "https://images.unsplash.com/photo-1559136555-9303baea8ebd?w=800&auto=format&fit=crop&q=60",
-        ]
-    },
-];
+import { useState, useEffect } from "react";
+import { generateClient } from "aws-amplify/data";
+import type { Schema } from "../../../../amplify/data/resource";
+
+const client = generateClient<Schema>();
 
 export default function CampaignsPage() {
+    const [campaigns, setCampaigns] = useState<Array<Schema["Campaign"]["type"]>>([]);
+
+    useEffect(() => {
+        if (!client.models.Campaign) return;
+        const sub = client.models.Campaign.observeQuery().subscribe({
+            next: (data) => setCampaigns([...data.items]),
+        });
+        return () => sub.unsubscribe();
+    }, []);
     return (
         <div className="space-y-6">
             <div className="flex items-center justify-between">
@@ -87,111 +64,85 @@ export default function CampaignsPage() {
                         </TableRow>
                     </TableHeader>
                     <TableBody>
-                        {campaigns.map((campaign) => (
-                            <TableRow key={campaign.id} className="hover:bg-white/5 border-none transition-colors group">
-                                <TableCell className="font-medium group-hover:text-primary transition-colors">{campaign.id}</TableCell>
-                                <TableCell className="font-medium">{campaign.name}</TableCell>
-                                <TableCell>{campaign.client}</TableCell>
-                                <TableCell className="font-bold">{campaign.budget}</TableCell>
-                                <TableCell>
-                                    <div className="flex flex-col gap-1">
-                                        <Progress
-                                            value={campaign.progress}
-                                            className="h-2 bg-secondary/30"
-                                            indicatorClassName={cn(
-                                                "bg-gradient-to-r",
-                                                campaign.progress === 100 ? "from-green-400 to-emerald-600" :
-                                                    campaign.progress > 50 ? "from-blue-400 to-indigo-600" :
-                                                        "from-orange-400 to-red-600"
-                                            )}
-                                        />
-                                        <span className="text-xs text-muted-foreground font-medium">{campaign.progress}%</span>
-                                    </div>
-                                </TableCell>
-                                <TableCell>
-                                    <div className="flex items-center">
-                                        {campaign.progressImages.length > 0 ? (
-                                            <Dialog>
-                                                <DialogTrigger asChild>
-                                                    <div className="flex -space-x-2 cursor-pointer hover:scale-105 transition-transform">
-                                                        {campaign.progressImages.slice(0, 3).map((img, i) => (
-                                                            <div key={i} className="relative w-8 h-8 rounded-full border-2 border-background overflow-hidden hover:z-20 transition-all">
-                                                                <img src={img} alt="Progress" className="w-full h-full object-cover" />
-                                                            </div>
-                                                        ))}
-                                                        {campaign.progressImages.length > 3 && (
-                                                            <div className="flex items-center justify-center w-8 h-8 rounded-full border-2 border-background bg-muted text-[10px] font-bold z-10">
-                                                                +{campaign.progressImages.length - 3}
-                                                            </div>
-                                                        )}
-                                                    </div>
-                                                </DialogTrigger>
-                                                <DialogContent className="max-w-3xl bg-card/90 backdrop-blur-xl border-none shadow-2xl rounded-2xl">
-                                                    <DialogHeader>
-                                                        <DialogTitle>Progress Updates - {campaign.name}</DialogTitle>
-                                                        <DialogDescription>Latest proof of work uploaded by vendor.</DialogDescription>
-                                                    </DialogHeader>
-                                                    <div className="grid grid-cols-2 md:grid-cols-3 gap-4 py-4">
-                                                        {campaign.progressImages.map((img, i) => (
-                                                            <div key={i} className="relative aspect-video rounded-xl overflow-hidden group/img">
-                                                                <img src={img} alt={`Progress ${i + 1}`} className="w-full h-full object-cover transition-transform group-hover/img:scale-105" />
-                                                            </div>
-                                                        ))}
-                                                    </div>
-                                                </DialogContent>
-                                            </Dialog>
-                                        ) : (
-                                            <span className="text-xs text-muted-foreground italic">No updates</span>
-                                        )}
-                                    </div>
-                                </TableCell>
-                                <TableCell>
-                                    <Badge variant={campaign.status === "Active" ? "default" : "outline"} className={`rounded-full px-3 border-none ${campaign.status === "Active" ? "bg-primary/20 text-primary hover:bg-primary/30" : "bg-white/5"}`}>
-                                        {campaign.status}
-                                    </Badge>
-                                </TableCell>
-                                <TableCell className="text-right">
-                                    <Dialog>
-                                        <DialogTrigger asChild>
-                                            <Button variant="ghost" size="sm" className="rounded-full hover:bg-white/10">
-                                                <Eye className="mr-2 h-4 w-4" />
-                                                View
-                                            </Button>
-                                        </DialogTrigger>
-                                        <DialogContent className="bg-card/90 backdrop-blur-xl border-none shadow-2xl rounded-2xl">
-                                            <DialogHeader>
-                                                <DialogTitle className="text-xl">{campaign.name}</DialogTitle>
-                                                <DialogDescription>
-                                                    Client Requirements and Details
-                                                </DialogDescription>
-                                            </DialogHeader>
-                                            <div className="grid gap-4 py-4">
-                                                <div className="grid grid-cols-4 items-center gap-4 border-b border-white/5 pb-2">
-                                                    <span className="font-bold text-muted-foreground">Client:</span>
-                                                    <span className="col-span-3 font-medium">{campaign.client}</span>
-                                                </div>
-                                                <div className="grid grid-cols-4 items-center gap-4 border-b border-white/5 pb-2">
-                                                    <span className="font-bold text-muted-foreground">Budget:</span>
-                                                    <span className="col-span-3 font-medium">{campaign.budget}</span>
-                                                </div>
-                                                <div className="grid grid-cols-4 items-center gap-4 border-b border-white/5 pb-2">
-                                                    <span className="font-bold text-muted-foreground">Objective:</span>
-                                                    <span className="col-span-3">Increase brand awareness among Gen Z demographic.</span>
-                                                </div>
-                                                <div className="grid grid-cols-4 items-center gap-4 border-b border-white/5 pb-2">
-                                                    <span className="font-bold text-muted-foreground">Locations:</span>
-                                                    <span className="col-span-3">New York, Los Angeles, Chicago</span>
-                                                </div>
-                                                <div className="grid grid-cols-4 items-center gap-4">
-                                                    <span className="font-bold text-muted-foreground">Assets:</span>
-                                                    <span className="col-span-3 text-primary hover:underline cursor-pointer font-medium">View Creative Assets</span>
-                                                </div>
-                                            </div>
-                                        </DialogContent>
-                                    </Dialog>
+                        {campaigns.length === 0 ? (
+                            <TableRow>
+                                <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
+                                    No campaigns found.
                                 </TableCell>
                             </TableRow>
-                        ))}
+                        ) : (
+                            campaigns.map((campaign) => (
+                                <TableRow key={campaign.id} className="hover:bg-white/5 border-none transition-colors group">
+                                    <TableCell className="font-medium group-hover:text-primary transition-colors">{campaign.id.slice(0, 8)}...</TableCell>
+                                    <TableCell className="font-medium">{campaign.title}</TableCell>
+                                    <TableCell>{campaign.vendorId ? campaign.vendorId.slice(0, 8) + '...' : 'Unknown'}</TableCell>
+                                    <TableCell className="font-bold">₹{campaign.budget || 0}</TableCell>
+                                    <TableCell>
+                                        <div className="flex flex-col gap-1">
+                                            <Progress
+                                                value={0}
+                                                className="h-2 bg-secondary/30"
+                                                indicatorClassName={cn(
+                                                    "bg-gradient-to-r",
+                                                    "from-blue-400 to-indigo-600"
+                                                )}
+                                            />
+                                            <span className="text-xs text-muted-foreground font-medium">0%</span>
+                                        </div>
+                                    </TableCell>
+                                    <TableCell>
+                                        <div className="flex items-center">
+                                            <span className="text-xs text-muted-foreground italic">No updates</span>
+                                        </div>
+                                    </TableCell>
+                                    <TableCell>
+                                        <Badge variant={campaign.status === "ACTIVE" ? "default" : "outline"} className={`rounded-full px-3 border-none ${campaign.status === "ACTIVE" ? "bg-primary/20 text-primary hover:bg-primary/30" : "bg-white/5"}`}>
+                                            {campaign.status}
+                                        </Badge>
+                                    </TableCell>
+                                    <TableCell className="text-right">
+                                        <Dialog>
+                                            <DialogTrigger asChild>
+                                                <Button variant="ghost" size="sm" className="rounded-full hover:bg-white/10">
+                                                    <Eye className="mr-2 h-4 w-4" />
+                                                    View
+                                                </Button>
+                                            </DialogTrigger>
+                                            <DialogContent className="bg-card/90 backdrop-blur-xl border-none shadow-2xl rounded-2xl">
+                                                <DialogHeader>
+                                                    <DialogTitle className="text-xl">{campaign.title}</DialogTitle>
+                                                    <DialogDescription>
+                                                        Client Requirements and Details
+                                                    </DialogDescription>
+                                                </DialogHeader>
+                                                <div className="grid gap-4 py-4">
+                                                    <div className="grid grid-cols-4 items-center gap-4 border-b border-white/5 pb-2">
+                                                        <span className="font-bold text-muted-foreground">Client:</span>
+                                                        <span className="col-span-3 font-medium">{campaign.vendorId || "Unknown"}</span>
+                                                    </div>
+                                                    <div className="grid grid-cols-4 items-center gap-4 border-b border-white/5 pb-2">
+                                                        <span className="font-bold text-muted-foreground">Budget:</span>
+                                                        <span className="col-span-3 font-medium">₹{campaign.budget || 0}</span>
+                                                    </div>
+                                                    <div className="grid grid-cols-4 items-center gap-4 border-b border-white/5 pb-2">
+                                                        <span className="font-bold text-muted-foreground">Objective:</span>
+                                                        <span className="col-span-3">Increase brand awareness among Gen Z demographic.</span>
+                                                    </div>
+                                                    <div className="grid grid-cols-4 items-center gap-4 border-b border-white/5 pb-2">
+                                                        <span className="font-bold text-muted-foreground">Locations:</span>
+                                                        <span className="col-span-3">New York, Los Angeles, Chicago</span>
+                                                    </div>
+                                                    <div className="grid grid-cols-4 items-center gap-4">
+                                                        <span className="font-bold text-muted-foreground">Assets:</span>
+                                                        <span className="col-span-3 text-primary hover:underline cursor-pointer font-medium">View Creative Assets</span>
+                                                    </div>
+                                                </div>
+                                            </DialogContent>
+                                        </Dialog>
+                                    </TableCell>
+                                </TableRow>
+                            ))
+                        )}
                     </TableBody>
                 </Table>
             </div>

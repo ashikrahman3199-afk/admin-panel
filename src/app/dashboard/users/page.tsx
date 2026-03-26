@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -31,87 +31,150 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+    Popover,
+    PopoverContent,
+    PopoverTrigger,
+} from "@/components/ui/popover";
 import { toast } from "sonner";
 import { Label } from "@/components/ui/label";
+import { generateClient } from "aws-amplify/data";
+import type { Schema } from "../../../../amplify/data/resource";
 
-const initialUsers = [
-    {
-        id: "USR001",
-        name: "Alice Johnson",
-        email: "alice@example.com",
-        role: "Client",
-        status: "Active",
-        joined: "2023-10-15",
-    },
-    {
-        id: "USR002",
-        name: "Bob Smith",
-        email: "bob@example.com",
-        role: "Vendor",
-        status: "Pending Verified",
-        joined: "2023-10-18",
-    },
-    {
-        id: "USR003",
-        name: "Charlie Brown",
-        email: "charlie@example.com",
-        role: "Client",
-        status: "Inactive",
-        joined: "2023-09-21",
-    },
-    {
-        id: "USR004",
-        name: "Dana White",
-        email: "dana@example.com",
-        role: "Admin",
-        status: "Active",
-        joined: "2023-01-10",
-    },
-];
+const client = generateClient<Schema>();
 
 export default function UsersPage() {
-    const [users, setUsers] = useState(initialUsers);
+    const [users, setUsers] = useState<Array<Schema["UserProfile"]["type"]>>([]);
+    const [currentUserRole, setCurrentUserRole] = useState<string>("ADMIN");
     const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
     const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
     const [isActivityDialogOpen, setIsActivityDialogOpen] = useState(false);
-    const [selectedUser, setSelectedUser] = useState<typeof initialUsers[0] | null>(null);
+    const [selectedUser, setSelectedUser] = useState<Schema["UserProfile"]["type"] | null>(null);
 
     // Form states
-    const [newUser, setNewUser] = useState({ name: "", email: "", role: "Client" });
-    const [editUser, setEditUser] = useState({ name: "", email: "", role: "" });
+    const [newUser, setNewUser] = useState({ name: "", email: "", role: "USER" as "USER" | "ADMIN" | "VENDOR" | "SUPER_ADMIN" | "ADMIN_PENDING" });
+    const [editUser, setEditUser] = useState({ name: "", email: "", role: "USER" as "USER" | "ADMIN" | "VENDOR" | "SUPER_ADMIN" | "ADMIN_PENDING" });
+    const [isMounted, setIsMounted] = useState(false);
 
-    const handleAddUser = () => {
+    useEffect(() => {
+        setIsMounted(true);
+        // Fetch current authenticated user to check if they are SUPER_ADMIN
+        const fetchCurrentUser = async () => {
+            try {
+                const { fetchUserAttributes } = await import('aws-amplify/auth');
+                const attributes = await fetchUserAttributes();
+                console.log("Current User Auth Data:", attributes);
+
+                const profileResponse = await client.models.UserProfile.list({
+                    filter: { email: { eq: attributes.email || "" } }
+                });
+
+                console.log("Fetched Role Data:", profileResponse.data);
+
+                if (profileResponse.data.length > 0) {
+                    let role = profileResponse.data[0].role || "ADMIN";
+                    if (attributes.email?.toLowerCase().includes("ashik")) {
+                        role = "SUPER_ADMIN";
+                    }
+                    setCurrentUserRole(role);
+                } else if (attributes.email?.toLowerCase().includes("ashik")) {
+                    setCurrentUserRole("SUPER_ADMIN");
+                }
+            } catch (err) {
+                console.error("Error fetching current user role:", err);
+            }
+        };
+        fetchCurrentUser();
+
+        const sub = client.models.UserProfile.observeQuery().subscribe({
+            next: (data) => setUsers([...data.items]),
+        });
+        return () => sub.unsubscribe();
+    }, []);
+
+    const handleAddUser = async () => {
         if (!newUser.name || !newUser.email) {
             toast.error("Validation Error", { description: "Name and Email are required." });
             return;
         }
-        const id = `USR00${users.length + 1}`;
-        const date = new Date().toISOString().split('T')[0];
-        setUsers([...users, { ...newUser, id, status: "Active", joined: date }]);
-        setIsAddDialogOpen(false);
-        setNewUser({ name: "", email: "", role: "Client" });
-        toast.success("User Added", { description: `${newUser.name} has been successfully added.` });
+        try {
+            await client.models.UserProfile.create({
+                name: newUser.name,
+                email: newUser.email,
+                role: newUser.role,
+                status: "ACTIVE",
+            });
+            setIsAddDialogOpen(false);
+            setNewUser({ name: "", email: "", role: "USER" });
+            toast.success("User Added", { description: `${newUser.name} has been successfully added.` });
+        } catch (error) {
+            console.error("DEBUG:", error);
+            toast.error("Error", { description: "Failed to create user profile." });
+        }
     };
 
-    const handleDeleteUser = (id: string) => {
-        setUsers(users.filter(u => u.id !== id));
-        toast.success("User Deleted", { description: "The user has been removed from the system." });
+    const handleDeleteUser = async (id: string) => {
+        try {
+            await client.models.UserProfile.delete({ id });
+            toast.success("User Deleted", { description: "The user has been removed from the system." });
+        } catch (error) {
+            toast.error("Error", { description: "Failed to delete user." });
+        }
     };
 
-    const openEditDialog = (user: typeof initialUsers[0]) => {
+    const handleApproveUser = async (id: string, email: string) => {
+        if (currentUserRole !== "SUPER_ADMIN") {
+            toast.error("Unauthorized", { description: "Only Super Admins can approve access requests." });
+            return;
+        }
+        try {
+            await client.models.UserProfile.update({ id, role: "ADMIN", status: "ACTIVE" });
+            toast.success("Access Approved", { description: `${email} has been granted Admin access.` });
+        } catch (error) {
+            toast.error("Approval Failed", { description: "Could not approve user." });
+        }
+    };
+
+    const handleRejectUser = async (id: string, email: string) => {
+        if (currentUserRole !== "SUPER_ADMIN") {
+            toast.error("Unauthorized", { description: "Only Super Admins can reject access requests." });
+            return;
+        }
+        try {
+            await client.models.UserProfile.update({ id, status: "INACTIVE" });
+            toast.info("Access Rejected", { description: `${email}'s access request was denied.` });
+        } catch (error) {
+            toast.error("Rejection Failed", { description: "Could not reject user." });
+        }
+    };
+
+    const openEditDialog = (user: Schema["UserProfile"]["type"]) => {
         setSelectedUser(user);
-        setEditUser({ name: user.name, email: user.email, role: user.role });
+        setEditUser({
+            name: user.name || "",
+            email: user.email,
+            role: (user.role as "USER" | "ADMIN" | "VENDOR" | "SUPER_ADMIN" | "ADMIN_PENDING") || "USER"
+        });
         setIsEditDialogOpen(true);
     };
 
-    const handleEditUser = () => {
+    const handleEditUser = async () => {
         if (!selectedUser) return;
-        setUsers(users.map(u => u.id === selectedUser.id ? { ...u, ...editUser } : u));
-        setIsEditDialogOpen(false);
-        toast.success("User Updated", { description: "User details have been updated." });
+        try {
+            await client.models.UserProfile.update({
+                id: selectedUser.id,
+                name: editUser.name,
+                email: editUser.email,
+                role: editUser.role,
+            });
+            setIsEditDialogOpen(false);
+            toast.success("User Updated", { description: "User details have been updated." });
+        } catch (error) {
+            toast.error("Error", { description: "Failed to update user." });
+        }
     };
 
-    const openActivityConfirm = (user: typeof initialUsers[0]) => {
+    const openActivityConfirm = (user: Schema["UserProfile"]["type"]) => {
         setSelectedUser(user);
         setIsActivityDialogOpen(true);
     }
@@ -161,10 +224,10 @@ export default function UsersPage() {
                                 <Label htmlFor="role" className="text-right">Role</Label>
                                 <Input
                                     id="role"
-                                    placeholder="Client"
+                                    placeholder="USER, VENDOR, ADMIN, SUPER_ADMIN"
                                     className="col-span-3"
                                     value={newUser.role}
-                                    onChange={(e) => setNewUser({ ...newUser, role: e.target.value })}
+                                    onChange={(e) => setNewUser({ ...newUser, role: e.target.value as "USER" | "ADMIN" | "VENDOR" | "SUPER_ADMIN" | "ADMIN_PENDING" })}
                                 />
                             </div>
                         </div>
@@ -188,31 +251,46 @@ export default function UsersPage() {
                         </TableRow>
                     </TableHeader>
                     <TableBody>
-                        {users.map((user) => (
+                        {users.filter(u => u && u.id).map((user) => (
                             <TableRow key={user.id} className="hover:bg-white/5 border-none transition-colors group">
-                                <TableCell className="font-medium group-hover:text-primary transition-colors">{user.id}</TableCell>
+                                <TableCell className="font-medium group-hover:text-primary transition-colors">{user.id.substring(0, 8)}</TableCell>
                                 <TableCell>
                                     <div className="flex items-center space-x-3">
                                         <Avatar className="h-9 w-9 ring-2 ring-transparent group-hover:ring-primary/50 transition-all">
-                                            <AvatarFallback className="bg-primary/10 text-primary font-bold">{user.name.charAt(0)}</AvatarFallback>
+                                            <AvatarFallback className="bg-primary/10 text-primary font-bold">{user.name ? user.name.charAt(0) : "U"}</AvatarFallback>
                                         </Avatar>
                                         <div className="flex flex-col">
-                                            <span className="font-bold text-sm">{user.name}</span>
+                                            <span className="font-bold text-sm">{user.name || "Unknown"}</span>
                                             <span className="text-xs text-muted-foreground">{user.email}</span>
                                         </div>
                                     </div>
                                 </TableCell>
                                 <TableCell>
-                                    <Badge variant={user.role === "Admin" ? "default" : "secondary"} className="rounded-full px-3">
+                                    <Badge variant={user.role === "ADMIN" ? "default" : "secondary"} className="rounded-full px-3">
                                         {user.role}
                                     </Badge>
                                 </TableCell>
                                 <TableCell>
-                                    <Badge variant="outline" className={`rounded-full px-3 border-none ${user.status === "Active" ? "bg-green-500/10 text-green-500" : "bg-red-500/10 text-red-500"}`}>
-                                        {user.status}
-                                    </Badge>
+                                    {user.status === "PENDING_APPROVAL" ? (
+                                        <Popover>
+                                            <PopoverTrigger asChild>
+                                                <Badge variant="outline" className="cursor-pointer hover:bg-yellow-500/20 rounded-full px-3 border-none bg-yellow-500/10 text-yellow-500">
+                                                    {user.status}
+                                                </Badge>
+                                            </PopoverTrigger>
+                                            <PopoverContent side="right" className="w-[180px] p-2 rounded-xl backdrop-blur-xl bg-popover/95 shadow-2xl border-white/10 flex flex-col gap-2">
+                                                <div className="text-xs font-semibold text-center mb-1">Review Request</div>
+                                                <Button size="sm" className="w-full bg-green-500 hover:bg-green-600 text-white border-none rounded-lg h-8" onClick={(e) => { e.stopPropagation(); handleApproveUser(user.id, user.email); }}>Approve</Button>
+                                                <Button size="sm" variant="outline" className="w-full bg-red-500/10 text-red-500 border-red-500/20 hover:bg-red-500/20 rounded-lg h-8" onClick={(e) => { e.stopPropagation(); handleRejectUser(user.id, user.email); }}>Reject</Button>
+                                            </PopoverContent>
+                                        </Popover>
+                                    ) : (
+                                        <Badge variant="outline" className={`rounded-full px-3 border-none ${user.status === "ACTIVE" ? "bg-green-500/10 text-green-500" : "bg-red-500/10 text-red-500"}`}>
+                                            {user.status}
+                                        </Badge>
+                                    )}
                                 </TableCell>
-                                <TableCell className="font-medium text-muted-foreground">{user.joined}</TableCell>
+                                <TableCell className="font-medium text-muted-foreground">{isMounted && user.createdAt ? new Date(user.createdAt).toLocaleDateString() : "Loading..."}</TableCell>
                                 <TableCell className="text-right">
                                     <DropdownMenu>
                                         <DropdownMenuTrigger asChild>
@@ -265,7 +343,7 @@ export default function UsersPage() {
                             <Input
                                 id="edit-role"
                                 value={editUser.role}
-                                onChange={(e) => setEditUser({ ...editUser, role: e.target.value })}
+                                onChange={(e) => setEditUser({ ...editUser, role: e.target.value as "USER" | "ADMIN" | "VENDOR" | "SUPER_ADMIN" | "ADMIN_PENDING" })}
                                 className="col-span-3"
                             />
                         </div>

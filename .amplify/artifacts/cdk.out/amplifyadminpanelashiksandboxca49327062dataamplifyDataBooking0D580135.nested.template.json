@@ -1,0 +1,2171 @@
+{
+ "Parameters": {
+  "DynamoDBModelTableReadIOPS": {
+   "Type": "Number",
+   "Default": 5,
+   "Description": "The number of read IOPS the table should support."
+  },
+  "DynamoDBModelTableWriteIOPS": {
+   "Type": "Number",
+   "Default": 5,
+   "Description": "The number of write IOPS the table should support."
+  },
+  "DynamoDBBillingMode": {
+   "Type": "String",
+   "Default": "PAY_PER_REQUEST",
+   "AllowedValues": [
+    "PAY_PER_REQUEST",
+    "PROVISIONED"
+   ],
+   "Description": "Configure @model types to create DynamoDB tables with PAY_PER_REQUEST or PROVISIONED billing modes."
+  },
+  "DynamoDBEnablePointInTimeRecovery": {
+   "Type": "String",
+   "Default": "false",
+   "AllowedValues": [
+    "true",
+    "false"
+   ],
+   "Description": "Whether to enable Point in Time Recovery on the table."
+  },
+  "DynamoDBEnableServerSideEncryption": {
+   "Type": "String",
+   "Default": "true",
+   "AllowedValues": [
+    "true",
+    "false"
+   ],
+   "Description": "Enable server side encryption powered by KMS."
+  },
+  "referencetoamplifyadminpanelashiksandboxca49327062dataamplifyDataAmplifyTableManagerNestedStackAmplifyTableManagerNestedStackResourceBDBAAB52Outputsamplifyadminpanelashiksandboxca49327062dataamplifyDataAmplifyTableManagerTableManagerCustomP200F3C09": {
+   "Type": "String"
+  },
+  "referencetoamplifyadminpanelashiksandboxca49327062dataamplifyDataGraphQLAPIDD3321C4ApiId": {
+   "Type": "String"
+  },
+  "referencetoamplifyadminpanelashiksandboxca49327062dataamplifyDataGraphQLAPINONEDS3717D349Name": {
+   "Type": "String"
+  },
+  "referencetoamplifyadminpanelashiksandboxca49327062authNestedStackauthNestedStackResourceECA3B996Outputsamplifyadminpanelashiksandboxca49327062authamplifyAuthauthenticatedUserRoleEB5DA10FRef": {
+   "Type": "String"
+  },
+  "referencetoamplifyadminpanelashiksandboxca49327062authNestedStackauthNestedStackResourceECA3B996Outputsamplifyadminpanelashiksandboxca49327062authamplifyAuthunauthenticatedUserRole6AE56C6ERef": {
+   "Type": "String"
+  },
+  "referencetoamplifyadminpanelashiksandboxca49327062authNestedStackauthNestedStackResourceECA3B996Outputsamplifyadminpanelashiksandboxca49327062authamplifyAuthIdentityPoolE2FC1E15Ref": {
+   "Type": "String"
+  }
+ },
+ "Conditions": {
+  "HasEnvironmentParameter": {
+   "Fn::Not": [
+    {
+     "Fn::Equals": [
+      "NONE",
+      "NONE"
+     ]
+    }
+   ]
+  },
+  "ShouldUsePayPerRequestBilling": {
+   "Fn::Equals": [
+    {
+     "Ref": "DynamoDBBillingMode"
+    },
+    "PAY_PER_REQUEST"
+   ]
+  },
+  "ShouldUsePointInTimeRecovery": {
+   "Fn::Equals": [
+    {
+     "Ref": "DynamoDBEnablePointInTimeRecovery"
+    },
+    "true"
+   ]
+  },
+  "CDKMetadataAvailable": {
+   "Fn::Or": [
+    {
+     "Fn::Or": [
+      {
+       "Fn::Equals": [
+        {
+         "Ref": "AWS::Region"
+        },
+        "af-south-1"
+       ]
+      },
+      {
+       "Fn::Equals": [
+        {
+         "Ref": "AWS::Region"
+        },
+        "ap-east-1"
+       ]
+      },
+      {
+       "Fn::Equals": [
+        {
+         "Ref": "AWS::Region"
+        },
+        "ap-northeast-1"
+       ]
+      },
+      {
+       "Fn::Equals": [
+        {
+         "Ref": "AWS::Region"
+        },
+        "ap-northeast-2"
+       ]
+      },
+      {
+       "Fn::Equals": [
+        {
+         "Ref": "AWS::Region"
+        },
+        "ap-northeast-3"
+       ]
+      },
+      {
+       "Fn::Equals": [
+        {
+         "Ref": "AWS::Region"
+        },
+        "ap-south-1"
+       ]
+      },
+      {
+       "Fn::Equals": [
+        {
+         "Ref": "AWS::Region"
+        },
+        "ap-south-2"
+       ]
+      },
+      {
+       "Fn::Equals": [
+        {
+         "Ref": "AWS::Region"
+        },
+        "ap-southeast-1"
+       ]
+      },
+      {
+       "Fn::Equals": [
+        {
+         "Ref": "AWS::Region"
+        },
+        "ap-southeast-2"
+       ]
+      },
+      {
+       "Fn::Equals": [
+        {
+         "Ref": "AWS::Region"
+        },
+        "ap-southeast-3"
+       ]
+      }
+     ]
+    },
+    {
+     "Fn::Or": [
+      {
+       "Fn::Equals": [
+        {
+         "Ref": "AWS::Region"
+        },
+        "ap-southeast-4"
+       ]
+      },
+      {
+       "Fn::Equals": [
+        {
+         "Ref": "AWS::Region"
+        },
+        "ca-central-1"
+       ]
+      },
+      {
+       "Fn::Equals": [
+        {
+         "Ref": "AWS::Region"
+        },
+        "ca-west-1"
+       ]
+      },
+      {
+       "Fn::Equals": [
+        {
+         "Ref": "AWS::Region"
+        },
+        "cn-north-1"
+       ]
+      },
+      {
+       "Fn::Equals": [
+        {
+         "Ref": "AWS::Region"
+        },
+        "cn-northwest-1"
+       ]
+      },
+      {
+       "Fn::Equals": [
+        {
+         "Ref": "AWS::Region"
+        },
+        "eu-central-1"
+       ]
+      },
+      {
+       "Fn::Equals": [
+        {
+         "Ref": "AWS::Region"
+        },
+        "eu-central-2"
+       ]
+      },
+      {
+       "Fn::Equals": [
+        {
+         "Ref": "AWS::Region"
+        },
+        "eu-north-1"
+       ]
+      },
+      {
+       "Fn::Equals": [
+        {
+         "Ref": "AWS::Region"
+        },
+        "eu-south-1"
+       ]
+      },
+      {
+       "Fn::Equals": [
+        {
+         "Ref": "AWS::Region"
+        },
+        "eu-south-2"
+       ]
+      }
+     ]
+    },
+    {
+     "Fn::Or": [
+      {
+       "Fn::Equals": [
+        {
+         "Ref": "AWS::Region"
+        },
+        "eu-west-1"
+       ]
+      },
+      {
+       "Fn::Equals": [
+        {
+         "Ref": "AWS::Region"
+        },
+        "eu-west-2"
+       ]
+      },
+      {
+       "Fn::Equals": [
+        {
+         "Ref": "AWS::Region"
+        },
+        "eu-west-3"
+       ]
+      },
+      {
+       "Fn::Equals": [
+        {
+         "Ref": "AWS::Region"
+        },
+        "il-central-1"
+       ]
+      },
+      {
+       "Fn::Equals": [
+        {
+         "Ref": "AWS::Region"
+        },
+        "me-central-1"
+       ]
+      },
+      {
+       "Fn::Equals": [
+        {
+         "Ref": "AWS::Region"
+        },
+        "me-south-1"
+       ]
+      },
+      {
+       "Fn::Equals": [
+        {
+         "Ref": "AWS::Region"
+        },
+        "sa-east-1"
+       ]
+      },
+      {
+       "Fn::Equals": [
+        {
+         "Ref": "AWS::Region"
+        },
+        "us-east-1"
+       ]
+      },
+      {
+       "Fn::Equals": [
+        {
+         "Ref": "AWS::Region"
+        },
+        "us-east-2"
+       ]
+      },
+      {
+       "Fn::Equals": [
+        {
+         "Ref": "AWS::Region"
+        },
+        "us-west-1"
+       ]
+      }
+     ]
+    },
+    {
+     "Fn::Equals": [
+      {
+       "Ref": "AWS::Region"
+      },
+      "us-west-2"
+     ]
+    }
+   ]
+  }
+ },
+ "Resources": {
+  "BookingTable": {
+   "Type": "Custom::AmplifyDynamoDBTable",
+   "Properties": {
+    "ServiceToken": {
+     "Ref": "referencetoamplifyadminpanelashiksandboxca49327062dataamplifyDataAmplifyTableManagerNestedStackAmplifyTableManagerNestedStackResourceBDBAAB52Outputsamplifyadminpanelashiksandboxca49327062dataamplifyDataAmplifyTableManagerTableManagerCustomP200F3C09"
+    },
+    "tableName": {
+     "Fn::Join": [
+      "",
+      [
+       "Booking-",
+       {
+        "Ref": "referencetoamplifyadminpanelashiksandboxca49327062dataamplifyDataGraphQLAPIDD3321C4ApiId"
+       },
+       "-NONE"
+      ]
+     ]
+    },
+    "attributeDefinitions": [
+     {
+      "attributeName": "id",
+      "attributeType": "S"
+     }
+    ],
+    "keySchema": [
+     {
+      "attributeName": "id",
+      "keyType": "HASH"
+     }
+    ],
+    "provisionedThroughput": {
+     "Fn::If": [
+      "ShouldUsePayPerRequestBilling",
+      {
+       "Ref": "AWS::NoValue"
+      },
+      {
+       "ReadCapacityUnits": {
+        "Ref": "DynamoDBModelTableReadIOPS"
+       },
+       "WriteCapacityUnits": {
+        "Ref": "DynamoDBModelTableWriteIOPS"
+       }
+      }
+     ]
+    },
+    "sseSpecification": {
+     "sseEnabled": false
+    },
+    "streamSpecification": {
+     "streamViewType": "NEW_AND_OLD_IMAGES"
+    },
+    "deletionProtectionEnabled": false,
+    "allowDestructiveGraphqlSchemaUpdates": true,
+    "replaceTableUponGsiUpdate": true,
+    "pointInTimeRecoverySpecification": {
+     "Fn::If": [
+      "ShouldUsePointInTimeRecovery",
+      {
+       "PointInTimeRecoveryEnabled": true
+      },
+      {
+       "Ref": "AWS::NoValue"
+      }
+     ]
+    },
+    "billingMode": {
+     "Fn::If": [
+      "ShouldUsePayPerRequestBilling",
+      "PAY_PER_REQUEST",
+      {
+       "Ref": "AWS::NoValue"
+      }
+     ]
+    }
+   },
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete",
+   "Metadata": {
+    "aws:cdk:path": "amplify-adminpanel-ashik-sandbox-ca49327062/data/amplifyData/Booking/BookingTable/Default/Default"
+   }
+  },
+  "BookingIAMRoleD7E335C1": {
+   "Type": "AWS::IAM::Role",
+   "Properties": {
+    "AssumeRolePolicyDocument": {
+     "Statement": [
+      {
+       "Action": "sts:AssumeRole",
+       "Effect": "Allow",
+       "Principal": {
+        "Service": "appsync.amazonaws.com"
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "Policies": [
+     {
+      "PolicyDocument": {
+       "Statement": [
+        {
+         "Action": [
+          "dynamodb:BatchGetItem",
+          "dynamodb:BatchWriteItem",
+          "dynamodb:PutItem",
+          "dynamodb:DeleteItem",
+          "dynamodb:GetItem",
+          "dynamodb:Scan",
+          "dynamodb:Query",
+          "dynamodb:UpdateItem",
+          "dynamodb:ConditionCheckItem",
+          "dynamodb:DescribeTable",
+          "dynamodb:GetRecords",
+          "dynamodb:GetShardIterator"
+         ],
+         "Effect": "Allow",
+         "Resource": [
+          {
+           "Fn::Sub": [
+            "arn:${AWS::Partition}:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${tablename}",
+            {
+             "tablename": {
+              "Fn::Join": [
+               "",
+               [
+                "Booking-",
+                {
+                 "Ref": "referencetoamplifyadminpanelashiksandboxca49327062dataamplifyDataGraphQLAPIDD3321C4ApiId"
+                },
+                "-NONE"
+               ]
+              ]
+             }
+            }
+           ]
+          },
+          {
+           "Fn::Sub": [
+            "arn:${AWS::Partition}:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${tablename}/*",
+            {
+             "tablename": {
+              "Fn::Join": [
+               "",
+               [
+                "Booking-",
+                {
+                 "Ref": "referencetoamplifyadminpanelashiksandboxca49327062dataamplifyDataGraphQLAPIDD3321C4ApiId"
+                },
+                "-NONE"
+               ]
+              ]
+             }
+            }
+           ]
+          }
+         ]
+        }
+       ],
+       "Version": "2012-10-17"
+      },
+      "PolicyName": "DynamoDBAccess"
+     }
+    ],
+    "RoleName": {
+     "Fn::Join": [
+      "",
+      [
+       "BookingIAMRole604390-",
+       {
+        "Ref": "referencetoamplifyadminpanelashiksandboxca49327062dataamplifyDataGraphQLAPIDD3321C4ApiId"
+       },
+       "-NONE"
+      ]
+     ]
+    },
+    "Tags": [
+     {
+      "Key": "amplify:deployment-type",
+      "Value": "sandbox"
+     },
+     {
+      "Key": "amplify:friendly-name",
+      "Value": "amplifyData"
+     },
+     {
+      "Key": "created-by",
+      "Value": "amplify"
+     }
+    ]
+   },
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete",
+   "Metadata": {
+    "aws:cdk:path": "amplify-adminpanel-ashik-sandbox-ca49327062/data/amplifyData/Booking/BookingIAMRole/Resource"
+   }
+  },
+  "BookingDataSource": {
+   "Type": "AWS::AppSync::DataSource",
+   "Properties": {
+    "ApiId": {
+     "Ref": "referencetoamplifyadminpanelashiksandboxca49327062dataamplifyDataGraphQLAPIDD3321C4ApiId"
+    },
+    "DynamoDBConfig": {
+     "AwsRegion": {
+      "Ref": "AWS::Region"
+     },
+     "TableName": {
+      "Fn::Select": [
+       1,
+       {
+        "Fn::Split": [
+         "/",
+         {
+          "Fn::Select": [
+           5,
+           {
+            "Fn::Split": [
+             ":",
+             {
+              "Fn::GetAtt": [
+               "BookingTable",
+               "TableArn"
+              ]
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    },
+    "Name": "BookingTable",
+    "ServiceRoleArn": {
+     "Fn::GetAtt": [
+      "BookingIAMRoleD7E335C1",
+      "Arn"
+     ]
+    },
+    "Type": "AMAZON_DYNAMODB"
+   },
+   "DependsOn": [
+    "BookingIAMRoleD7E335C1"
+   ],
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete",
+   "Metadata": {
+    "aws:cdk:path": "amplify-adminpanel-ashik-sandbox-ca49327062/data/amplifyData/Booking/BookingDataSource/Resource"
+   }
+  },
+  "QuerygetBookingauth0FunctionQuerygetBookingauth0FunctionAppSyncFunction736FE42B": {
+   "Type": "AWS::AppSync::FunctionConfiguration",
+   "Properties": {
+    "ApiId": {
+     "Ref": "referencetoamplifyadminpanelashiksandboxca49327062dataamplifyDataGraphQLAPIDD3321C4ApiId"
+    },
+    "DataSourceName": {
+     "Ref": "referencetoamplifyadminpanelashiksandboxca49327062dataamplifyDataGraphQLAPINONEDS3717D349Name"
+    },
+    "FunctionVersion": "2018-05-29",
+    "Name": "QuerygetBookingauth0Function",
+    "RequestMappingTemplateS3Location": {
+     "Fn::Sub": "s3://cdk-hnb659fds-assets-${AWS::AccountId}-${AWS::Region}/be722542edcbd1bc3c29e22c13c649b7d568bbf4ce34293a25eb28a6451e6bda.vtl"
+    },
+    "ResponseMappingTemplate": "$util.toJson({})"
+   },
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete",
+   "Metadata": {
+    "aws:cdk:path": "amplify-adminpanel-ashik-sandbox-ca49327062/data/amplifyData/Booking/QuerygetBookingauth0Function/QuerygetBookingauth0Function.AppSyncFunction"
+   }
+  },
+  "QuerygetBookingpostAuth0FunctionQuerygetBookingpostAuth0FunctionAppSyncFunction272982C8": {
+   "Type": "AWS::AppSync::FunctionConfiguration",
+   "Properties": {
+    "ApiId": {
+     "Ref": "referencetoamplifyadminpanelashiksandboxca49327062dataamplifyDataGraphQLAPIDD3321C4ApiId"
+    },
+    "DataSourceName": {
+     "Ref": "referencetoamplifyadminpanelashiksandboxca49327062dataamplifyDataGraphQLAPINONEDS3717D349Name"
+    },
+    "FunctionVersion": "2018-05-29",
+    "Name": "QuerygetBookingpostAuth0Function",
+    "RequestMappingTemplateS3Location": {
+     "Fn::Sub": "s3://cdk-hnb659fds-assets-${AWS::AccountId}-${AWS::Region}/c1721bcd774e27c514d3454b5be4f9bdd094c0161b57ddf053d618e3b0086a77.vtl"
+    },
+    "ResponseMappingTemplate": "$util.toJson({})"
+   },
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete",
+   "Metadata": {
+    "aws:cdk:path": "amplify-adminpanel-ashik-sandbox-ca49327062/data/amplifyData/Booking/QuerygetBookingpostAuth0Function/QuerygetBookingpostAuth0Function.AppSyncFunction"
+   }
+  },
+  "QueryGetBookingDataResolverFnQueryGetBookingDataResolverFnAppSyncFunction06BE0605": {
+   "Type": "AWS::AppSync::FunctionConfiguration",
+   "Properties": {
+    "ApiId": {
+     "Ref": "referencetoamplifyadminpanelashiksandboxca49327062dataamplifyDataGraphQLAPIDD3321C4ApiId"
+    },
+    "DataSourceName": {
+     "Fn::GetAtt": [
+      "BookingDataSource",
+      "Name"
+     ]
+    },
+    "FunctionVersion": "2018-05-29",
+    "Name": "QueryGetBookingDataResolverFn",
+    "RequestMappingTemplateS3Location": {
+     "Fn::Sub": "s3://cdk-hnb659fds-assets-${AWS::AccountId}-${AWS::Region}/08f4d557693d96c1a4efba0f9dc91330e4b19772fd5477c156468843e3d9cb5e.vtl"
+    },
+    "ResponseMappingTemplateS3Location": {
+     "Fn::Sub": "s3://cdk-hnb659fds-assets-${AWS::AccountId}-${AWS::Region}/4c6a2d29f01c6091bd1d9afe16e5849d456c96f17c3b215938c8067399532719.vtl"
+    }
+   },
+   "DependsOn": [
+    "BookingDataSource"
+   ],
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete",
+   "Metadata": {
+    "aws:cdk:path": "amplify-adminpanel-ashik-sandbox-ca49327062/data/amplifyData/Booking/QueryGetBookingDataResolverFn/QueryGetBookingDataResolverFn.AppSyncFunction"
+   }
+  },
+  "GetBookingResolver": {
+   "Type": "AWS::AppSync::Resolver",
+   "Properties": {
+    "ApiId": {
+     "Ref": "referencetoamplifyadminpanelashiksandboxca49327062dataamplifyDataGraphQLAPIDD3321C4ApiId"
+    },
+    "FieldName": "getBooking",
+    "Kind": "PIPELINE",
+    "PipelineConfig": {
+     "Functions": [
+      {
+       "Fn::GetAtt": [
+        "QuerygetBookingauth0FunctionQuerygetBookingauth0FunctionAppSyncFunction736FE42B",
+        "FunctionId"
+       ]
+      },
+      {
+       "Fn::GetAtt": [
+        "QuerygetBookingpostAuth0FunctionQuerygetBookingpostAuth0FunctionAppSyncFunction272982C8",
+        "FunctionId"
+       ]
+      },
+      {
+       "Fn::GetAtt": [
+        "QueryGetBookingDataResolverFnQueryGetBookingDataResolverFnAppSyncFunction06BE0605",
+        "FunctionId"
+       ]
+      }
+     ]
+    },
+    "RequestMappingTemplate": {
+     "Fn::Join": [
+      "",
+      [
+       "$util.qr($ctx.stash.put(\"typeName\", \"Query\"))\n$util.qr($ctx.stash.put(\"fieldName\", \"getBooking\"))\n$util.qr($ctx.stash.put(\"conditions\", []))\n$util.qr($ctx.stash.put(\"metadata\", {}))\n$util.qr($ctx.stash.metadata.put(\"dataSourceType\", \"AMAZON_DYNAMODB\"))\n$util.qr($ctx.stash.metadata.put(\"apiId\", \"",
+       {
+        "Ref": "referencetoamplifyadminpanelashiksandboxca49327062dataamplifyDataGraphQLAPIDD3321C4ApiId"
+       },
+       "\"))\n$util.qr($ctx.stash.put(\"connectionAttributes\", {}))\n$util.qr($ctx.stash.put(\"tableName\", \"",
+       {
+        "Fn::Select": [
+         1,
+         {
+          "Fn::Split": [
+           "/",
+           {
+            "Fn::Select": [
+             5,
+             {
+              "Fn::Split": [
+               ":",
+               {
+                "Fn::GetAtt": [
+                 "BookingTable",
+                 "TableArn"
+                ]
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       "\"))\n$util.qr($ctx.stash.put(\"authRole\", \"arn:",
+       {
+        "Ref": "AWS::Partition"
+       },
+       ":sts::",
+       {
+        "Ref": "AWS::AccountId"
+       },
+       ":assumed-role/",
+       {
+        "Ref": "referencetoamplifyadminpanelashiksandboxca49327062authNestedStackauthNestedStackResourceECA3B996Outputsamplifyadminpanelashiksandboxca49327062authamplifyAuthauthenticatedUserRoleEB5DA10FRef"
+       },
+       "/CognitoIdentityCredentials\"))\n$util.qr($ctx.stash.put(\"unauthRole\", \"arn:",
+       {
+        "Ref": "AWS::Partition"
+       },
+       ":sts::",
+       {
+        "Ref": "AWS::AccountId"
+       },
+       ":assumed-role/",
+       {
+        "Ref": "referencetoamplifyadminpanelashiksandboxca49327062authNestedStackauthNestedStackResourceECA3B996Outputsamplifyadminpanelashiksandboxca49327062authamplifyAuthunauthenticatedUserRole6AE56C6ERef"
+       },
+       "/CognitoIdentityCredentials\"))\n$util.qr($ctx.stash.put(\"identityPoolId\", \"",
+       {
+        "Ref": "referencetoamplifyadminpanelashiksandboxca49327062authNestedStackauthNestedStackResourceECA3B996Outputsamplifyadminpanelashiksandboxca49327062authamplifyAuthIdentityPoolE2FC1E15Ref"
+       },
+       "\"))\n$util.qr($ctx.stash.put(\"adminRoles\", []))\n$util.toJson({})"
+      ]
+     ]
+    },
+    "ResponseMappingTemplate": "$util.toJson($ctx.prev.result)",
+    "TypeName": "Query"
+   },
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete",
+   "Metadata": {
+    "aws:cdk:path": "amplify-adminpanel-ashik-sandbox-ca49327062/data/amplifyData/Booking/queryGetBookingResolver"
+   }
+  },
+  "QuerylistBookingsauth0FunctionQuerylistBookingsauth0FunctionAppSyncFunctionCAE35A04": {
+   "Type": "AWS::AppSync::FunctionConfiguration",
+   "Properties": {
+    "ApiId": {
+     "Ref": "referencetoamplifyadminpanelashiksandboxca49327062dataamplifyDataGraphQLAPIDD3321C4ApiId"
+    },
+    "DataSourceName": {
+     "Ref": "referencetoamplifyadminpanelashiksandboxca49327062dataamplifyDataGraphQLAPINONEDS3717D349Name"
+    },
+    "FunctionVersion": "2018-05-29",
+    "Name": "QuerylistBookingsauth0Function",
+    "RequestMappingTemplateS3Location": {
+     "Fn::Sub": "s3://cdk-hnb659fds-assets-${AWS::AccountId}-${AWS::Region}/be722542edcbd1bc3c29e22c13c649b7d568bbf4ce34293a25eb28a6451e6bda.vtl"
+    },
+    "ResponseMappingTemplate": "$util.toJson({})"
+   },
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete",
+   "Metadata": {
+    "aws:cdk:path": "amplify-adminpanel-ashik-sandbox-ca49327062/data/amplifyData/Booking/QuerylistBookingsauth0Function/QuerylistBookingsauth0Function.AppSyncFunction"
+   }
+  },
+  "QuerylistBookingspostAuth0FunctionQuerylistBookingspostAuth0FunctionAppSyncFunction27C1B5B3": {
+   "Type": "AWS::AppSync::FunctionConfiguration",
+   "Properties": {
+    "ApiId": {
+     "Ref": "referencetoamplifyadminpanelashiksandboxca49327062dataamplifyDataGraphQLAPIDD3321C4ApiId"
+    },
+    "DataSourceName": {
+     "Ref": "referencetoamplifyadminpanelashiksandboxca49327062dataamplifyDataGraphQLAPINONEDS3717D349Name"
+    },
+    "FunctionVersion": "2018-05-29",
+    "Name": "QuerylistBookingspostAuth0Function",
+    "RequestMappingTemplateS3Location": {
+     "Fn::Sub": "s3://cdk-hnb659fds-assets-${AWS::AccountId}-${AWS::Region}/c1721bcd774e27c514d3454b5be4f9bdd094c0161b57ddf053d618e3b0086a77.vtl"
+    },
+    "ResponseMappingTemplate": "$util.toJson({})"
+   },
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete",
+   "Metadata": {
+    "aws:cdk:path": "amplify-adminpanel-ashik-sandbox-ca49327062/data/amplifyData/Booking/QuerylistBookingspostAuth0Function/QuerylistBookingspostAuth0Function.AppSyncFunction"
+   }
+  },
+  "QueryListBookingsDataResolverFnQueryListBookingsDataResolverFnAppSyncFunctionA277640B": {
+   "Type": "AWS::AppSync::FunctionConfiguration",
+   "Properties": {
+    "ApiId": {
+     "Ref": "referencetoamplifyadminpanelashiksandboxca49327062dataamplifyDataGraphQLAPIDD3321C4ApiId"
+    },
+    "DataSourceName": {
+     "Fn::GetAtt": [
+      "BookingDataSource",
+      "Name"
+     ]
+    },
+    "FunctionVersion": "2018-05-29",
+    "Name": "QueryListBookingsDataResolverFn",
+    "RequestMappingTemplateS3Location": {
+     "Fn::Sub": "s3://cdk-hnb659fds-assets-${AWS::AccountId}-${AWS::Region}/9fcbe070ecd3023c5bf5b966fa9584757db9762eef123bad0820bd87591b2174.vtl"
+    },
+    "ResponseMappingTemplateS3Location": {
+     "Fn::Sub": "s3://cdk-hnb659fds-assets-${AWS::AccountId}-${AWS::Region}/cc01911d0269d4080ea57505dc445dfc315ef7ad85d3d9d4ea1357858bff451d.vtl"
+    }
+   },
+   "DependsOn": [
+    "BookingDataSource"
+   ],
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete",
+   "Metadata": {
+    "aws:cdk:path": "amplify-adminpanel-ashik-sandbox-ca49327062/data/amplifyData/Booking/QueryListBookingsDataResolverFn/QueryListBookingsDataResolverFn.AppSyncFunction"
+   }
+  },
+  "ListBookingResolver": {
+   "Type": "AWS::AppSync::Resolver",
+   "Properties": {
+    "ApiId": {
+     "Ref": "referencetoamplifyadminpanelashiksandboxca49327062dataamplifyDataGraphQLAPIDD3321C4ApiId"
+    },
+    "FieldName": "listBookings",
+    "Kind": "PIPELINE",
+    "PipelineConfig": {
+     "Functions": [
+      {
+       "Fn::GetAtt": [
+        "QuerylistBookingsauth0FunctionQuerylistBookingsauth0FunctionAppSyncFunctionCAE35A04",
+        "FunctionId"
+       ]
+      },
+      {
+       "Fn::GetAtt": [
+        "QuerylistBookingspostAuth0FunctionQuerylistBookingspostAuth0FunctionAppSyncFunction27C1B5B3",
+        "FunctionId"
+       ]
+      },
+      {
+       "Fn::GetAtt": [
+        "QueryListBookingsDataResolverFnQueryListBookingsDataResolverFnAppSyncFunctionA277640B",
+        "FunctionId"
+       ]
+      }
+     ]
+    },
+    "RequestMappingTemplate": {
+     "Fn::Join": [
+      "",
+      [
+       "$util.qr($ctx.stash.put(\"typeName\", \"Query\"))\n$util.qr($ctx.stash.put(\"fieldName\", \"listBookings\"))\n$util.qr($ctx.stash.put(\"conditions\", []))\n$util.qr($ctx.stash.put(\"metadata\", {}))\n$util.qr($ctx.stash.metadata.put(\"dataSourceType\", \"AMAZON_DYNAMODB\"))\n$util.qr($ctx.stash.metadata.put(\"apiId\", \"",
+       {
+        "Ref": "referencetoamplifyadminpanelashiksandboxca49327062dataamplifyDataGraphQLAPIDD3321C4ApiId"
+       },
+       "\"))\n$util.qr($ctx.stash.put(\"connectionAttributes\", {}))\n$util.qr($ctx.stash.put(\"tableName\", \"",
+       {
+        "Fn::Select": [
+         1,
+         {
+          "Fn::Split": [
+           "/",
+           {
+            "Fn::Select": [
+             5,
+             {
+              "Fn::Split": [
+               ":",
+               {
+                "Fn::GetAtt": [
+                 "BookingTable",
+                 "TableArn"
+                ]
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       "\"))\n$util.qr($ctx.stash.put(\"authRole\", \"arn:",
+       {
+        "Ref": "AWS::Partition"
+       },
+       ":sts::",
+       {
+        "Ref": "AWS::AccountId"
+       },
+       ":assumed-role/",
+       {
+        "Ref": "referencetoamplifyadminpanelashiksandboxca49327062authNestedStackauthNestedStackResourceECA3B996Outputsamplifyadminpanelashiksandboxca49327062authamplifyAuthauthenticatedUserRoleEB5DA10FRef"
+       },
+       "/CognitoIdentityCredentials\"))\n$util.qr($ctx.stash.put(\"unauthRole\", \"arn:",
+       {
+        "Ref": "AWS::Partition"
+       },
+       ":sts::",
+       {
+        "Ref": "AWS::AccountId"
+       },
+       ":assumed-role/",
+       {
+        "Ref": "referencetoamplifyadminpanelashiksandboxca49327062authNestedStackauthNestedStackResourceECA3B996Outputsamplifyadminpanelashiksandboxca49327062authamplifyAuthunauthenticatedUserRole6AE56C6ERef"
+       },
+       "/CognitoIdentityCredentials\"))\n$util.qr($ctx.stash.put(\"identityPoolId\", \"",
+       {
+        "Ref": "referencetoamplifyadminpanelashiksandboxca49327062authNestedStackauthNestedStackResourceECA3B996Outputsamplifyadminpanelashiksandboxca49327062authamplifyAuthIdentityPoolE2FC1E15Ref"
+       },
+       "\"))\n$util.qr($ctx.stash.put(\"adminRoles\", []))\n$util.toJson({})"
+      ]
+     ]
+    },
+    "ResponseMappingTemplate": "$util.toJson($ctx.prev.result)",
+    "TypeName": "Query"
+   },
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete",
+   "Metadata": {
+    "aws:cdk:path": "amplify-adminpanel-ashik-sandbox-ca49327062/data/amplifyData/Booking/queryListBookingsResolver"
+   }
+  },
+  "MutationcreateBookinginit0FunctionMutationcreateBookinginit0FunctionAppSyncFunctionCF4ACAAA": {
+   "Type": "AWS::AppSync::FunctionConfiguration",
+   "Properties": {
+    "ApiId": {
+     "Ref": "referencetoamplifyadminpanelashiksandboxca49327062dataamplifyDataGraphQLAPIDD3321C4ApiId"
+    },
+    "DataSourceName": {
+     "Ref": "referencetoamplifyadminpanelashiksandboxca49327062dataamplifyDataGraphQLAPINONEDS3717D349Name"
+    },
+    "FunctionVersion": "2018-05-29",
+    "Name": "MutationcreateBookinginit0Function",
+    "RequestMappingTemplateS3Location": {
+     "Fn::Sub": "s3://cdk-hnb659fds-assets-${AWS::AccountId}-${AWS::Region}/a183ddccbd956316c38ef97177b8f088ef0826f62023323f5ae6053d348ccffc.vtl"
+    },
+    "ResponseMappingTemplate": "$util.toJson({})"
+   },
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete",
+   "Metadata": {
+    "aws:cdk:path": "amplify-adminpanel-ashik-sandbox-ca49327062/data/amplifyData/Booking/MutationcreateBookinginit0Function/MutationcreateBookinginit0Function.AppSyncFunction"
+   }
+  },
+  "MutationcreateBookingauth0FunctionMutationcreateBookingauth0FunctionAppSyncFunctionF11BEF1F": {
+   "Type": "AWS::AppSync::FunctionConfiguration",
+   "Properties": {
+    "ApiId": {
+     "Ref": "referencetoamplifyadminpanelashiksandboxca49327062dataamplifyDataGraphQLAPIDD3321C4ApiId"
+    },
+    "DataSourceName": {
+     "Ref": "referencetoamplifyadminpanelashiksandboxca49327062dataamplifyDataGraphQLAPINONEDS3717D349Name"
+    },
+    "FunctionVersion": "2018-05-29",
+    "Name": "MutationcreateBookingauth0Function",
+    "RequestMappingTemplateS3Location": {
+     "Fn::Sub": "s3://cdk-hnb659fds-assets-${AWS::AccountId}-${AWS::Region}/26fadf747fa9c5bda8839e8635d85edc05a5fa3b867d3c4c4bafe908ba8c8814.vtl"
+    },
+    "ResponseMappingTemplate": "$util.toJson({})"
+   },
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete",
+   "Metadata": {
+    "aws:cdk:path": "amplify-adminpanel-ashik-sandbox-ca49327062/data/amplifyData/Booking/MutationcreateBookingauth0Function/MutationcreateBookingauth0Function.AppSyncFunction"
+   }
+  },
+  "MutationcreateBookingpostAuth0FunctionMutationcreateBookingpostAuth0FunctionAppSyncFunction67996F0C": {
+   "Type": "AWS::AppSync::FunctionConfiguration",
+   "Properties": {
+    "ApiId": {
+     "Ref": "referencetoamplifyadminpanelashiksandboxca49327062dataamplifyDataGraphQLAPIDD3321C4ApiId"
+    },
+    "DataSourceName": {
+     "Ref": "referencetoamplifyadminpanelashiksandboxca49327062dataamplifyDataGraphQLAPINONEDS3717D349Name"
+    },
+    "FunctionVersion": "2018-05-29",
+    "Name": "MutationcreateBookingpostAuth0Function",
+    "RequestMappingTemplateS3Location": {
+     "Fn::Sub": "s3://cdk-hnb659fds-assets-${AWS::AccountId}-${AWS::Region}/c1721bcd774e27c514d3454b5be4f9bdd094c0161b57ddf053d618e3b0086a77.vtl"
+    },
+    "ResponseMappingTemplate": "$util.toJson({})"
+   },
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete",
+   "Metadata": {
+    "aws:cdk:path": "amplify-adminpanel-ashik-sandbox-ca49327062/data/amplifyData/Booking/MutationcreateBookingpostAuth0Function/MutationcreateBookingpostAuth0Function.AppSyncFunction"
+   }
+  },
+  "MutationCreateBookingDataResolverFnMutationCreateBookingDataResolverFnAppSyncFunction305870D3": {
+   "Type": "AWS::AppSync::FunctionConfiguration",
+   "Properties": {
+    "ApiId": {
+     "Ref": "referencetoamplifyadminpanelashiksandboxca49327062dataamplifyDataGraphQLAPIDD3321C4ApiId"
+    },
+    "DataSourceName": {
+     "Fn::GetAtt": [
+      "BookingDataSource",
+      "Name"
+     ]
+    },
+    "FunctionVersion": "2018-05-29",
+    "Name": "MutationCreateBookingDataResolverFn",
+    "RequestMappingTemplateS3Location": {
+     "Fn::Sub": "s3://cdk-hnb659fds-assets-${AWS::AccountId}-${AWS::Region}/d8ce07e73e345482679300b3e75befc0852abf33dc412049b1d1b5704bc75f9c.vtl"
+    },
+    "ResponseMappingTemplateS3Location": {
+     "Fn::Sub": "s3://cdk-hnb659fds-assets-${AWS::AccountId}-${AWS::Region}/f4a52b72209a9dfa197b5e7367a5c378c5bb86de6e29ddd9e48b49a3fe54b249.vtl"
+    }
+   },
+   "DependsOn": [
+    "BookingDataSource"
+   ],
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete",
+   "Metadata": {
+    "aws:cdk:path": "amplify-adminpanel-ashik-sandbox-ca49327062/data/amplifyData/Booking/MutationCreateBookingDataResolverFn/MutationCreateBookingDataResolverFn.AppSyncFunction"
+   }
+  },
+  "CreateBookingResolver": {
+   "Type": "AWS::AppSync::Resolver",
+   "Properties": {
+    "ApiId": {
+     "Ref": "referencetoamplifyadminpanelashiksandboxca49327062dataamplifyDataGraphQLAPIDD3321C4ApiId"
+    },
+    "FieldName": "createBooking",
+    "Kind": "PIPELINE",
+    "PipelineConfig": {
+     "Functions": [
+      {
+       "Fn::GetAtt": [
+        "MutationcreateBookinginit0FunctionMutationcreateBookinginit0FunctionAppSyncFunctionCF4ACAAA",
+        "FunctionId"
+       ]
+      },
+      {
+       "Fn::GetAtt": [
+        "MutationcreateBookingauth0FunctionMutationcreateBookingauth0FunctionAppSyncFunctionF11BEF1F",
+        "FunctionId"
+       ]
+      },
+      {
+       "Fn::GetAtt": [
+        "MutationcreateBookingpostAuth0FunctionMutationcreateBookingpostAuth0FunctionAppSyncFunction67996F0C",
+        "FunctionId"
+       ]
+      },
+      {
+       "Fn::GetAtt": [
+        "MutationCreateBookingDataResolverFnMutationCreateBookingDataResolverFnAppSyncFunction305870D3",
+        "FunctionId"
+       ]
+      }
+     ]
+    },
+    "RequestMappingTemplate": {
+     "Fn::Join": [
+      "",
+      [
+       "$util.qr($ctx.stash.put(\"typeName\", \"Mutation\"))\n$util.qr($ctx.stash.put(\"fieldName\", \"createBooking\"))\n$util.qr($ctx.stash.put(\"conditions\", []))\n$util.qr($ctx.stash.put(\"metadata\", {}))\n$util.qr($ctx.stash.metadata.put(\"dataSourceType\", \"AMAZON_DYNAMODB\"))\n$util.qr($ctx.stash.metadata.put(\"apiId\", \"",
+       {
+        "Ref": "referencetoamplifyadminpanelashiksandboxca49327062dataamplifyDataGraphQLAPIDD3321C4ApiId"
+       },
+       "\"))\n$util.qr($ctx.stash.put(\"connectionAttributes\", {}))\n$util.qr($ctx.stash.put(\"tableName\", \"",
+       {
+        "Fn::Select": [
+         1,
+         {
+          "Fn::Split": [
+           "/",
+           {
+            "Fn::Select": [
+             5,
+             {
+              "Fn::Split": [
+               ":",
+               {
+                "Fn::GetAtt": [
+                 "BookingTable",
+                 "TableArn"
+                ]
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       "\"))\n$util.qr($ctx.stash.put(\"authRole\", \"arn:",
+       {
+        "Ref": "AWS::Partition"
+       },
+       ":sts::",
+       {
+        "Ref": "AWS::AccountId"
+       },
+       ":assumed-role/",
+       {
+        "Ref": "referencetoamplifyadminpanelashiksandboxca49327062authNestedStackauthNestedStackResourceECA3B996Outputsamplifyadminpanelashiksandboxca49327062authamplifyAuthauthenticatedUserRoleEB5DA10FRef"
+       },
+       "/CognitoIdentityCredentials\"))\n$util.qr($ctx.stash.put(\"unauthRole\", \"arn:",
+       {
+        "Ref": "AWS::Partition"
+       },
+       ":sts::",
+       {
+        "Ref": "AWS::AccountId"
+       },
+       ":assumed-role/",
+       {
+        "Ref": "referencetoamplifyadminpanelashiksandboxca49327062authNestedStackauthNestedStackResourceECA3B996Outputsamplifyadminpanelashiksandboxca49327062authamplifyAuthunauthenticatedUserRole6AE56C6ERef"
+       },
+       "/CognitoIdentityCredentials\"))\n$util.qr($ctx.stash.put(\"identityPoolId\", \"",
+       {
+        "Ref": "referencetoamplifyadminpanelashiksandboxca49327062authNestedStackauthNestedStackResourceECA3B996Outputsamplifyadminpanelashiksandboxca49327062authamplifyAuthIdentityPoolE2FC1E15Ref"
+       },
+       "\"))\n$util.qr($ctx.stash.put(\"adminRoles\", []))\n$util.toJson({})"
+      ]
+     ]
+    },
+    "ResponseMappingTemplate": "$util.toJson($ctx.prev.result)",
+    "TypeName": "Mutation"
+   },
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete",
+   "Metadata": {
+    "aws:cdk:path": "amplify-adminpanel-ashik-sandbox-ca49327062/data/amplifyData/Booking/mutationCreateBookingResolver"
+   }
+  },
+  "MutationupdateBookinginit0FunctionMutationupdateBookinginit0FunctionAppSyncFunctionB76D399F": {
+   "Type": "AWS::AppSync::FunctionConfiguration",
+   "Properties": {
+    "ApiId": {
+     "Ref": "referencetoamplifyadminpanelashiksandboxca49327062dataamplifyDataGraphQLAPIDD3321C4ApiId"
+    },
+    "DataSourceName": {
+     "Ref": "referencetoamplifyadminpanelashiksandboxca49327062dataamplifyDataGraphQLAPINONEDS3717D349Name"
+    },
+    "FunctionVersion": "2018-05-29",
+    "Name": "MutationupdateBookinginit0Function",
+    "RequestMappingTemplateS3Location": {
+     "Fn::Sub": "s3://cdk-hnb659fds-assets-${AWS::AccountId}-${AWS::Region}/06db846fd14e6fc371f22b12b5545ba8e2dbfeda85d8c8d586c71c282166657b.vtl"
+    },
+    "ResponseMappingTemplate": "$util.toJson({})"
+   },
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete",
+   "Metadata": {
+    "aws:cdk:path": "amplify-adminpanel-ashik-sandbox-ca49327062/data/amplifyData/Booking/MutationupdateBookinginit0Function/MutationupdateBookinginit0Function.AppSyncFunction"
+   }
+  },
+  "MutationupdateBookingauth0FunctionMutationupdateBookingauth0FunctionAppSyncFunction27A7145F": {
+   "Type": "AWS::AppSync::FunctionConfiguration",
+   "Properties": {
+    "ApiId": {
+     "Ref": "referencetoamplifyadminpanelashiksandboxca49327062dataamplifyDataGraphQLAPIDD3321C4ApiId"
+    },
+    "DataSourceName": {
+     "Fn::GetAtt": [
+      "BookingDataSource",
+      "Name"
+     ]
+    },
+    "FunctionVersion": "2018-05-29",
+    "Name": "MutationupdateBookingauth0Function",
+    "RequestMappingTemplateS3Location": {
+     "Fn::Sub": "s3://cdk-hnb659fds-assets-${AWS::AccountId}-${AWS::Region}/1f5fed297da9c32ae3af922bf3a38ccf23b956078887d16891ec06c20c64722c.vtl"
+    },
+    "ResponseMappingTemplateS3Location": {
+     "Fn::Sub": "s3://cdk-hnb659fds-assets-${AWS::AccountId}-${AWS::Region}/e7a97da9666a723298a59ad8973e68c014263ce8c5ff95a3cf47b2cc30206ddf.vtl"
+    }
+   },
+   "DependsOn": [
+    "BookingDataSource"
+   ],
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete",
+   "Metadata": {
+    "aws:cdk:path": "amplify-adminpanel-ashik-sandbox-ca49327062/data/amplifyData/Booking/MutationupdateBookingauth0Function/MutationupdateBookingauth0Function.AppSyncFunction"
+   }
+  },
+  "MutationupdateBookingpostAuth0FunctionMutationupdateBookingpostAuth0FunctionAppSyncFunction70EED2CA": {
+   "Type": "AWS::AppSync::FunctionConfiguration",
+   "Properties": {
+    "ApiId": {
+     "Ref": "referencetoamplifyadminpanelashiksandboxca49327062dataamplifyDataGraphQLAPIDD3321C4ApiId"
+    },
+    "DataSourceName": {
+     "Ref": "referencetoamplifyadminpanelashiksandboxca49327062dataamplifyDataGraphQLAPINONEDS3717D349Name"
+    },
+    "FunctionVersion": "2018-05-29",
+    "Name": "MutationupdateBookingpostAuth0Function",
+    "RequestMappingTemplateS3Location": {
+     "Fn::Sub": "s3://cdk-hnb659fds-assets-${AWS::AccountId}-${AWS::Region}/c1721bcd774e27c514d3454b5be4f9bdd094c0161b57ddf053d618e3b0086a77.vtl"
+    },
+    "ResponseMappingTemplate": "$util.toJson({})"
+   },
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete",
+   "Metadata": {
+    "aws:cdk:path": "amplify-adminpanel-ashik-sandbox-ca49327062/data/amplifyData/Booking/MutationupdateBookingpostAuth0Function/MutationupdateBookingpostAuth0Function.AppSyncFunction"
+   }
+  },
+  "MutationUpdateBookingDataResolverFnMutationUpdateBookingDataResolverFnAppSyncFunctionC1D672BC": {
+   "Type": "AWS::AppSync::FunctionConfiguration",
+   "Properties": {
+    "ApiId": {
+     "Ref": "referencetoamplifyadminpanelashiksandboxca49327062dataamplifyDataGraphQLAPIDD3321C4ApiId"
+    },
+    "DataSourceName": {
+     "Fn::GetAtt": [
+      "BookingDataSource",
+      "Name"
+     ]
+    },
+    "FunctionVersion": "2018-05-29",
+    "Name": "MutationUpdateBookingDataResolverFn",
+    "RequestMappingTemplateS3Location": {
+     "Fn::Sub": "s3://cdk-hnb659fds-assets-${AWS::AccountId}-${AWS::Region}/474bf0776ec2164a13191d1a0a9e057154931e4918fea5086f49850d02a5371b.vtl"
+    },
+    "ResponseMappingTemplateS3Location": {
+     "Fn::Sub": "s3://cdk-hnb659fds-assets-${AWS::AccountId}-${AWS::Region}/f4a52b72209a9dfa197b5e7367a5c378c5bb86de6e29ddd9e48b49a3fe54b249.vtl"
+    }
+   },
+   "DependsOn": [
+    "BookingDataSource"
+   ],
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete",
+   "Metadata": {
+    "aws:cdk:path": "amplify-adminpanel-ashik-sandbox-ca49327062/data/amplifyData/Booking/MutationUpdateBookingDataResolverFn/MutationUpdateBookingDataResolverFn.AppSyncFunction"
+   }
+  },
+  "UpdateBookingResolver": {
+   "Type": "AWS::AppSync::Resolver",
+   "Properties": {
+    "ApiId": {
+     "Ref": "referencetoamplifyadminpanelashiksandboxca49327062dataamplifyDataGraphQLAPIDD3321C4ApiId"
+    },
+    "FieldName": "updateBooking",
+    "Kind": "PIPELINE",
+    "PipelineConfig": {
+     "Functions": [
+      {
+       "Fn::GetAtt": [
+        "MutationupdateBookinginit0FunctionMutationupdateBookinginit0FunctionAppSyncFunctionB76D399F",
+        "FunctionId"
+       ]
+      },
+      {
+       "Fn::GetAtt": [
+        "MutationupdateBookingauth0FunctionMutationupdateBookingauth0FunctionAppSyncFunction27A7145F",
+        "FunctionId"
+       ]
+      },
+      {
+       "Fn::GetAtt": [
+        "MutationupdateBookingpostAuth0FunctionMutationupdateBookingpostAuth0FunctionAppSyncFunction70EED2CA",
+        "FunctionId"
+       ]
+      },
+      {
+       "Fn::GetAtt": [
+        "MutationUpdateBookingDataResolverFnMutationUpdateBookingDataResolverFnAppSyncFunctionC1D672BC",
+        "FunctionId"
+       ]
+      }
+     ]
+    },
+    "RequestMappingTemplate": {
+     "Fn::Join": [
+      "",
+      [
+       "$util.qr($ctx.stash.put(\"typeName\", \"Mutation\"))\n$util.qr($ctx.stash.put(\"fieldName\", \"updateBooking\"))\n$util.qr($ctx.stash.put(\"conditions\", []))\n$util.qr($ctx.stash.put(\"metadata\", {}))\n$util.qr($ctx.stash.metadata.put(\"dataSourceType\", \"AMAZON_DYNAMODB\"))\n$util.qr($ctx.stash.metadata.put(\"apiId\", \"",
+       {
+        "Ref": "referencetoamplifyadminpanelashiksandboxca49327062dataamplifyDataGraphQLAPIDD3321C4ApiId"
+       },
+       "\"))\n$util.qr($ctx.stash.put(\"connectionAttributes\", {}))\n$util.qr($ctx.stash.put(\"tableName\", \"",
+       {
+        "Fn::Select": [
+         1,
+         {
+          "Fn::Split": [
+           "/",
+           {
+            "Fn::Select": [
+             5,
+             {
+              "Fn::Split": [
+               ":",
+               {
+                "Fn::GetAtt": [
+                 "BookingTable",
+                 "TableArn"
+                ]
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       "\"))\n$util.qr($ctx.stash.put(\"authRole\", \"arn:",
+       {
+        "Ref": "AWS::Partition"
+       },
+       ":sts::",
+       {
+        "Ref": "AWS::AccountId"
+       },
+       ":assumed-role/",
+       {
+        "Ref": "referencetoamplifyadminpanelashiksandboxca49327062authNestedStackauthNestedStackResourceECA3B996Outputsamplifyadminpanelashiksandboxca49327062authamplifyAuthauthenticatedUserRoleEB5DA10FRef"
+       },
+       "/CognitoIdentityCredentials\"))\n$util.qr($ctx.stash.put(\"unauthRole\", \"arn:",
+       {
+        "Ref": "AWS::Partition"
+       },
+       ":sts::",
+       {
+        "Ref": "AWS::AccountId"
+       },
+       ":assumed-role/",
+       {
+        "Ref": "referencetoamplifyadminpanelashiksandboxca49327062authNestedStackauthNestedStackResourceECA3B996Outputsamplifyadminpanelashiksandboxca49327062authamplifyAuthunauthenticatedUserRole6AE56C6ERef"
+       },
+       "/CognitoIdentityCredentials\"))\n$util.qr($ctx.stash.put(\"identityPoolId\", \"",
+       {
+        "Ref": "referencetoamplifyadminpanelashiksandboxca49327062authNestedStackauthNestedStackResourceECA3B996Outputsamplifyadminpanelashiksandboxca49327062authamplifyAuthIdentityPoolE2FC1E15Ref"
+       },
+       "\"))\n$util.qr($ctx.stash.put(\"adminRoles\", []))\n$util.toJson({})"
+      ]
+     ]
+    },
+    "ResponseMappingTemplate": "$util.toJson($ctx.prev.result)",
+    "TypeName": "Mutation"
+   },
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete",
+   "Metadata": {
+    "aws:cdk:path": "amplify-adminpanel-ashik-sandbox-ca49327062/data/amplifyData/Booking/mutationUpdateBookingResolver"
+   }
+  },
+  "MutationdeleteBookingauth0FunctionMutationdeleteBookingauth0FunctionAppSyncFunction50755C84": {
+   "Type": "AWS::AppSync::FunctionConfiguration",
+   "Properties": {
+    "ApiId": {
+     "Ref": "referencetoamplifyadminpanelashiksandboxca49327062dataamplifyDataGraphQLAPIDD3321C4ApiId"
+    },
+    "DataSourceName": {
+     "Fn::GetAtt": [
+      "BookingDataSource",
+      "Name"
+     ]
+    },
+    "FunctionVersion": "2018-05-29",
+    "Name": "MutationdeleteBookingauth0Function",
+    "RequestMappingTemplateS3Location": {
+     "Fn::Sub": "s3://cdk-hnb659fds-assets-${AWS::AccountId}-${AWS::Region}/1f5fed297da9c32ae3af922bf3a38ccf23b956078887d16891ec06c20c64722c.vtl"
+    },
+    "ResponseMappingTemplateS3Location": {
+     "Fn::Sub": "s3://cdk-hnb659fds-assets-${AWS::AccountId}-${AWS::Region}/be82f9ebbbf2ebac411566d46477b831bf70551655cf3b91b9c314230ecee538.vtl"
+    }
+   },
+   "DependsOn": [
+    "BookingDataSource"
+   ],
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete",
+   "Metadata": {
+    "aws:cdk:path": "amplify-adminpanel-ashik-sandbox-ca49327062/data/amplifyData/Booking/MutationdeleteBookingauth0Function/MutationdeleteBookingauth0Function.AppSyncFunction"
+   }
+  },
+  "MutationdeleteBookingpostAuth0FunctionMutationdeleteBookingpostAuth0FunctionAppSyncFunction9D1DF788": {
+   "Type": "AWS::AppSync::FunctionConfiguration",
+   "Properties": {
+    "ApiId": {
+     "Ref": "referencetoamplifyadminpanelashiksandboxca49327062dataamplifyDataGraphQLAPIDD3321C4ApiId"
+    },
+    "DataSourceName": {
+     "Ref": "referencetoamplifyadminpanelashiksandboxca49327062dataamplifyDataGraphQLAPINONEDS3717D349Name"
+    },
+    "FunctionVersion": "2018-05-29",
+    "Name": "MutationdeleteBookingpostAuth0Function",
+    "RequestMappingTemplateS3Location": {
+     "Fn::Sub": "s3://cdk-hnb659fds-assets-${AWS::AccountId}-${AWS::Region}/c1721bcd774e27c514d3454b5be4f9bdd094c0161b57ddf053d618e3b0086a77.vtl"
+    },
+    "ResponseMappingTemplate": "$util.toJson({})"
+   },
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete",
+   "Metadata": {
+    "aws:cdk:path": "amplify-adminpanel-ashik-sandbox-ca49327062/data/amplifyData/Booking/MutationdeleteBookingpostAuth0Function/MutationdeleteBookingpostAuth0Function.AppSyncFunction"
+   }
+  },
+  "MutationDeleteBookingDataResolverFnMutationDeleteBookingDataResolverFnAppSyncFunction4E060C22": {
+   "Type": "AWS::AppSync::FunctionConfiguration",
+   "Properties": {
+    "ApiId": {
+     "Ref": "referencetoamplifyadminpanelashiksandboxca49327062dataamplifyDataGraphQLAPIDD3321C4ApiId"
+    },
+    "DataSourceName": {
+     "Fn::GetAtt": [
+      "BookingDataSource",
+      "Name"
+     ]
+    },
+    "FunctionVersion": "2018-05-29",
+    "Name": "MutationDeleteBookingDataResolverFn",
+    "RequestMappingTemplateS3Location": {
+     "Fn::Sub": "s3://cdk-hnb659fds-assets-${AWS::AccountId}-${AWS::Region}/4f7907d1209a2c9953a0c053df402c634e359546d70c7cc5c2e8e21ea734880f.vtl"
+    },
+    "ResponseMappingTemplateS3Location": {
+     "Fn::Sub": "s3://cdk-hnb659fds-assets-${AWS::AccountId}-${AWS::Region}/f4a52b72209a9dfa197b5e7367a5c378c5bb86de6e29ddd9e48b49a3fe54b249.vtl"
+    }
+   },
+   "DependsOn": [
+    "BookingDataSource"
+   ],
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete",
+   "Metadata": {
+    "aws:cdk:path": "amplify-adminpanel-ashik-sandbox-ca49327062/data/amplifyData/Booking/MutationDeleteBookingDataResolverFn/MutationDeleteBookingDataResolverFn.AppSyncFunction"
+   }
+  },
+  "DeleteBookingResolver": {
+   "Type": "AWS::AppSync::Resolver",
+   "Properties": {
+    "ApiId": {
+     "Ref": "referencetoamplifyadminpanelashiksandboxca49327062dataamplifyDataGraphQLAPIDD3321C4ApiId"
+    },
+    "FieldName": "deleteBooking",
+    "Kind": "PIPELINE",
+    "PipelineConfig": {
+     "Functions": [
+      {
+       "Fn::GetAtt": [
+        "MutationdeleteBookingauth0FunctionMutationdeleteBookingauth0FunctionAppSyncFunction50755C84",
+        "FunctionId"
+       ]
+      },
+      {
+       "Fn::GetAtt": [
+        "MutationdeleteBookingpostAuth0FunctionMutationdeleteBookingpostAuth0FunctionAppSyncFunction9D1DF788",
+        "FunctionId"
+       ]
+      },
+      {
+       "Fn::GetAtt": [
+        "MutationDeleteBookingDataResolverFnMutationDeleteBookingDataResolverFnAppSyncFunction4E060C22",
+        "FunctionId"
+       ]
+      }
+     ]
+    },
+    "RequestMappingTemplate": {
+     "Fn::Join": [
+      "",
+      [
+       "$util.qr($ctx.stash.put(\"typeName\", \"Mutation\"))\n$util.qr($ctx.stash.put(\"fieldName\", \"deleteBooking\"))\n$util.qr($ctx.stash.put(\"conditions\", []))\n$util.qr($ctx.stash.put(\"metadata\", {}))\n$util.qr($ctx.stash.metadata.put(\"dataSourceType\", \"AMAZON_DYNAMODB\"))\n$util.qr($ctx.stash.metadata.put(\"apiId\", \"",
+       {
+        "Ref": "referencetoamplifyadminpanelashiksandboxca49327062dataamplifyDataGraphQLAPIDD3321C4ApiId"
+       },
+       "\"))\n$util.qr($ctx.stash.put(\"connectionAttributes\", {}))\n$util.qr($ctx.stash.put(\"tableName\", \"",
+       {
+        "Fn::Select": [
+         1,
+         {
+          "Fn::Split": [
+           "/",
+           {
+            "Fn::Select": [
+             5,
+             {
+              "Fn::Split": [
+               ":",
+               {
+                "Fn::GetAtt": [
+                 "BookingTable",
+                 "TableArn"
+                ]
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       "\"))\n$util.qr($ctx.stash.put(\"authRole\", \"arn:",
+       {
+        "Ref": "AWS::Partition"
+       },
+       ":sts::",
+       {
+        "Ref": "AWS::AccountId"
+       },
+       ":assumed-role/",
+       {
+        "Ref": "referencetoamplifyadminpanelashiksandboxca49327062authNestedStackauthNestedStackResourceECA3B996Outputsamplifyadminpanelashiksandboxca49327062authamplifyAuthauthenticatedUserRoleEB5DA10FRef"
+       },
+       "/CognitoIdentityCredentials\"))\n$util.qr($ctx.stash.put(\"unauthRole\", \"arn:",
+       {
+        "Ref": "AWS::Partition"
+       },
+       ":sts::",
+       {
+        "Ref": "AWS::AccountId"
+       },
+       ":assumed-role/",
+       {
+        "Ref": "referencetoamplifyadminpanelashiksandboxca49327062authNestedStackauthNestedStackResourceECA3B996Outputsamplifyadminpanelashiksandboxca49327062authamplifyAuthunauthenticatedUserRole6AE56C6ERef"
+       },
+       "/CognitoIdentityCredentials\"))\n$util.qr($ctx.stash.put(\"identityPoolId\", \"",
+       {
+        "Ref": "referencetoamplifyadminpanelashiksandboxca49327062authNestedStackauthNestedStackResourceECA3B996Outputsamplifyadminpanelashiksandboxca49327062authamplifyAuthIdentityPoolE2FC1E15Ref"
+       },
+       "\"))\n$util.qr($ctx.stash.put(\"adminRoles\", []))\n$util.toJson({})"
+      ]
+     ]
+    },
+    "ResponseMappingTemplate": "$util.toJson($ctx.prev.result)",
+    "TypeName": "Mutation"
+   },
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete",
+   "Metadata": {
+    "aws:cdk:path": "amplify-adminpanel-ashik-sandbox-ca49327062/data/amplifyData/Booking/mutationDeleteBookingResolver"
+   }
+  },
+  "SubscriptiononCreateBookingauth0FunctionSubscriptiononCreateBookingauth0FunctionAppSyncFunction5243B826": {
+   "Type": "AWS::AppSync::FunctionConfiguration",
+   "Properties": {
+    "ApiId": {
+     "Ref": "referencetoamplifyadminpanelashiksandboxca49327062dataamplifyDataGraphQLAPIDD3321C4ApiId"
+    },
+    "DataSourceName": {
+     "Ref": "referencetoamplifyadminpanelashiksandboxca49327062dataamplifyDataGraphQLAPINONEDS3717D349Name"
+    },
+    "FunctionVersion": "2018-05-29",
+    "Name": "SubscriptiononCreateBookingauth0Function",
+    "RequestMappingTemplateS3Location": {
+     "Fn::Sub": "s3://cdk-hnb659fds-assets-${AWS::AccountId}-${AWS::Region}/e5e0099d3487eba977b96aa69bf7f4f6a0c7b149dcb9e048c5acf9c9c4613213.vtl"
+    },
+    "ResponseMappingTemplate": "$util.toJson({})"
+   },
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete",
+   "Metadata": {
+    "aws:cdk:path": "amplify-adminpanel-ashik-sandbox-ca49327062/data/amplifyData/Booking/SubscriptiononCreateBookingauth0Function/SubscriptiononCreateBookingauth0Function.AppSyncFunction"
+   }
+  },
+  "SubscriptiononCreateBookingpostAuth0FunctionSubscriptiononCreateBookingpostAuth0FunctionAppSyncFunctionCEE18C4E": {
+   "Type": "AWS::AppSync::FunctionConfiguration",
+   "Properties": {
+    "ApiId": {
+     "Ref": "referencetoamplifyadminpanelashiksandboxca49327062dataamplifyDataGraphQLAPIDD3321C4ApiId"
+    },
+    "DataSourceName": {
+     "Ref": "referencetoamplifyadminpanelashiksandboxca49327062dataamplifyDataGraphQLAPINONEDS3717D349Name"
+    },
+    "FunctionVersion": "2018-05-29",
+    "Name": "SubscriptiononCreateBookingpostAuth0Function",
+    "RequestMappingTemplateS3Location": {
+     "Fn::Sub": "s3://cdk-hnb659fds-assets-${AWS::AccountId}-${AWS::Region}/c1721bcd774e27c514d3454b5be4f9bdd094c0161b57ddf053d618e3b0086a77.vtl"
+    },
+    "ResponseMappingTemplate": "$util.toJson({})"
+   },
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete",
+   "Metadata": {
+    "aws:cdk:path": "amplify-adminpanel-ashik-sandbox-ca49327062/data/amplifyData/Booking/SubscriptiononCreateBookingpostAuth0Function/SubscriptiononCreateBookingpostAuth0Function.AppSyncFunction"
+   }
+  },
+  "SubscriptionOnCreateBookingDataResolverFnSubscriptionOnCreateBookingDataResolverFnAppSyncFunction40A6105B": {
+   "Type": "AWS::AppSync::FunctionConfiguration",
+   "Properties": {
+    "ApiId": {
+     "Ref": "referencetoamplifyadminpanelashiksandboxca49327062dataamplifyDataGraphQLAPIDD3321C4ApiId"
+    },
+    "DataSourceName": {
+     "Ref": "referencetoamplifyadminpanelashiksandboxca49327062dataamplifyDataGraphQLAPINONEDS3717D349Name"
+    },
+    "FunctionVersion": "2018-05-29",
+    "Name": "SubscriptionOnCreateBookingDataResolverFn",
+    "RequestMappingTemplateS3Location": {
+     "Fn::Sub": "s3://cdk-hnb659fds-assets-${AWS::AccountId}-${AWS::Region}/fe3c43ada4b9d681a5e2312663ef7a73386424d73b73e51f8e2e9d4b50f7c502.vtl"
+    },
+    "ResponseMappingTemplateS3Location": {
+     "Fn::Sub": "s3://cdk-hnb659fds-assets-${AWS::AccountId}-${AWS::Region}/e0cff47fb007f0bbf2a4e43ca256d6aa7ec109821769fd79fa7c5e83f0e7f9fc.vtl"
+    }
+   },
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete",
+   "Metadata": {
+    "aws:cdk:path": "amplify-adminpanel-ashik-sandbox-ca49327062/data/amplifyData/Booking/SubscriptionOnCreateBookingDataResolverFn/SubscriptionOnCreateBookingDataResolverFn.AppSyncFunction"
+   }
+  },
+  "SubscriptiononCreateBookingResolver": {
+   "Type": "AWS::AppSync::Resolver",
+   "Properties": {
+    "ApiId": {
+     "Ref": "referencetoamplifyadminpanelashiksandboxca49327062dataamplifyDataGraphQLAPIDD3321C4ApiId"
+    },
+    "FieldName": "onCreateBooking",
+    "Kind": "PIPELINE",
+    "PipelineConfig": {
+     "Functions": [
+      {
+       "Fn::GetAtt": [
+        "SubscriptiononCreateBookingauth0FunctionSubscriptiononCreateBookingauth0FunctionAppSyncFunction5243B826",
+        "FunctionId"
+       ]
+      },
+      {
+       "Fn::GetAtt": [
+        "SubscriptiononCreateBookingpostAuth0FunctionSubscriptiononCreateBookingpostAuth0FunctionAppSyncFunctionCEE18C4E",
+        "FunctionId"
+       ]
+      },
+      {
+       "Fn::GetAtt": [
+        "SubscriptionOnCreateBookingDataResolverFnSubscriptionOnCreateBookingDataResolverFnAppSyncFunction40A6105B",
+        "FunctionId"
+       ]
+      }
+     ]
+    },
+    "RequestMappingTemplate": {
+     "Fn::Join": [
+      "",
+      [
+       "$util.qr($ctx.stash.put(\"typeName\", \"Subscription\"))\n$util.qr($ctx.stash.put(\"fieldName\", \"onCreateBooking\"))\n$util.qr($ctx.stash.put(\"conditions\", []))\n$util.qr($ctx.stash.put(\"metadata\", {}))\n$util.qr($ctx.stash.metadata.put(\"dataSourceType\", \"NONE\"))\n$util.qr($ctx.stash.metadata.put(\"apiId\", \"",
+       {
+        "Ref": "referencetoamplifyadminpanelashiksandboxca49327062dataamplifyDataGraphQLAPIDD3321C4ApiId"
+       },
+       "\"))\n$util.qr($ctx.stash.put(\"connectionAttributes\", {}))\n\n$util.qr($ctx.stash.put(\"authRole\", \"arn:",
+       {
+        "Ref": "AWS::Partition"
+       },
+       ":sts::",
+       {
+        "Ref": "AWS::AccountId"
+       },
+       ":assumed-role/",
+       {
+        "Ref": "referencetoamplifyadminpanelashiksandboxca49327062authNestedStackauthNestedStackResourceECA3B996Outputsamplifyadminpanelashiksandboxca49327062authamplifyAuthauthenticatedUserRoleEB5DA10FRef"
+       },
+       "/CognitoIdentityCredentials\"))\n$util.qr($ctx.stash.put(\"unauthRole\", \"arn:",
+       {
+        "Ref": "AWS::Partition"
+       },
+       ":sts::",
+       {
+        "Ref": "AWS::AccountId"
+       },
+       ":assumed-role/",
+       {
+        "Ref": "referencetoamplifyadminpanelashiksandboxca49327062authNestedStackauthNestedStackResourceECA3B996Outputsamplifyadminpanelashiksandboxca49327062authamplifyAuthunauthenticatedUserRole6AE56C6ERef"
+       },
+       "/CognitoIdentityCredentials\"))\n$util.qr($ctx.stash.put(\"identityPoolId\", \"",
+       {
+        "Ref": "referencetoamplifyadminpanelashiksandboxca49327062authNestedStackauthNestedStackResourceECA3B996Outputsamplifyadminpanelashiksandboxca49327062authamplifyAuthIdentityPoolE2FC1E15Ref"
+       },
+       "\"))\n$util.qr($ctx.stash.put(\"adminRoles\", []))\n$util.toJson({})"
+      ]
+     ]
+    },
+    "ResponseMappingTemplate": "$util.toJson($ctx.prev.result)",
+    "TypeName": "Subscription"
+   },
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete",
+   "Metadata": {
+    "aws:cdk:path": "amplify-adminpanel-ashik-sandbox-ca49327062/data/amplifyData/Booking/subscriptionOnCreateBookingResolver"
+   }
+  },
+  "SubscriptiononUpdateBookingauth0FunctionSubscriptiononUpdateBookingauth0FunctionAppSyncFunction8FB0A17D": {
+   "Type": "AWS::AppSync::FunctionConfiguration",
+   "Properties": {
+    "ApiId": {
+     "Ref": "referencetoamplifyadminpanelashiksandboxca49327062dataamplifyDataGraphQLAPIDD3321C4ApiId"
+    },
+    "DataSourceName": {
+     "Ref": "referencetoamplifyadminpanelashiksandboxca49327062dataamplifyDataGraphQLAPINONEDS3717D349Name"
+    },
+    "FunctionVersion": "2018-05-29",
+    "Name": "SubscriptiononUpdateBookingauth0Function",
+    "RequestMappingTemplateS3Location": {
+     "Fn::Sub": "s3://cdk-hnb659fds-assets-${AWS::AccountId}-${AWS::Region}/e5e0099d3487eba977b96aa69bf7f4f6a0c7b149dcb9e048c5acf9c9c4613213.vtl"
+    },
+    "ResponseMappingTemplate": "$util.toJson({})"
+   },
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete",
+   "Metadata": {
+    "aws:cdk:path": "amplify-adminpanel-ashik-sandbox-ca49327062/data/amplifyData/Booking/SubscriptiononUpdateBookingauth0Function/SubscriptiononUpdateBookingauth0Function.AppSyncFunction"
+   }
+  },
+  "SubscriptiononUpdateBookingpostAuth0FunctionSubscriptiononUpdateBookingpostAuth0FunctionAppSyncFunction7562B4FD": {
+   "Type": "AWS::AppSync::FunctionConfiguration",
+   "Properties": {
+    "ApiId": {
+     "Ref": "referencetoamplifyadminpanelashiksandboxca49327062dataamplifyDataGraphQLAPIDD3321C4ApiId"
+    },
+    "DataSourceName": {
+     "Ref": "referencetoamplifyadminpanelashiksandboxca49327062dataamplifyDataGraphQLAPINONEDS3717D349Name"
+    },
+    "FunctionVersion": "2018-05-29",
+    "Name": "SubscriptiononUpdateBookingpostAuth0Function",
+    "RequestMappingTemplateS3Location": {
+     "Fn::Sub": "s3://cdk-hnb659fds-assets-${AWS::AccountId}-${AWS::Region}/c1721bcd774e27c514d3454b5be4f9bdd094c0161b57ddf053d618e3b0086a77.vtl"
+    },
+    "ResponseMappingTemplate": "$util.toJson({})"
+   },
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete",
+   "Metadata": {
+    "aws:cdk:path": "amplify-adminpanel-ashik-sandbox-ca49327062/data/amplifyData/Booking/SubscriptiononUpdateBookingpostAuth0Function/SubscriptiononUpdateBookingpostAuth0Function.AppSyncFunction"
+   }
+  },
+  "SubscriptionOnUpdateBookingDataResolverFnSubscriptionOnUpdateBookingDataResolverFnAppSyncFunctionE15704F7": {
+   "Type": "AWS::AppSync::FunctionConfiguration",
+   "Properties": {
+    "ApiId": {
+     "Ref": "referencetoamplifyadminpanelashiksandboxca49327062dataamplifyDataGraphQLAPIDD3321C4ApiId"
+    },
+    "DataSourceName": {
+     "Ref": "referencetoamplifyadminpanelashiksandboxca49327062dataamplifyDataGraphQLAPINONEDS3717D349Name"
+    },
+    "FunctionVersion": "2018-05-29",
+    "Name": "SubscriptionOnUpdateBookingDataResolverFn",
+    "RequestMappingTemplateS3Location": {
+     "Fn::Sub": "s3://cdk-hnb659fds-assets-${AWS::AccountId}-${AWS::Region}/fe3c43ada4b9d681a5e2312663ef7a73386424d73b73e51f8e2e9d4b50f7c502.vtl"
+    },
+    "ResponseMappingTemplateS3Location": {
+     "Fn::Sub": "s3://cdk-hnb659fds-assets-${AWS::AccountId}-${AWS::Region}/e0cff47fb007f0bbf2a4e43ca256d6aa7ec109821769fd79fa7c5e83f0e7f9fc.vtl"
+    }
+   },
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete",
+   "Metadata": {
+    "aws:cdk:path": "amplify-adminpanel-ashik-sandbox-ca49327062/data/amplifyData/Booking/SubscriptionOnUpdateBookingDataResolverFn/SubscriptionOnUpdateBookingDataResolverFn.AppSyncFunction"
+   }
+  },
+  "SubscriptiononUpdateBookingResolver": {
+   "Type": "AWS::AppSync::Resolver",
+   "Properties": {
+    "ApiId": {
+     "Ref": "referencetoamplifyadminpanelashiksandboxca49327062dataamplifyDataGraphQLAPIDD3321C4ApiId"
+    },
+    "FieldName": "onUpdateBooking",
+    "Kind": "PIPELINE",
+    "PipelineConfig": {
+     "Functions": [
+      {
+       "Fn::GetAtt": [
+        "SubscriptiononUpdateBookingauth0FunctionSubscriptiononUpdateBookingauth0FunctionAppSyncFunction8FB0A17D",
+        "FunctionId"
+       ]
+      },
+      {
+       "Fn::GetAtt": [
+        "SubscriptiononUpdateBookingpostAuth0FunctionSubscriptiononUpdateBookingpostAuth0FunctionAppSyncFunction7562B4FD",
+        "FunctionId"
+       ]
+      },
+      {
+       "Fn::GetAtt": [
+        "SubscriptionOnUpdateBookingDataResolverFnSubscriptionOnUpdateBookingDataResolverFnAppSyncFunctionE15704F7",
+        "FunctionId"
+       ]
+      }
+     ]
+    },
+    "RequestMappingTemplate": {
+     "Fn::Join": [
+      "",
+      [
+       "$util.qr($ctx.stash.put(\"typeName\", \"Subscription\"))\n$util.qr($ctx.stash.put(\"fieldName\", \"onUpdateBooking\"))\n$util.qr($ctx.stash.put(\"conditions\", []))\n$util.qr($ctx.stash.put(\"metadata\", {}))\n$util.qr($ctx.stash.metadata.put(\"dataSourceType\", \"NONE\"))\n$util.qr($ctx.stash.metadata.put(\"apiId\", \"",
+       {
+        "Ref": "referencetoamplifyadminpanelashiksandboxca49327062dataamplifyDataGraphQLAPIDD3321C4ApiId"
+       },
+       "\"))\n$util.qr($ctx.stash.put(\"connectionAttributes\", {}))\n\n$util.qr($ctx.stash.put(\"authRole\", \"arn:",
+       {
+        "Ref": "AWS::Partition"
+       },
+       ":sts::",
+       {
+        "Ref": "AWS::AccountId"
+       },
+       ":assumed-role/",
+       {
+        "Ref": "referencetoamplifyadminpanelashiksandboxca49327062authNestedStackauthNestedStackResourceECA3B996Outputsamplifyadminpanelashiksandboxca49327062authamplifyAuthauthenticatedUserRoleEB5DA10FRef"
+       },
+       "/CognitoIdentityCredentials\"))\n$util.qr($ctx.stash.put(\"unauthRole\", \"arn:",
+       {
+        "Ref": "AWS::Partition"
+       },
+       ":sts::",
+       {
+        "Ref": "AWS::AccountId"
+       },
+       ":assumed-role/",
+       {
+        "Ref": "referencetoamplifyadminpanelashiksandboxca49327062authNestedStackauthNestedStackResourceECA3B996Outputsamplifyadminpanelashiksandboxca49327062authamplifyAuthunauthenticatedUserRole6AE56C6ERef"
+       },
+       "/CognitoIdentityCredentials\"))\n$util.qr($ctx.stash.put(\"identityPoolId\", \"",
+       {
+        "Ref": "referencetoamplifyadminpanelashiksandboxca49327062authNestedStackauthNestedStackResourceECA3B996Outputsamplifyadminpanelashiksandboxca49327062authamplifyAuthIdentityPoolE2FC1E15Ref"
+       },
+       "\"))\n$util.qr($ctx.stash.put(\"adminRoles\", []))\n$util.toJson({})"
+      ]
+     ]
+    },
+    "ResponseMappingTemplate": "$util.toJson($ctx.prev.result)",
+    "TypeName": "Subscription"
+   },
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete",
+   "Metadata": {
+    "aws:cdk:path": "amplify-adminpanel-ashik-sandbox-ca49327062/data/amplifyData/Booking/subscriptionOnUpdateBookingResolver"
+   }
+  },
+  "SubscriptiononDeleteBookingauth0FunctionSubscriptiononDeleteBookingauth0FunctionAppSyncFunctionC2A3454E": {
+   "Type": "AWS::AppSync::FunctionConfiguration",
+   "Properties": {
+    "ApiId": {
+     "Ref": "referencetoamplifyadminpanelashiksandboxca49327062dataamplifyDataGraphQLAPIDD3321C4ApiId"
+    },
+    "DataSourceName": {
+     "Ref": "referencetoamplifyadminpanelashiksandboxca49327062dataamplifyDataGraphQLAPINONEDS3717D349Name"
+    },
+    "FunctionVersion": "2018-05-29",
+    "Name": "SubscriptiononDeleteBookingauth0Function",
+    "RequestMappingTemplateS3Location": {
+     "Fn::Sub": "s3://cdk-hnb659fds-assets-${AWS::AccountId}-${AWS::Region}/e5e0099d3487eba977b96aa69bf7f4f6a0c7b149dcb9e048c5acf9c9c4613213.vtl"
+    },
+    "ResponseMappingTemplate": "$util.toJson({})"
+   },
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete",
+   "Metadata": {
+    "aws:cdk:path": "amplify-adminpanel-ashik-sandbox-ca49327062/data/amplifyData/Booking/SubscriptiononDeleteBookingauth0Function/SubscriptiononDeleteBookingauth0Function.AppSyncFunction"
+   }
+  },
+  "SubscriptiononDeleteBookingpostAuth0FunctionSubscriptiononDeleteBookingpostAuth0FunctionAppSyncFunction8F89DB22": {
+   "Type": "AWS::AppSync::FunctionConfiguration",
+   "Properties": {
+    "ApiId": {
+     "Ref": "referencetoamplifyadminpanelashiksandboxca49327062dataamplifyDataGraphQLAPIDD3321C4ApiId"
+    },
+    "DataSourceName": {
+     "Ref": "referencetoamplifyadminpanelashiksandboxca49327062dataamplifyDataGraphQLAPINONEDS3717D349Name"
+    },
+    "FunctionVersion": "2018-05-29",
+    "Name": "SubscriptiononDeleteBookingpostAuth0Function",
+    "RequestMappingTemplateS3Location": {
+     "Fn::Sub": "s3://cdk-hnb659fds-assets-${AWS::AccountId}-${AWS::Region}/c1721bcd774e27c514d3454b5be4f9bdd094c0161b57ddf053d618e3b0086a77.vtl"
+    },
+    "ResponseMappingTemplate": "$util.toJson({})"
+   },
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete",
+   "Metadata": {
+    "aws:cdk:path": "amplify-adminpanel-ashik-sandbox-ca49327062/data/amplifyData/Booking/SubscriptiononDeleteBookingpostAuth0Function/SubscriptiononDeleteBookingpostAuth0Function.AppSyncFunction"
+   }
+  },
+  "SubscriptionOnDeleteBookingDataResolverFnSubscriptionOnDeleteBookingDataResolverFnAppSyncFunctionC8FD7D03": {
+   "Type": "AWS::AppSync::FunctionConfiguration",
+   "Properties": {
+    "ApiId": {
+     "Ref": "referencetoamplifyadminpanelashiksandboxca49327062dataamplifyDataGraphQLAPIDD3321C4ApiId"
+    },
+    "DataSourceName": {
+     "Ref": "referencetoamplifyadminpanelashiksandboxca49327062dataamplifyDataGraphQLAPINONEDS3717D349Name"
+    },
+    "FunctionVersion": "2018-05-29",
+    "Name": "SubscriptionOnDeleteBookingDataResolverFn",
+    "RequestMappingTemplateS3Location": {
+     "Fn::Sub": "s3://cdk-hnb659fds-assets-${AWS::AccountId}-${AWS::Region}/fe3c43ada4b9d681a5e2312663ef7a73386424d73b73e51f8e2e9d4b50f7c502.vtl"
+    },
+    "ResponseMappingTemplateS3Location": {
+     "Fn::Sub": "s3://cdk-hnb659fds-assets-${AWS::AccountId}-${AWS::Region}/e0cff47fb007f0bbf2a4e43ca256d6aa7ec109821769fd79fa7c5e83f0e7f9fc.vtl"
+    }
+   },
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete",
+   "Metadata": {
+    "aws:cdk:path": "amplify-adminpanel-ashik-sandbox-ca49327062/data/amplifyData/Booking/SubscriptionOnDeleteBookingDataResolverFn/SubscriptionOnDeleteBookingDataResolverFn.AppSyncFunction"
+   }
+  },
+  "SubscriptiononDeleteBookingResolver": {
+   "Type": "AWS::AppSync::Resolver",
+   "Properties": {
+    "ApiId": {
+     "Ref": "referencetoamplifyadminpanelashiksandboxca49327062dataamplifyDataGraphQLAPIDD3321C4ApiId"
+    },
+    "FieldName": "onDeleteBooking",
+    "Kind": "PIPELINE",
+    "PipelineConfig": {
+     "Functions": [
+      {
+       "Fn::GetAtt": [
+        "SubscriptiononDeleteBookingauth0FunctionSubscriptiononDeleteBookingauth0FunctionAppSyncFunctionC2A3454E",
+        "FunctionId"
+       ]
+      },
+      {
+       "Fn::GetAtt": [
+        "SubscriptiononDeleteBookingpostAuth0FunctionSubscriptiononDeleteBookingpostAuth0FunctionAppSyncFunction8F89DB22",
+        "FunctionId"
+       ]
+      },
+      {
+       "Fn::GetAtt": [
+        "SubscriptionOnDeleteBookingDataResolverFnSubscriptionOnDeleteBookingDataResolverFnAppSyncFunctionC8FD7D03",
+        "FunctionId"
+       ]
+      }
+     ]
+    },
+    "RequestMappingTemplate": {
+     "Fn::Join": [
+      "",
+      [
+       "$util.qr($ctx.stash.put(\"typeName\", \"Subscription\"))\n$util.qr($ctx.stash.put(\"fieldName\", \"onDeleteBooking\"))\n$util.qr($ctx.stash.put(\"conditions\", []))\n$util.qr($ctx.stash.put(\"metadata\", {}))\n$util.qr($ctx.stash.metadata.put(\"dataSourceType\", \"NONE\"))\n$util.qr($ctx.stash.metadata.put(\"apiId\", \"",
+       {
+        "Ref": "referencetoamplifyadminpanelashiksandboxca49327062dataamplifyDataGraphQLAPIDD3321C4ApiId"
+       },
+       "\"))\n$util.qr($ctx.stash.put(\"connectionAttributes\", {}))\n\n$util.qr($ctx.stash.put(\"authRole\", \"arn:",
+       {
+        "Ref": "AWS::Partition"
+       },
+       ":sts::",
+       {
+        "Ref": "AWS::AccountId"
+       },
+       ":assumed-role/",
+       {
+        "Ref": "referencetoamplifyadminpanelashiksandboxca49327062authNestedStackauthNestedStackResourceECA3B996Outputsamplifyadminpanelashiksandboxca49327062authamplifyAuthauthenticatedUserRoleEB5DA10FRef"
+       },
+       "/CognitoIdentityCredentials\"))\n$util.qr($ctx.stash.put(\"unauthRole\", \"arn:",
+       {
+        "Ref": "AWS::Partition"
+       },
+       ":sts::",
+       {
+        "Ref": "AWS::AccountId"
+       },
+       ":assumed-role/",
+       {
+        "Ref": "referencetoamplifyadminpanelashiksandboxca49327062authNestedStackauthNestedStackResourceECA3B996Outputsamplifyadminpanelashiksandboxca49327062authamplifyAuthunauthenticatedUserRole6AE56C6ERef"
+       },
+       "/CognitoIdentityCredentials\"))\n$util.qr($ctx.stash.put(\"identityPoolId\", \"",
+       {
+        "Ref": "referencetoamplifyadminpanelashiksandboxca49327062authNestedStackauthNestedStackResourceECA3B996Outputsamplifyadminpanelashiksandboxca49327062authamplifyAuthIdentityPoolE2FC1E15Ref"
+       },
+       "\"))\n$util.qr($ctx.stash.put(\"adminRoles\", []))\n$util.toJson({})"
+      ]
+     ]
+    },
+    "ResponseMappingTemplate": "$util.toJson($ctx.prev.result)",
+    "TypeName": "Subscription"
+   },
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete",
+   "Metadata": {
+    "aws:cdk:path": "amplify-adminpanel-ashik-sandbox-ca49327062/data/amplifyData/Booking/subscriptionOnDeleteBookingResolver"
+   }
+  },
+  "BookingOwnerDataResolverFnBookingOwnerDataResolverFnAppSyncFunction2058E41A": {
+   "Type": "AWS::AppSync::FunctionConfiguration",
+   "Properties": {
+    "ApiId": {
+     "Ref": "referencetoamplifyadminpanelashiksandboxca49327062dataamplifyDataGraphQLAPIDD3321C4ApiId"
+    },
+    "DataSourceName": {
+     "Ref": "referencetoamplifyadminpanelashiksandboxca49327062dataamplifyDataGraphQLAPINONEDS3717D349Name"
+    },
+    "FunctionVersion": "2018-05-29",
+    "Name": "BookingOwnerDataResolverFn",
+    "RequestMappingTemplateS3Location": {
+     "Fn::Sub": "s3://cdk-hnb659fds-assets-${AWS::AccountId}-${AWS::Region}/041534e5fd916595f752318f161512d7c7f83b9f2cf32d0f0be381c12253ff68.vtl"
+    },
+    "ResponseMappingTemplateS3Location": {
+     "Fn::Sub": "s3://cdk-hnb659fds-assets-${AWS::AccountId}-${AWS::Region}/064303962e481067b44300212516363b99aaee539b6bafaf756fdd83ff0b60f0.vtl"
+    }
+   },
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete",
+   "Metadata": {
+    "aws:cdk:path": "amplify-adminpanel-ashik-sandbox-ca49327062/data/amplifyData/Booking/BookingOwnerDataResolverFn/BookingOwnerDataResolverFn.AppSyncFunction"
+   }
+  },
+  "BookingownerResolver": {
+   "Type": "AWS::AppSync::Resolver",
+   "Properties": {
+    "ApiId": {
+     "Ref": "referencetoamplifyadminpanelashiksandboxca49327062dataamplifyDataGraphQLAPIDD3321C4ApiId"
+    },
+    "FieldName": "owner",
+    "Kind": "PIPELINE",
+    "PipelineConfig": {
+     "Functions": [
+      {
+       "Fn::GetAtt": [
+        "BookingOwnerDataResolverFnBookingOwnerDataResolverFnAppSyncFunction2058E41A",
+        "FunctionId"
+       ]
+      }
+     ]
+    },
+    "RequestMappingTemplate": {
+     "Fn::Join": [
+      "",
+      [
+       "$util.qr($ctx.stash.put(\"typeName\", \"Booking\"))\n$util.qr($ctx.stash.put(\"fieldName\", \"owner\"))\n$util.qr($ctx.stash.put(\"conditions\", []))\n$util.qr($ctx.stash.put(\"metadata\", {}))\n$util.qr($ctx.stash.metadata.put(\"dataSourceType\", \"NONE\"))\n$util.qr($ctx.stash.metadata.put(\"apiId\", \"",
+       {
+        "Ref": "referencetoamplifyadminpanelashiksandboxca49327062dataamplifyDataGraphQLAPIDD3321C4ApiId"
+       },
+       "\"))\n$util.qr($ctx.stash.put(\"connectionAttributes\", {}))\n\n$util.qr($ctx.stash.put(\"authRole\", \"arn:",
+       {
+        "Ref": "AWS::Partition"
+       },
+       ":sts::",
+       {
+        "Ref": "AWS::AccountId"
+       },
+       ":assumed-role/",
+       {
+        "Ref": "referencetoamplifyadminpanelashiksandboxca49327062authNestedStackauthNestedStackResourceECA3B996Outputsamplifyadminpanelashiksandboxca49327062authamplifyAuthauthenticatedUserRoleEB5DA10FRef"
+       },
+       "/CognitoIdentityCredentials\"))\n$util.qr($ctx.stash.put(\"unauthRole\", \"arn:",
+       {
+        "Ref": "AWS::Partition"
+       },
+       ":sts::",
+       {
+        "Ref": "AWS::AccountId"
+       },
+       ":assumed-role/",
+       {
+        "Ref": "referencetoamplifyadminpanelashiksandboxca49327062authNestedStackauthNestedStackResourceECA3B996Outputsamplifyadminpanelashiksandboxca49327062authamplifyAuthunauthenticatedUserRole6AE56C6ERef"
+       },
+       "/CognitoIdentityCredentials\"))\n$util.qr($ctx.stash.put(\"identityPoolId\", \"",
+       {
+        "Ref": "referencetoamplifyadminpanelashiksandboxca49327062authNestedStackauthNestedStackResourceECA3B996Outputsamplifyadminpanelashiksandboxca49327062authamplifyAuthIdentityPoolE2FC1E15Ref"
+       },
+       "\"))\n$util.qr($ctx.stash.put(\"adminRoles\", []))\n$util.toJson({})"
+      ]
+     ]
+    },
+    "ResponseMappingTemplate": "$util.toJson($ctx.prev.result)",
+    "TypeName": "Booking"
+   },
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete",
+   "Metadata": {
+    "aws:cdk:path": "amplify-adminpanel-ashik-sandbox-ca49327062/data/amplifyData/Booking/bookingOwnerResolver"
+   }
+  },
+  "CDKMetadata": {
+   "Type": "AWS::CDK::Metadata",
+   "Properties": {
+    "Analytics": "v2:deflate64:H4sIAAAAAAAA/1WOwW6DMAyGn6X31Otgh11X0I7bBLtXJjEoBRwUO60qxLtP0KnTTr8/+ZP9Z5Dlr3DY4VX21vX7wTcwf5AouVrR9qZo+QsjjqQUVygCO68+sKlIQoqWTJFEw/iHLT9mvMppdjfGMbgGvrEZ6IhCxuMIcxWGux0GWgxOk9zYwlxuetmUqFg/Tv6n98R2LVEEbn2XIm6Nfj8PF4qLkfyEIqQCb2sYyeGYbE+6FlhW9zPplNRs61qx89wthoMjOMvTJcvg+QUOu7N4v4+J1Y8E1T1/AGFoGnI2AQAA"
+   },
+   "Metadata": {
+    "aws:cdk:path": "amplify-adminpanel-ashik-sandbox-ca49327062/data/amplifyData/Booking/CDKMetadata/Default"
+   },
+   "Condition": "CDKMetadataAvailable"
+  }
+ },
+ "Outputs": {
+  "GetAttBookingTableStreamArn": {
+   "Description": "Your DynamoDB table StreamArn.",
+   "Value": {
+    "Fn::GetAtt": [
+     "BookingTable",
+     "TableStreamArn"
+    ]
+   },
+   "Export": {
+    "Name": {
+     "Fn::Join": [
+      ":",
+      [
+       {
+        "Ref": "referencetoamplifyadminpanelashiksandboxca49327062dataamplifyDataGraphQLAPIDD3321C4ApiId"
+       },
+       "GetAtt:BookingTable:StreamArn"
+      ]
+     ]
+    }
+   }
+  },
+  "GetAttBookingTableName": {
+   "Description": "Your DynamoDB table name.",
+   "Value": {
+    "Fn::Join": [
+     "",
+     [
+      "Booking-",
+      {
+       "Ref": "referencetoamplifyadminpanelashiksandboxca49327062dataamplifyDataGraphQLAPIDD3321C4ApiId"
+      },
+      "-NONE"
+     ]
+    ]
+   },
+   "Export": {
+    "Name": {
+     "Fn::Join": [
+      ":",
+      [
+       {
+        "Ref": "referencetoamplifyadminpanelashiksandboxca49327062dataamplifyDataGraphQLAPIDD3321C4ApiId"
+       },
+       "GetAtt:BookingTable:Name"
+      ]
+     ]
+    }
+   }
+  }
+ }
+}

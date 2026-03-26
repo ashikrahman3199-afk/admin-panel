@@ -1,0 +1,143 @@
+type Vendor @model @auth(rules: [{allow: owner, ownerField: "owner"},
+  {allow: private},
+  {allow: private, provider: iam, operations: [read]},
+  {allow: public, provider: apiKey, operations: [read]}])
+{
+  businessName: String!
+  contact: String!
+  location: String
+  status: VendorStatus
+  inventory: [Service] @hasMany(references: ["vendorId"])
+  owner: String
+}
+
+type ServiceOption @model @auth(rules: [{allow: owner, ownerField: "owner"},
+  {allow: private},
+  {allow: public, provider: apiKey, operations: [read]}])
+{
+  name: String!
+  price: Float!
+  duration: String
+  status: String
+  serviceId: ID
+  service: Service @belongsTo(references: ["serviceId"])
+}
+
+type Service @model @auth(rules: [{allow: owner, ownerField: "owner"},
+  {allow: private},
+  {allow: public, provider: apiKey, operations: [read]}])
+{
+  name: String!
+  type: String
+  price: Float!
+  description: String
+  approvalStatus: ServiceApprovalStatus
+  vendorId: ID
+  vendor: Vendor @belongsTo(references: ["vendorId"])
+  options: [ServiceOption] @hasMany(references: ["serviceId"])
+}
+
+type UserProfile @model @auth(rules: [{allow: owner, ownerField: "owner"},
+  {allow: private}])
+{
+  email: String!
+  name: String
+  role: UserProfileRole
+  status: UserProfileStatus
+  profileId: ID
+}
+
+type Booking @model @auth(rules: [{allow: owner, ownerField: "owner"},
+  {allow: private},
+  {allow: groups, groups: ["Vendor"]}])
+{
+  date: String!
+  status: BookingStatus
+  totalAmount: Float
+  vendorId: ID
+  customerId: ID
+  serviceId: ID
+}
+
+type Campaign @model @auth(rules: [{allow: owner, ownerField: "owner"},
+  {allow: private},
+  {allow: groups, groups: ["Vendor"]}])
+{
+  title: String!
+  status: CampaignStatus
+  impressions: Int
+  clicks: Int
+  budget: Float
+  vendorId: ID
+}
+
+type Transaction @model @auth(rules: [{allow: owner, ownerField: "owner"},
+  {allow: private},
+  {allow: groups, groups: ["Vendor"]}])
+{
+  amount: Float!
+  status: TransactionStatus
+  date: String
+  vendorId: ID
+  customerId: ID
+}
+
+type Dispute @model @auth(rules: [{allow: owner, ownerField: "owner"},
+  {allow: private}])
+{
+  reason: String!
+  status: DisputeStatus
+  transactionId: ID
+  raisedBy: ID
+}
+
+enum VendorStatus {
+  PENDING
+  VERIFIED
+  REJECTED
+}
+
+enum ServiceApprovalStatus {
+  pending
+  approved
+  rejected
+}
+
+enum UserProfileRole {
+  SUPER_ADMIN
+  ADMIN
+  ADMIN_PENDING
+  VENDOR
+  USER
+}
+
+enum UserProfileStatus {
+  ACTIVE
+  INACTIVE
+  PENDING_APPROVAL
+}
+
+enum BookingStatus {
+  PENDING
+  CONFIRMED
+  COMPLETED
+  CANCELLED
+}
+
+enum CampaignStatus {
+  ACTIVE
+  PAUSED
+  ENDED
+}
+
+enum TransactionStatus {
+  SUCCESS
+  FAILED
+  PENDING
+}
+
+enum DisputeStatus {
+  OPEN
+  RESOLVED
+  CLOSED
+}

@@ -22,52 +22,137 @@ import {
     DialogTrigger,
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
+import { generateClient } from "aws-amplify/data";
+import type { Schema } from "../../../../amplify/data/resource";
 
-const pendingServices = [
-    {
-        id: "SRV-001",
-        vendor: "City Billboards Co.",
-        serviceName: "LED Wall - Times Square",
-        type: "Digital Billboard",
-        price: "₹50,000/day",
-        submitted: "2023-10-28",
-        status: "Pending Review",
-    },
-    {
-        id: "SRV-002",
-        vendor: "Metro Ads",
-        serviceName: "Subway Station Posters",
-        type: "Poster",
-        price: "₹5,000/week",
-        submitted: "2023-10-27",
-        status: "Pending Review",
-    },
-    {
-        id: "SRV-003",
-        vendor: "Skyline Media",
-        serviceName: "Rooftop Giant Banner",
-        type: "Banner",
-        price: "₹1,20,000/month",
-        submitted: "2023-10-26",
-        status: "Pending Review",
-    },
-];
+const client = generateClient<Schema>();
+
+function ServiceOptionsList({ serviceId }: { serviceId: string }) {
+    const [options, setOptions] = React.useState<Array<Schema["ServiceOption"]["type"]>>([]);
+    const [loading, setLoading] = React.useState(true);
+
+    React.useEffect(() => {
+        if (!serviceId) return;
+        setLoading(true);
+        // Ensure the model exists before querying (just in case types are syncing)
+        if (!client.models.ServiceOption) {
+            setLoading(false);
+            return;
+        }
+
+        const sub = client.models.ServiceOption.observeQuery({
+            filter: { serviceId: { eq: serviceId } }
+        }).subscribe({
+            next: (data) => {
+                setOptions([...data.items]);
+                setLoading(false);
+            },
+            error: (err) => {
+                console.error("Error fetching options:", err);
+                setLoading(false);
+            }
+        });
+        return () => sub.unsubscribe();
+    }, [serviceId]);
+
+    if (loading) return <div className="text-sm text-muted-foreground animate-pulse">Loading options...</div>;
+
+    if (options.length === 0) return (
+        <div className="text-sm text-muted-foreground italic bg-white/5 p-3 rounded-xl border border-white/10">
+            No options provided for this service.
+        </div>
+    );
+
+    return (
+        <div className="space-y-2 mt-2">
+            <h4 className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Service Options</h4>
+            <div className="space-y-2 max-h-[150px] overflow-y-auto pr-2">
+                {options.map(opt => (
+                    <div key={opt.id} className="flex items-center justify-between p-3 rounded-xl bg-white/5 border border-white/10 text-sm">
+                        <div>
+                            <p className="font-semibold">{opt.name}</p>
+                            <p className="text-xs text-muted-foreground">{opt.duration}</p>
+                        </div>
+                        <div className="text-right">
+                            <p className="font-bold">₹{opt.price}</p>
+                            {opt.status && (
+                                <Badge variant="secondary" className="mt-1 bg-green-500/10 text-green-500 hover:bg-green-500/20 text-[10px] px-2 py-0">
+                                    {opt.status}
+                                </Badge>
+                            )}
+                        </div>
+                    </div>
+                ))}
+            </div>
+        </div>
+    );
+}
 
 export default function VerificationPage() {
-    const [services, setServices] = React.useState(pendingServices);
+    const [services, setServices] = React.useState<Array<Schema["Service"]["type"]>>([]);
+    const [isLoading, setIsLoading] = React.useState(true);
 
-    const handleApprove = (id: string, name: string) => {
-        setServices(prev => prev.map(service =>
-            service.id === id ? { ...service, status: "Approved" } : service
-        ));
-        toast.success("Service Approved", { description: `${name} has been approved.` });
+    const fetchPendingServices = async () => {
+        setIsLoading(true);
+        try {
+            const { data, errors } = await client.models.Service.list({
+                filter: { approvalStatus: { eq: "pending" } }
+            });
+            if (errors) {
+                console.warn("GraphQL Errors fetching services (likely schema mismatch):", errors);
+            }
+            // Filter out nulls safely in case of GraphQL translation errors (e.g. missing updatedAt)
+            const validServices = data.filter((s): s is NonNullable<typeof s> => s !== null);
+            validServices.sort((a, b) => {
+                const timeA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+                const timeB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+                return timeB - timeA;
+            });
+            setServices(validServices);
+        } catch (error) {
+            console.error("Error fetching pending services:", error);
+            toast.error("Failed to load services");
+        } finally {
+            setIsLoading(false);
+        }
     };
 
-    const handleReject = (id: string, name: string) => {
-        setServices(prev => prev.map(service =>
-            service.id === id ? { ...service, status: "Rejected" } : service
-        ));
-        toast.error("Service Rejected", { description: `${name} has been rejected.` });
+    React.useEffect(() => {
+        fetchPendingServices();
+        if (!client.models.Service) return;
+
+        const sub = client.models.Service.observeQuery({
+            filter: {
+                approvalStatus: {
+                    eq: "pending"
+                }
+            }
+        }).subscribe({
+            next: (data) => {
+                setServices([...data.items]);
+            },
+        });
+        return () => sub.unsubscribe();
+    }, []);
+
+    const handleApprove = async (id: string, name: string) => {
+        try {
+            setServices(prev => prev.filter(s => s && s.id !== id));
+            await client.models.Service.update({ id, approvalStatus: "approved" });
+            toast.success("Service Approved", { description: `${name} has been approved.` });
+        } catch {
+            toast.error("Error", { description: "Failed to approve service." });
+        }
+    };
+
+    const handleReject = async (id: string, name: string) => {
+        try {
+            setServices(prev => prev.filter(s => s && s.id !== id));
+            await client.models.Service.update({ id, approvalStatus: "rejected" });
+            toast.error("Service Rejected", { description: `${name} has been rejected.` });
+        } catch {
+            toast.error("Error", { description: "Failed to reject service." });
+        }
     };
 
     return (
@@ -78,6 +163,22 @@ export default function VerificationPage() {
                     <p className="text-muted-foreground">
                         Review and approve new services added by vendors.
                     </p>
+                </div>
+                <div className="flex gap-2">
+                    <Button
+                        variant="default"
+                        className="rounded-full shadow-lg shadow-primary/20"
+                        onClick={async () => {
+                            toast.promise(fetchPendingServices(), {
+                                loading: "Refreshing list...",
+                                success: "List refreshed successfully!",
+                                error: "Failed to refresh list"
+                            });
+                        }}
+                        disabled={isLoading}
+                    >
+                        {isLoading ? "Refreshing..." : "Refresh List"}
+                    </Button>
                 </div>
             </div>
 
@@ -95,19 +196,20 @@ export default function VerificationPage() {
                         </TableRow>
                     </TableHeader>
                     <TableBody>
-                        {services.map((service) => (
+                        {services.filter(s => s && s.id).map((service) => (
                             <TableRow key={service.id} className="hover:bg-white/5 border-none transition-colors group">
-                                <TableCell className="font-medium group-hover:text-primary transition-colors">{service.id}</TableCell>
-                                <TableCell className="font-medium">{service.serviceName}</TableCell>
-                                <TableCell>{service.vendor}</TableCell>
+                                <TableCell className="font-medium group-hover:text-primary transition-colors">{service.id.substring(0, 8)}</TableCell>
+                                <TableCell className="font-medium">{service.name}</TableCell>
+                                <TableCell>{service.vendorId ? service.vendorId.substring(0, 8) : "Unknown"}</TableCell>
                                 <TableCell>
                                     <Badge variant="outline" className="rounded-full bg-white/5 border-none">{service.type}</Badge>
                                 </TableCell>
-                                <TableCell className="font-bold">{service.price}</TableCell>
-                                <TableCell>{service.submitted}</TableCell>
+                                <TableCell className="font-bold">₹{service.price}</TableCell>
+                                <TableCell>{service.createdAt ? new Date(service.createdAt).toLocaleDateString() : "-"}</TableCell>
                                 <TableCell className="text-right">
                                     <div className="flex justify-end gap-2 items-center min-h-[40px]">
-                                        {service.status === "Pending Review" ? (
+                                        {/* Status is always PENDING_REVIEW here based on filter, but handling others just in case */}
+                                        {service.approvalStatus === "pending" ? (
                                             <>
                                                 <Dialog>
                                                     <DialogTrigger asChild>
@@ -117,15 +219,15 @@ export default function VerificationPage() {
                                                     </DialogTrigger>
                                                     <DialogContent className="bg-card/90 backdrop-blur-xl border-none shadow-2xl rounded-2xl">
                                                         <DialogHeader>
-                                                            <DialogTitle>{service.serviceName}</DialogTitle>
+                                                            <DialogTitle>{service.name}</DialogTitle>
                                                             <DialogDescription>
                                                                 Review service details before approval.
                                                             </DialogDescription>
                                                         </DialogHeader>
                                                         <div className="grid gap-4 py-4">
                                                             <div className="grid grid-cols-4 items-center gap-4 text-sm">
-                                                                <span className="font-bold text-muted-foreground">Vendor:</span>
-                                                                <span className="col-span-3 font-medium">{service.vendor}</span>
+                                                                <span className="font-bold text-muted-foreground">Vendor ID:</span>
+                                                                <span className="col-span-3 font-medium">{service.vendorId}</span>
                                                             </div>
                                                             <div className="grid grid-cols-4 items-center gap-4 text-sm">
                                                                 <span className="font-bold text-muted-foreground">Type:</span>
@@ -133,46 +235,35 @@ export default function VerificationPage() {
                                                             </div>
                                                             <div className="grid grid-cols-4 items-center gap-4 text-sm">
                                                                 <span className="font-bold text-muted-foreground">Price:</span>
-                                                                <span className="col-span-3 font-medium">{service.price}</span>
-                                                            </div>
-                                                            <div className="grid grid-cols-4 items-center gap-4 text-sm">
-                                                                <span className="font-bold text-muted-foreground">Dimensions:</span>
-                                                                <span className="col-span-3">20ft x 10ft (Mock Data)</span>
+                                                                <span className="col-span-3 font-medium">₹{service.price}</span>
                                                             </div>
                                                             <div className="grid grid-cols-4 items-center gap-4 text-sm">
                                                                 <span className="font-bold text-muted-foreground">Description:</span>
-                                                                <span className="col-span-3">High visibility LED screen in prime location.</span>
+                                                                <span className="col-span-3">{service.description || "No description provided."}</span>
+                                                            </div>
+                                                            <div className="pt-2 border-t border-white/10">
+                                                                <ServiceOptionsList serviceId={service.id} />
                                                             </div>
                                                         </div>
                                                         <DialogFooter>
-                                                            <Button variant="destructive" className="gap-2 rounded-full shadow-lg shadow-red-500/20" onClick={() => handleReject(service.id, service.serviceName)}>
+                                                            <Button variant="destructive" className="gap-2 rounded-full shadow-lg shadow-red-500/20" onClick={() => handleReject(service.id, service.name)}>
                                                                 <XCircle className="h-4 w-4" /> Reject
                                                             </Button>
-                                                            <Button className="gap-2 bg-green-600 hover:bg-green-700 rounded-full shadow-lg shadow-green-500/20" onClick={() => handleApprove(service.id, service.serviceName)}>
+                                                            <Button className="gap-2 bg-green-600 hover:bg-green-700 rounded-full shadow-lg shadow-green-500/20" onClick={() => handleApprove(service.id, service.name)}>
                                                                 <CheckCircle2 className="h-4 w-4" /> Approve
                                                             </Button>
                                                         </DialogFooter>
                                                     </DialogContent>
                                                 </Dialog>
 
-                                                <Button variant="ghost" size="icon" title="Approve" className="rounded-full hover:bg-green-500/10 hover:text-green-500 text-green-500" onClick={() => handleApprove(service.id, service.serviceName)}>
+                                                <Button variant="ghost" size="icon" title="Approve" className="rounded-full hover:bg-green-500/10 hover:text-green-500 text-green-500" onClick={() => handleApprove(service.id, service.name)}>
                                                     <CheckCircle2 className="h-5 w-5" />
                                                 </Button>
-                                                <Button variant="ghost" size="icon" title="Reject" className="rounded-full hover:bg-red-500/10 hover:text-red-500 text-destructive" onClick={() => handleReject(service.id, service.serviceName)}>
+                                                <Button variant="ghost" size="icon" title="Reject" className="rounded-full hover:bg-red-500/10 hover:text-red-500 text-destructive" onClick={() => handleReject(service.id, service.name)}>
                                                     <XCircle className="h-5 w-5" />
                                                 </Button>
                                             </>
-                                        ) : service.status === "Approved" ? (
-                                            <div className="flex items-center gap-2 text-green-500 font-medium px-3 py-1 rounded-full bg-green-500/10">
-                                                <CheckCircle2 className="h-4 w-4" />
-                                                Approved
-                                            </div>
-                                        ) : (
-                                            <div className="flex items-center gap-2 text-red-500 font-medium px-3 py-1 rounded-full bg-red-500/10">
-                                                <XCircle className="h-4 w-4" />
-                                                Rejected
-                                            </div>
-                                        )}
+                                        ) : null}
                                     </div>
                                 </TableCell>
                             </TableRow>

@@ -10,7 +10,6 @@ import {
     FileText,
     Settings,
     LogOut,
-    MessageSquare,
     CreditCard,
     AlertTriangle,
     ShieldCheck
@@ -27,8 +26,24 @@ const sidebarItems = [
     { icon: Settings, label: "Settings", href: "/dashboard/settings" },
 ];
 
+import { signOut } from "aws-amplify/auth";
+import { toast } from "sonner";
+import { useRouter } from "next/navigation";
+
 export function Sidebar() {
     const pathname = usePathname();
+    const router = useRouter();
+
+    const handleSignOut = async () => {
+        try {
+            toast.info("Signing out...");
+            await signOut();
+            router.push("/login");
+        } catch (error) {
+            console.error("Error signing out:", error);
+            toast.error("Error signing out.");
+        }
+    };
 
     return (
         <aside className="hidden w-64 flex-col md:flex h-screen sticky top-0 p-4">
@@ -59,13 +74,13 @@ export function Sidebar() {
                     })}
                 </nav>
                 <div className="border-t border-white/10 p-4">
-                    <Link
-                        href="/login"
-                        className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-bold text-muted-foreground transition-all hover:bg-red-500/10 hover:text-red-500"
+                    <button
+                        onClick={handleSignOut}
+                        className="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-sm font-bold text-muted-foreground transition-all hover:bg-red-500/10 hover:text-red-500"
                     >
                         <LogOut className="h-5 w-5" />
                         Sign Out
-                    </Link>
+                    </button>
                 </div>
             </div>
         </aside>

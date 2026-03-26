@@ -1,0 +1,58 @@
+type Vendor @model @auth(rules: [{allow: owner, ownerField: "owner"},
+  {allow: groups, groups: ["Admin"]},
+  {allow: private, provider: iam, operations: [read]},
+  {allow: public, provider: apiKey, operations: [read]}])
+{
+  businessName: String!
+  contact: String!
+  location: String
+  status: VendorStatus
+  inventory: [Service] @hasMany(references: ["vendorId"])
+  owner: String
+}
+
+type Service @model @auth(rules: [{allow: owner, ownerField: "owner"},
+  {allow: groups, groups: ["Admin"]},
+  {allow: public, provider: apiKey, operations: [read]}])
+{
+  name: String!
+  type: String!
+  price: Float!
+  description: String
+  status: ServiceStatus
+  vendorId: ID
+  vendor: Vendor @belongsTo(references: ["vendorId"])
+}
+
+type UserProfile @model @auth(rules: [{allow: owner, ownerField: "owner"},
+  {allow: groups, groups: ["Admin"]}])
+{
+  email: String!
+  name: String
+  role: UserProfileRole
+  status: UserProfileStatus
+  profileId: ID
+}
+
+enum VendorStatus {
+  PENDING
+  VERIFIED
+  REJECTED
+}
+
+enum ServiceStatus {
+  PENDING_REVIEW
+  APPROVED
+  REJECTED
+}
+
+enum UserProfileRole {
+  ADMIN
+  VENDOR
+  USER
+}
+
+enum UserProfileStatus {
+  ACTIVE
+  INACTIVE
+}
