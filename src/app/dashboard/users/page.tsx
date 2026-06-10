@@ -191,7 +191,7 @@ function UsersPageContent() {
             toast.success("Access Approved", { description: `${email} has been granted ${approveRole} access.` });
             
             setTimeout(() => {
-                setUsers(prev => prev.map(u => u.id === id ? { ...u, role: approveRole as any, status: "ACTIVE" } : u));
+                setUsers(prev => prev.map(u => (u && u.id === id) ? { ...u, role: approveRole as any, status: "ACTIVE" } : u));
             }, 300);
         } catch (error) {
             toast.error("Approval Failed", { description: "Could not approve user." });
@@ -217,7 +217,7 @@ function UsersPageContent() {
             toast.info("Access Rejected", { description: `${email}'s access request was denied.` });
             
             setTimeout(() => {
-                setUsers(prev => prev.map(u => u.id === id ? { ...u, status: "INACTIVE" } : u));
+                setUsers(prev => prev.map(u => (u && u.id === id) ? { ...u, status: "INACTIVE" } : u));
             }, 300);
         } catch (error) {
             toast.error("Rejection Failed", { description: "Could not reject user." });
