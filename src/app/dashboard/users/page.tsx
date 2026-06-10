@@ -143,9 +143,12 @@ export default function UsersPage() {
         }
         try {
             await client.models.UserProfile.update({ id, role: approveRole, status: "ACTIVE" });
-            setUsers(prev => prev.map(u => u.id === id ? { ...u, role: approveRole as any, status: "ACTIVE" } : u));
-            toast.success("Access Approved", { description: `${email} has been granted ${approveRole} access.` });
             setIsApproveDialogOpen(false);
+            toast.success("Access Approved", { description: `${email} has been granted ${approveRole} access.` });
+            
+            setTimeout(() => {
+                setUsers(prev => prev.map(u => u.id === id ? { ...u, role: approveRole as any, status: "ACTIVE" } : u));
+            }, 300);
         } catch (error) {
             toast.error("Approval Failed", { description: "Could not approve user." });
         }
@@ -167,8 +170,11 @@ export default function UsersPage() {
         }
         try {
             await client.models.UserProfile.update({ id, status: "INACTIVE" });
-            setUsers(prev => prev.map(u => u.id === id ? { ...u, status: "INACTIVE" } : u));
             toast.info("Access Rejected", { description: `${email}'s access request was denied.` });
+            
+            setTimeout(() => {
+                setUsers(prev => prev.map(u => u.id === id ? { ...u, status: "INACTIVE" } : u));
+            }, 300);
         } catch (error) {
             toast.error("Rejection Failed", { description: "Could not reject user." });
         }
