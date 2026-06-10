@@ -44,7 +44,7 @@ export default function VendorsPage() {
         try {
             // In the shared backend, vendors are UserProfiles with role 'VENDOR'
             const profilesRes = await client.models.UserProfile.list();
-            setVendorsList(profilesRes.data.filter(Boolean));
+            setVendorsList(profilesRes.data.filter(p => p && (p.role === "VENDOR" || p.role === "VENDOR_PENDING")));
 
             const withdrawalsRes = await client.models.WithdrawalRequest.list();
             setWithdrawals(withdrawalsRes.data.filter(Boolean));
@@ -61,7 +61,7 @@ export default function VendorsPage() {
         
         // Setup subscriptions
         const subProfiles = client.models.UserProfile.observeQuery().subscribe({
-            next: (data) => setVendorsList([...data.items].filter(Boolean)),
+            next: (data) => setVendorsList([...data.items].filter(p => p && (p.role === "VENDOR" || p.role === "VENDOR_PENDING"))),
         });
 
         const subWithdrawals = client.models.WithdrawalRequest.observeQuery().subscribe({
