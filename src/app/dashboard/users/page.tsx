@@ -43,7 +43,50 @@ import type { Schema } from "../../../../amplify/data/resource";
 
 const client = generateClient<Schema>();
 
+class ErrorBoundary extends React.Component<{children: React.ReactNode}, {hasError: boolean, error: Error | null, info: React.ErrorInfo | null}> {
+    constructor(props: {children: React.ReactNode}) {
+        super(props);
+        this.state = { hasError: false, error: null, info: null };
+    }
+
+    static getDerivedStateFromError(error: Error) {
+        return { hasError: true, error };
+    }
+
+    componentDidCatch(error: Error, info: React.ErrorInfo) {
+        this.setState({ info });
+        console.error("ErrorBoundary caught an error", error, info);
+    }
+
+    render() {
+        if (this.state.hasError) {
+            return (
+                <div className="p-8 bg-red-900/20 rounded-xl border border-red-500 m-8">
+                    <h2 className="text-xl font-bold text-red-500 mb-4">Client-Side Crash Detected</h2>
+                    <p className="text-white mb-2">Message: {this.state.error?.message}</p>
+                    <pre className="p-4 bg-black text-red-300 rounded overflow-auto text-xs h-[400px]">
+                        {this.state.error?.stack}
+                        {"\n\nComponent Stack:\n"}
+                        {this.state.info?.componentStack}
+                    </pre>
+                </div>
+            );
+        }
+        return this.props.children;
+    }
+}
+
+import React from 'react';
+
 export default function UsersPage() {
+    return (
+        <ErrorBoundary>
+            <UsersPageContent />
+        </ErrorBoundary>
+    );
+}
+
+function UsersPageContent() {
     const [users, setUsers] = useState<Array<Schema["UserProfile"]["type"]>>([]);
     const [currentUserRole, setCurrentUserRole] = useState<string>("ADMIN");
     const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
