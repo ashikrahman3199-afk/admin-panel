@@ -268,6 +268,7 @@ export default function UsersPage() {
                         </DialogFooter>
                     </DialogContent>
                 </Dialog>
+                </div>
             </div>
 
             <div className="bg-white/5 rounded-3xl p-1 backdrop-blur-2xl shadow-2xl">
