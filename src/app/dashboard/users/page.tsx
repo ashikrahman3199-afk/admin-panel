@@ -57,6 +57,7 @@ export default function UsersPage() {
     // Form states
     const [newUser, setNewUser] = useState({ name: "", email: "", role: "USER" as "USER" | "ADMIN" | "VENDOR" | "SUPER_ADMIN" | "ADMIN_PENDING" });
     const [editUser, setEditUser] = useState({ name: "", email: "", role: "USER" as "USER" | "ADMIN" | "VENDOR" | "SUPER_ADMIN" | "ADMIN_PENDING" });
+    const [viewFilter, setViewFilter] = useState<"ALL" | "PENDING" | "REGISTERED">("ALL");
     const [isMounted, setIsMounted] = useState(false);
 
     useEffect(() => {
@@ -142,6 +143,7 @@ export default function UsersPage() {
         }
         try {
             await client.models.UserProfile.update({ id, role: approveRole, status: "ACTIVE" });
+            setUsers(prev => prev.map(u => u.id === id ? { ...u, role: approveRole as any, status: "ACTIVE" } : u));
             toast.success("Access Approved", { description: `${email} has been granted ${approveRole} access.` });
             setIsApproveDialogOpen(false);
         } catch (error) {
@@ -165,6 +167,7 @@ export default function UsersPage() {
         }
         try {
             await client.models.UserProfile.update({ id, status: "INACTIVE" });
+            setUsers(prev => prev.map(u => u.id === id ? { ...u, status: "INACTIVE" } : u));
             toast.info("Access Rejected", { description: `${email}'s access request was denied.` });
         } catch (error) {
             toast.error("Rejection Failed", { description: "Could not reject user." });
@@ -211,12 +214,18 @@ export default function UsersPage() {
                         Manage system users, roles, and access permissions.
                     </p>
                 </div>
-                <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-                    <DialogTrigger asChild>
-                        <Button className="rounded-full shadow-lg shadow-primary/20 hover:shadow-primary/40 transition-all">
-                            <Plus className="mr-2 h-4 w-4" /> Add New User
-                        </Button>
-                    </DialogTrigger>
+                <div className="flex items-center gap-2">
+                    <div className="flex bg-white/5 rounded-full p-1 border border-white/10 mr-2">
+                        <Button variant={viewFilter === "ALL" ? "secondary" : "ghost"} size="sm" className="rounded-full" onClick={() => setViewFilter("ALL")}>All</Button>
+                        <Button variant={viewFilter === "PENDING" ? "secondary" : "ghost"} size="sm" className={`rounded-full ${viewFilter === "PENDING" ? "text-yellow-500" : ""}`} onClick={() => setViewFilter("PENDING")}>Pending</Button>
+                        <Button variant={viewFilter === "REGISTERED" ? "secondary" : "ghost"} size="sm" className={`rounded-full ${viewFilter === "REGISTERED" ? "text-green-500" : ""}`} onClick={() => setViewFilter("REGISTERED")}>Registered</Button>
+                    </div>
+                    <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+                        <DialogTrigger asChild>
+                            <Button className="rounded-full shadow-lg shadow-primary/20 hover:shadow-primary/40 transition-all">
+                                <Plus className="mr-2 h-4 w-4" /> Add New User
+                            </Button>
+                        </DialogTrigger>
                     <DialogContent>
                         <DialogHeader>
                             <DialogTitle>Add New User</DialogTitle>
@@ -274,7 +283,12 @@ export default function UsersPage() {
                         </TableRow>
                     </TableHeader>
                     <TableBody>
-                        {users.filter(u => u && u.id && u.role !== "VENDOR" && u.role !== "VENDOR_PENDING").map((user) => (
+                        {users.filter(u => {
+                            if (!u || !u.id || u.role === "VENDOR" || u.role === "VENDOR_PENDING") return false;
+                            if (viewFilter === "PENDING" && u.status !== "PENDING_APPROVAL") return false;
+                            if (viewFilter === "REGISTERED" && u.status === "PENDING_APPROVAL") return false;
+                            return true;
+                        }).map((user) => (
                             <TableRow key={user.id} className="hover:bg-white/5 border-none transition-colors group">
                                 <TableCell className="font-medium group-hover:text-primary transition-colors">{user.id.substring(0, 8)}</TableCell>
                                 <TableCell>

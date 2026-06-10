@@ -1,6 +1,6 @@
 "use client";
 
-import { Bell, Search, User } from "lucide-react";
+import { Bell, Search, User, RefreshCw } from "lucide-react";
 import { ModeToggle } from "@/components/mode-toggle";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -81,6 +81,9 @@ export function Header() {
                 </div>
             </div>
             <div className="flex items-center gap-4">
+                <Button variant="ghost" size="icon" className="rounded-full hover:bg-white/10" onClick={() => window.location.reload()}>
+                    <RefreshCw className="h-5 w-5" />
+                </Button>
                 <ModeToggle />
 
                 <Popover>
