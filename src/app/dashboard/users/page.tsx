@@ -315,24 +315,9 @@ export default function UsersPage() {
                                     </Badge>
                                 </TableCell>
                                 <TableCell>
-                                    {user.status === "PENDING_APPROVAL" ? (
-                                        <Popover>
-                                            <PopoverTrigger asChild>
-                                                <Badge variant="outline" className="cursor-pointer hover:bg-yellow-500/20 rounded-full px-3 border-none bg-yellow-500/10 text-yellow-500">
-                                                    {user.status}
-                                                </Badge>
-                                            </PopoverTrigger>
-                                            <PopoverContent side="right" className="w-[180px] p-2 rounded-xl backdrop-blur-xl bg-popover/95 shadow-2xl border-white/10 flex flex-col gap-2">
-                                                <div className="text-xs font-semibold text-center mb-1">Review Request</div>
-                                                <Button size="sm" className="w-full bg-green-500 hover:bg-green-600 text-white border-none rounded-lg h-8" onClick={(e) => { e.stopPropagation(); setUserToApprove(user); setApproveRole("ADMIN"); setIsApproveDialogOpen(true); }}>Approve</Button>
-                                                <Button size="sm" variant="outline" className="w-full bg-red-500/10 text-red-500 border-red-500/20 hover:bg-red-500/20 rounded-lg h-8" onClick={(e) => { e.stopPropagation(); handleRejectUser(user.id, user.email || ""); }}>Reject</Button>
-                                            </PopoverContent>
-                                        </Popover>
-                                    ) : (
-                                        <Badge variant="outline" className={`rounded-full px-3 border-none ${user.status === "ACTIVE" ? "bg-green-500/10 text-green-500" : "bg-red-500/10 text-red-500"}`}>
-                                            {user.status}
-                                        </Badge>
-                                    )}
+                                    <Badge variant="outline" className={`rounded-full px-3 border-none ${user.status === "ACTIVE" ? "bg-green-500/10 text-green-500" : user.status === "PENDING_APPROVAL" ? "bg-yellow-500/10 text-yellow-500" : "bg-red-500/10 text-red-500"}`}>
+                                        {user.status}
+                                    </Badge>
                                 </TableCell>
                                 <TableCell className="font-medium text-muted-foreground">{isMounted && user.createdAt ? new Date(user.createdAt).toLocaleDateString() : "Loading..."}</TableCell>
                                 <TableCell className="text-right">
@@ -347,6 +332,13 @@ export default function UsersPage() {
                                                 </Button>
                                             </DropdownMenuTrigger>
                                             <DropdownMenuContent align="end" className="rounded-xl border-none bg-popover/80 backdrop-blur-xl shadow-2xl">
+                                                {user.status === "PENDING_APPROVAL" && (
+                                                    <>
+                                                        <DropdownMenuItem className="text-green-500 focus:text-green-500 focus:bg-green-500/10 font-medium" onClick={() => { setUserToApprove(user); setApproveRole("ADMIN"); setIsApproveDialogOpen(true); }}>Approve Request</DropdownMenuItem>
+                                                        <DropdownMenuItem className="text-yellow-500 focus:text-yellow-500 focus:bg-yellow-500/10 font-medium" onClick={() => handleRejectUser(user.id, user.email || "")}>Reject Request</DropdownMenuItem>
+                                                        <DropdownMenuSeparator className="bg-white/10" />
+                                                    </>
+                                                )}
                                                 <DropdownMenuItem onClick={() => openEditDialog(user)}>Edit Details</DropdownMenuItem>
                                                 <DropdownMenuItem onClick={() => openActivityConfirm(user)}>View Activity</DropdownMenuItem>
                                                 <DropdownMenuSeparator className="bg-white/10" />
