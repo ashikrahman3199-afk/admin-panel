@@ -1,7 +1,7 @@
 import { CognitoIdentityProviderClient, ListUsersCommand, AdminAddUserToGroupCommand } from "@aws-sdk/client-cognito-identity-provider";
 
-const userPoolId = "us-east-1_MYLryFvR3"; // from amplify_outputs.json
-const client = new CognitoIdentityProviderClient({ region: "us-east-1" });
+const userPoolId = "ap-south-1_kt7EAsmQA"; // from amplify_outputs.json
+const client = new CognitoIdentityProviderClient({ region: "ap-south-1" });
 
 async function run() {
     try {

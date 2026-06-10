@@ -21,19 +21,18 @@ export default function DashboardPage() {
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const [services, bookings, campaigns, transactions] = await Promise.all([
-                    client.models.Service ? client.models.Service.list({ filter: { approvalStatus: { eq: 'pending' } } }) : Promise.resolve({ data: [] }),
+                // In the shared backend, listings are AdSpaces and revenue comes from Bookings
+                const [adSpaces, bookings, campaigns] = await Promise.all([
+                    client.models.AdSpace ? client.models.AdSpace.list({ filter: { approvalStatus: { eq: 'PENDING' } } }) : Promise.resolve({ data: [] }),
                     client.models.Booking ? client.models.Booking.list({}) : Promise.resolve({ data: [] }),
                     client.models.Campaign ? client.models.Campaign.list({ filter: { status: { eq: 'ACTIVE' } } }) : Promise.resolve({ data: [] }),
-                    client.models.Transaction ? client.models.Transaction.list({}) : Promise.resolve({ data: [] }),
                 ]);
 
-                // Calculate total revenue
-                // Note: floating point math can be tricky, but sufficient for this MVP
-                const totalRevenue = transactions.data.reduce((sum, t) => sum + (t.amount || 0), 0);
+                // Calculate total revenue from bookings
+                const totalRevenue = bookings.data.reduce((sum, b) => sum + (b.amount || 0), 0);
 
                 setMetrics({
-                    pendingListings: services.data.length,
+                    pendingListings: adSpaces.data.length,
                     totalBookings: bookings.data.length,
                     activeCampaigns: campaigns.data.length,
                     revenue: totalRevenue,

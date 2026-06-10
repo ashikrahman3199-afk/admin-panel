@@ -42,7 +42,6 @@
     "awsAppsyncAuthenticationType",
     "awsAppsyncRegion",
     "amplifyApiModelSchemaS3Uri",
-    "awsAppsyncApiKey",
     "awsAppsyncAdditionalAuthenticationTypes"
    ]
   }
@@ -202,16 +201,8 @@
     ]
    }
   },
-  "awsAppsyncApiKey": {
-   "Value": {
-    "Fn::GetAtt": [
-     "data7552DF31",
-     "Outputs.amplifyadminpanelashiksandboxca49327062dataamplifyDataGraphQLAPIDefaultApiKey4E6A3BCBApiKey"
-    ]
-   }
-  },
   "awsAppsyncAdditionalAuthenticationTypes": {
-   "Value": "API_KEY,AWS_IAM"
+   "Value": "AWS_IAM"
   }
  },
  "Resources": {
@@ -244,7 +235,7 @@
        {
         "Fn::Sub": "cdk-hnb659fds-assets-${AWS::AccountId}-${AWS::Region}"
        },
-       "/d146d752260749e824679bca4750e7902d3d9d711cb9a084f9b23e9eaf1b87db.json"
+       "/9c916f3d315fec23dc241f7de2b98a9c8d2c702dcc63f624754afc8a7e544eee.json"
       ]
      ]
     }
@@ -312,7 +303,7 @@
        {
         "Fn::Sub": "cdk-hnb659fds-assets-${AWS::AccountId}-${AWS::Region}"
        },
-       "/f9a32988cb12300d92f68fddfef83ab972847a3f1186e206d5fc126da9802bb8.json"
+       "/fbc227db61d954c9239ee8e4c644d20796a21b67e46117da9f41225a23acbb43.json"
       ]
      ]
     }
@@ -328,7 +319,7 @@
   "CDKMetadata": {
    "Type": "AWS::CDK::Metadata",
    "Properties": {
-    "Analytics": "v2:deflate64:H4sIAAAAAAAA/zPSMzK20DNQTCwv1k1OydbNyUzSqw4uSUzO1nFOy/MvLSkoLQGxwEK1Onn5Kal6WcX6ZUZGeoYmegaKWcWZmbpFpXklmbmpekEQGgDK+7pBVAAAAA=="
+    "Analytics": "v2:deflate64:H4sIAAAAAAAA/zPSMzK20DNQTCwv1k1OydbNyUzSqw4uSUzO1nFOy/MvLSkoLQGxwEK1Onn5Kal6WcX6ZUamepZ6BopZxZmZukWleSWZual6QRAaACG1xiNTAAAA"
    },
    "Metadata": {
     "aws:cdk:path": "amplify-adminpanel-ashik-sandbox-ca49327062/CDKMetadata/Default"

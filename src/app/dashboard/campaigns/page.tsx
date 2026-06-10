@@ -11,7 +11,7 @@ import {
     TableHeader,
     TableRow,
 } from "@/components/ui/table";
-import { Eye } from "lucide-react";
+import { Eye, RefreshCw } from "lucide-react";
 import {
     Dialog,
     DialogContent,
@@ -22,82 +22,107 @@ import {
 } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { generateClient } from "aws-amplify/data";
 import type { Schema } from "../../../../amplify/data/resource";
 
 const client = generateClient<Schema>();
 
 export default function CampaignsPage() {
-    const [campaigns, setCampaigns] = useState<Array<Schema["Campaign"]["type"]>>([]);
+    const [mounted, setMounted] = useState(false);
+    const [campaigns, setCampaigns] = useState<Array<any>>([]);
+    const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
+        setMounted(true);
+    }, []);
+
+    const fetchCampaigns = useCallback(async () => {
+        setIsLoading(true);
+        try {
+            const { data } = await client.models.Campaign.list();
+            setCampaigns(data);
+        } catch (error) {
+            console.error("Error fetching campaigns:", error);
+        } finally {
+            setIsLoading(false);
+        }
+    }, []);
+
+    useEffect(() => {
+        fetchCampaigns();
         if (!client.models.Campaign) return;
         const sub = client.models.Campaign.observeQuery().subscribe({
             next: (data) => setCampaigns([...data.items]),
         });
         return () => sub.unsubscribe();
-    }, []);
+    }, [fetchCampaigns]);
+
+    if (!mounted) return null;
+
     return (
         <div className="space-y-6">
             <div className="flex items-center justify-between">
                 <div>
                     <h1 className="text-3xl font-bold tracking-tight">Campaign Oversight</h1>
                     <p className="text-muted-foreground">
-                        Monitor active campaigns and approve new requests.
+                        Monitor active campaigns from the shared backend.
                     </p>
                 </div>
+                <Button
+                    variant="outline"
+                    size="sm"
+                    className="rounded-full gap-2 bg-white/5 border-none"
+                    onClick={fetchCampaigns}
+                    disabled={isLoading}
+                >
+                    <RefreshCw className={`h-4 w-4 ${isLoading ? "animate-spin" : ""}`} />
+                    Refresh
+                </Button>
             </div>
 
-            <div className="bg-white/5 rounded-3xl p-1 backdrop-blur-2xl shadow-2xl">
+            <div className="bg-white/5 rounded-3xl p-1 backdrop-blur-2xl shadow-2xl overflow-hidden border border-white/5">
                 <Table>
                     <TableHeader>
                         <TableRow className="hover:bg-transparent border-none">
                             <TableHead className="w-[100px] text-muted-foreground/70">ID</TableHead>
                             <TableHead className="text-muted-foreground/70">Campaign Name</TableHead>
-                            <TableHead className="text-muted-foreground/70">Client</TableHead>
+                            <TableHead className="text-muted-foreground/70">User ID</TableHead>
                             <TableHead className="text-muted-foreground/70">Budget</TableHead>
-                            <TableHead className="w-[200px] text-muted-foreground/70">Progress</TableHead>
-                            <TableHead className="text-muted-foreground/70">Work Updates</TableHead>
                             <TableHead className="text-muted-foreground/70">Status</TableHead>
                             <TableHead className="text-right text-muted-foreground/70">Actions</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
-                        {campaigns.length === 0 ? (
+                        {isLoading ? (
                             <TableRow>
-                                <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
+                                <TableCell colSpan={6} className="text-center py-20 text-muted-foreground">
+                                    Loading campaigns...
+                                </TableCell>
+                            </TableRow>
+                        ) : campaigns.length === 0 ? (
+                            <TableRow>
+                                <TableCell colSpan={6} className="text-center py-20 text-muted-foreground">
                                     No campaigns found.
                                 </TableCell>
                             </TableRow>
                         ) : (
                             campaigns.map((campaign) => (
                                 <TableRow key={campaign.id} className="hover:bg-white/5 border-none transition-colors group">
-                                    <TableCell className="font-medium group-hover:text-primary transition-colors">{campaign.id.slice(0, 8)}...</TableCell>
-                                    <TableCell className="font-medium">{campaign.title}</TableCell>
-                                    <TableCell>{campaign.vendorId ? campaign.vendorId.slice(0, 8) + '...' : 'Unknown'}</TableCell>
+                                    <TableCell className="font-medium text-xs text-muted-foreground">{campaign.id.slice(0, 8)}...</TableCell>
+                                    <TableCell className="font-bold">{campaign.name || "Unnamed"}</TableCell>
+                                    <TableCell className="text-xs">{campaign.userId ? campaign.userId.slice(0, 8) + '...' : 'Unknown'}</TableCell>
                                     <TableCell className="font-bold">₹{campaign.budget || 0}</TableCell>
                                     <TableCell>
-                                        <div className="flex flex-col gap-1">
-                                            <Progress
-                                                value={0}
-                                                className="h-2 bg-secondary/30"
-                                                indicatorClassName={cn(
-                                                    "bg-gradient-to-r",
-                                                    "from-blue-400 to-indigo-600"
-                                                )}
-                                            />
-                                            <span className="text-xs text-muted-foreground font-medium">0%</span>
-                                        </div>
-                                    </TableCell>
-                                    <TableCell>
-                                        <div className="flex items-center">
-                                            <span className="text-xs text-muted-foreground italic">No updates</span>
-                                        </div>
-                                    </TableCell>
-                                    <TableCell>
-                                        <Badge variant={campaign.status === "ACTIVE" ? "default" : "outline"} className={`rounded-full px-3 border-none ${campaign.status === "ACTIVE" ? "bg-primary/20 text-primary hover:bg-primary/30" : "bg-white/5"}`}>
-                                            {campaign.status}
+                                        <Badge 
+                                            variant="secondary" 
+                                            className={`rounded-full px-3 border-none ${
+                                                campaign.status === "ACTIVE" 
+                                                    ? "bg-primary/20 text-primary" 
+                                                    : "bg-white/5"
+                                            }`}
+                                        >
+                                            {campaign.status || "UNKNOWN"}
                                         </Badge>
                                     </TableCell>
                                     <TableCell className="text-right">
@@ -110,31 +135,27 @@ export default function CampaignsPage() {
                                             </DialogTrigger>
                                             <DialogContent className="bg-card/90 backdrop-blur-xl border-none shadow-2xl rounded-2xl">
                                                 <DialogHeader>
-                                                    <DialogTitle className="text-xl">{campaign.title}</DialogTitle>
+                                                    <DialogTitle className="text-xl">{campaign.name}</DialogTitle>
                                                     <DialogDescription>
-                                                        Client Requirements and Details
+                                                        {campaign.objective || "No objective provided."}
                                                     </DialogDescription>
                                                 </DialogHeader>
-                                                <div className="grid gap-4 py-4">
-                                                    <div className="grid grid-cols-4 items-center gap-4 border-b border-white/5 pb-2">
-                                                        <span className="font-bold text-muted-foreground">Client:</span>
-                                                        <span className="col-span-3 font-medium">{campaign.vendorId || "Unknown"}</span>
-                                                    </div>
-                                                    <div className="grid grid-cols-4 items-center gap-4 border-b border-white/5 pb-2">
-                                                        <span className="font-bold text-muted-foreground">Budget:</span>
-                                                        <span className="col-span-3 font-medium">₹{campaign.budget || 0}</span>
-                                                    </div>
-                                                    <div className="grid grid-cols-4 items-center gap-4 border-b border-white/5 pb-2">
-                                                        <span className="font-bold text-muted-foreground">Objective:</span>
-                                                        <span className="col-span-3">Increase brand awareness among Gen Z demographic.</span>
-                                                    </div>
-                                                    <div className="grid grid-cols-4 items-center gap-4 border-b border-white/5 pb-2">
-                                                        <span className="font-bold text-muted-foreground">Locations:</span>
-                                                        <span className="col-span-3">New York, Los Angeles, Chicago</span>
+                                                <div className="grid gap-4 py-4 text-sm">
+                                                    <div className="grid grid-cols-4 items-center gap-4">
+                                                        <span className="font-bold text-muted-foreground">User:</span>
+                                                        <span className="col-span-3">{campaign.userId}</span>
                                                     </div>
                                                     <div className="grid grid-cols-4 items-center gap-4">
-                                                        <span className="font-bold text-muted-foreground">Assets:</span>
-                                                        <span className="col-span-3 text-primary hover:underline cursor-pointer font-medium">View Creative Assets</span>
+                                                        <span className="font-bold text-muted-foreground">Budget:</span>
+                                                        <span className="col-span-3 font-bold">₹{campaign.budget || 0}</span>
+                                                    </div>
+                                                    <div className="grid grid-cols-4 items-center gap-4">
+                                                        <span className="font-bold text-muted-foreground">Style:</span>
+                                                        <span className="col-span-3">{campaign.designStyle || "Standard"}</span>
+                                                    </div>
+                                                    <div className="grid grid-cols-4 items-center gap-4">
+                                                        <span className="font-bold text-muted-foreground">Dates:</span>
+                                                        <span className="col-span-3">{campaign.startDate} - {campaign.endDate}</span>
                                                     </div>
                                                 </div>
                                             </DialogContent>

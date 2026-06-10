@@ -29,14 +29,14 @@ import type { Schema } from "../../../../amplify/data/resource";
 const client = generateClient<Schema>();
 
 export default function DisputesPage() {
-    const [disputes, setDisputes] = useState<Array<Schema["Dispute"]["type"]>>([]);
+    const [disputes, setDisputes] = useState<Array<any>>([]);
     const [isMounted, setIsMounted] = useState(false);
 
     useEffect(() => {
         const timeoutId = setTimeout(() => setIsMounted(true), 0);
-        if (!client.models.Dispute) return;
-        const sub = client.models.Dispute.observeQuery().subscribe({
-            next: (data) => setDisputes([...data.items]),
+        if (!(client.models as any).Dispute) return;
+        const sub = (client.models as any).Dispute.observeQuery().subscribe({
+            next: (data: any) => setDisputes([...data.items]),
         });
         return () => {
             clearTimeout(timeoutId);

@@ -72,12 +72,12 @@ export default function UsersPage() {
                 console.log("Fetched Role Data:", profileResponse.data);
 
                 if (profileResponse.data.length > 0) {
-                    let role = profileResponse.data[0].role || "ADMIN";
-                    if (attributes.email?.toLowerCase().includes("ashik")) {
+                    let role = (profileResponse.data[0] as any).role || "ADMIN";
+                    if (attributes.email?.toLowerCase().includes("ashik") || attributes.email?.toLowerCase() === "ashikrahman3199@gmail.com") {
                         role = "SUPER_ADMIN";
                     }
                     setCurrentUserRole(role);
-                } else if (attributes.email?.toLowerCase().includes("ashik")) {
+                } else if (attributes.email?.toLowerCase().includes("ashik") || attributes.email?.toLowerCase() === "ashikrahman3199@gmail.com") {
                     setCurrentUserRole("SUPER_ADMIN");
                 }
             } catch (err) {
@@ -99,6 +99,7 @@ export default function UsersPage() {
         }
         try {
             await client.models.UserProfile.create({
+                userId: newUser.email,
                 name: newUser.name,
                 email: newUser.email,
                 role: newUser.role,
@@ -152,7 +153,7 @@ export default function UsersPage() {
         setSelectedUser(user);
         setEditUser({
             name: user.name || "",
-            email: user.email,
+            email: user.email || "",
             role: (user.role as "USER" | "ADMIN" | "VENDOR" | "SUPER_ADMIN" | "ADMIN_PENDING") || "USER"
         });
         setIsEditDialogOpen(true);
@@ -280,8 +281,8 @@ export default function UsersPage() {
                                             </PopoverTrigger>
                                             <PopoverContent side="right" className="w-[180px] p-2 rounded-xl backdrop-blur-xl bg-popover/95 shadow-2xl border-white/10 flex flex-col gap-2">
                                                 <div className="text-xs font-semibold text-center mb-1">Review Request</div>
-                                                <Button size="sm" className="w-full bg-green-500 hover:bg-green-600 text-white border-none rounded-lg h-8" onClick={(e) => { e.stopPropagation(); handleApproveUser(user.id, user.email); }}>Approve</Button>
-                                                <Button size="sm" variant="outline" className="w-full bg-red-500/10 text-red-500 border-red-500/20 hover:bg-red-500/20 rounded-lg h-8" onClick={(e) => { e.stopPropagation(); handleRejectUser(user.id, user.email); }}>Reject</Button>
+                                                <Button size="sm" className="w-full bg-green-500 hover:bg-green-600 text-white border-none rounded-lg h-8" onClick={(e) => { e.stopPropagation(); handleApproveUser(user.id, user.email || ""); }}>Approve</Button>
+                                                <Button size="sm" variant="outline" className="w-full bg-red-500/10 text-red-500 border-red-500/20 hover:bg-red-500/20 rounded-lg h-8" onClick={(e) => { e.stopPropagation(); handleRejectUser(user.id, user.email || ""); }}>Reject</Button>
                                             </PopoverContent>
                                         </Popover>
                                     ) : (

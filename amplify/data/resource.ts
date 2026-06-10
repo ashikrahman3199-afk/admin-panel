@@ -1,140 +1,126 @@
 import { type ClientSchema, a, defineData } from '@aws-amplify/backend';
 
-/*== STEP 1 ===============================================================
-The section below creates a Todo database table with a "content" field. https://docs.amplify.aws/gen2/build-a-backend/data/custom-business-logic/
-=========================================================================*/
 const schema = a.schema({
-    Vendor: a
-        .model({
-            businessName: a.string().required(),
-            contact: a.string().required(),
-            location: a.string(),
-            status: a.enum(['PENDING', 'VERIFIED', 'REJECTED']),
-            inventory: a.hasMany('Service', 'vendorId'),
-            owner: a.string(),
-        })
-        .authorization((allow) => [
-            allow.owner(),
-            allow.authenticated(), // Allow any authenticated user (our Admin dashboard relies on UI checks)
-            allow.authenticated("identityPool").to(['read']), // Allow users to read verified vendors? Maybe complicate later. Keep simple.
-            allow.publicApiKey().to(['read']),
-        ]),
+    UserProfile: a.model({
+        userId: a.string().required(),
+        phoneNumber: a.string(),
+        name: a.string(),
+        email: a.string(),
+        role: a.string(),
+        avatar: a.string(),
+        totalEarnings: a.float(),
+        totalBookings: a.integer(),
+        profileViews: a.integer(),
+        status: a.string(), // Keeping this for Admin Panel status tracking if needed
+    }).authorization(allow => [
+        allow.authenticated().to(['read']),
+        allow.owner(),
+    ]),
 
-    ServiceOption: a
-        .model({
-            name: a.string().required(),
-            price: a.float().required(),
-            duration: a.string(),
-            status: a.string(),
-            serviceId: a.id(),
-            service: a.belongsTo('Service', 'serviceId'),
-        })
-        .authorization((allow) => [
-            allow.owner(),
-            allow.authenticated(),
-            allow.publicApiKey().to(['read']),
-        ]),
+    AdSpace: a.model({
+        title: a.string().required(),
+        category: a.string().required(),
+        location: a.string().required(),
+        price: a.float().required(),
+        priceUnit: a.string().required(),
+        rating: a.float(),
+        image: a.string(),
+        description: a.string(),
+        reach: a.string(),
+        minSpend: a.float(),
+        features: a.string().array(),
+        approvalStatus: a.string(), // 'PENDING', 'APPROVED', 'REJECTED'
+        rejectionReason: a.string(),
+    }).authorization(allow => [allow.authenticated()]),
 
-    Service: a
-        .model({
-            name: a.string().required(),
-            type: a.string(),
-            price: a.float().required(),
-            description: a.string(),
-            approvalStatus: a.enum(['pending', 'approved', 'rejected']),
-            vendorId: a.id(),
-            vendor: a.belongsTo('Vendor', 'vendorId'),
-            options: a.hasMany('ServiceOption', 'serviceId'),
-        })
-        .authorization((allow) => [
-            allow.owner(),
-            allow.authenticated(),
-            allow.publicApiKey().to(['read']), // Public read for users
-        ]),
+    Campaign: a.model({
+        userId: a.string().required(),
+        name: a.string().required(),
+        objective: a.string(),
+        designStyle: a.string(),
+        selectedServices: a.string().array(),
+        budget: a.float(),
+        startDate: a.string(),
+        endDate: a.string(),
+        status: a.string(),
+    }).authorization(allow => [
+        allow.authenticated().to(['read', 'update']),
+        allow.owner(),
+    ]),
 
-    UserProfile: a
-        .model({
-            email: a.string().required(),
-            name: a.string(),
-            role: a.enum(['SUPER_ADMIN', 'ADMIN', 'ADMIN_PENDING', 'VENDOR', 'USER']), // Matches Cognito group logic but stored in DB
-            status: a.enum(['ACTIVE', 'INACTIVE', 'PENDING_APPROVAL']),
-            profileId: a.id(),
-        })
-        .authorization((allow) => [
-            allow.owner(),
-            allow.authenticated(),
-        ]),
+    Booking: a.model({
+        userId: a.string().required(),
+        campaignName: a.string(),
+        orderDate: a.string(),
+        startDate: a.string(),
+        endDate: a.string(),
+        status: a.string(),
+        amount: a.float(),
+        services: a.string().array(),
+        itemsJson: a.string(),
+        vendorProgressJson: a.string(),
+        verificationImages: a.string().array(),
+        paymentId: a.string(),
+        razorpayOrderId: a.string(),
+        razorpaySignature: a.string(),
+        paymentStatus: a.string(), // 'PENDING', 'PAID', 'FAILED'
+        commissionAmount: a.float(),
+        vendorAmount: a.float(),
+    }).authorization(allow => [
+        allow.authenticated().to(['read', 'update']),
+        allow.owner(),
+    ]),
 
-    Booking: a
-        .model({
-            date: a.string().required(),
-            status: a.enum(['PENDING', 'CONFIRMED', 'COMPLETED', 'CANCELLED']),
-            totalAmount: a.float(),
-            vendorId: a.id(),
-            customerId: a.id(),
-            serviceId: a.id(),
-        })
-        .authorization((allow) => [
-            allow.owner(),
-            allow.authenticated(),
-            allow.group('Vendor'), // Vendors need to see their bookings
-        ]),
+    Notification: a.model({
+        userId: a.string().required(),
+        title: a.string().required(),
+        message: a.string().required(),
+        type: a.string(),
+        read: a.boolean(),
+    }).authorization(allow => [
+        allow.authenticated().to(['read', 'update']),
+        allow.owner(),
+    ]),
 
-    Campaign: a
-        .model({
-            title: a.string().required(),
-            status: a.enum(['ACTIVE', 'PAUSED', 'ENDED']),
-            impressions: a.integer(),
-            clicks: a.integer(),
-            budget: a.float(),
-            vendorId: a.id(),
-        })
-        .authorization((allow) => [
-            allow.owner(),
-            allow.authenticated(),
-            allow.group('Vendor'),
-        ]),
+    VendorWallet: a.model({
+        userId: a.string().required(), // The Vendor's User ID
+        availableBalance: a.float().required(),
+        totalEarnings: a.float().required(),
+        totalWithdrawn: a.float().required(),
+    }).authorization(allow => [
+        allow.authenticated().to(['read', 'update']),
+        allow.owner(),
+    ]),
 
-    Transaction: a
-        .model({
-            amount: a.float().required(),
-            status: a.enum(['SUCCESS', 'FAILED', 'PENDING']),
-            date: a.string(),
-            vendorId: a.id(), // Who got paid
-            customerId: a.id(), // Who paid
-        })
-        .authorization((allow) => [
-            allow.owner(),
-            allow.authenticated(),
-            allow.group('Vendor'),
-        ]),
+    WithdrawalRequest: a.model({
+        userId: a.string().required(), // The Vendor's User ID
+        amount: a.float().required(),
+        requestDate: a.string().required(),
+        paymentMethod: a.string(), // Bank Account, UPI ID, etc.
+        paymentDetails: a.string(),
+        status: a.string(), // 'PENDING', 'APPROVED', 'PROCESSED', 'REJECTED'
+        processedDate: a.string(),
+        adminNotes: a.string(),
+    }).authorization(allow => [
+        allow.authenticated().to(['read', 'update']),
+        allow.owner(),
+    ]),
 
-    Dispute: a
-        .model({
-            reason: a.string().required(),
-            status: a.enum(['OPEN', 'RESOLVED', 'CLOSED']),
-            transactionId: a.id(),
-            raisedBy: a.id(),
-        })
-        .authorization((allow) => [
-            allow.owner(),
-            allow.authenticated(),
-        ]),
+    // Keep compatibility for any old code that might expect these models
+    Transaction: a.model({
+        amount: a.float().required(),
+        status: a.string(),
+        date: a.string(),
+        vendorId: a.id(),
+        customerId: a.id(),
+    }).authorization(allow => [allow.authenticated()]),
 
-    WithdrawalRequest: a
-        .model({
-            amount: a.float().required(),
-            status: a.enum(['PENDING', 'APPROVED', 'REJECTED']),
-            vendorId: a.id(),
-            vendor: a.belongsTo('Vendor', 'vendorId'),
-            bankDetails: a.string(),
-            requestedAt: a.string(),
-        })
-        .authorization((allow) => [
-            allow.owner(),
-            allow.authenticated(),
-            allow.group('Vendor'),
-        ]),
+    Vendor: a.model({
+        businessName: a.string().required(),
+        contact: a.string().required(),
+        location: a.string(),
+        status: a.string(),
+    }).authorization(allow => [allow.authenticated()]),
 });
 
 export type Schema = ClientSchema<typeof schema>;
@@ -143,8 +129,5 @@ export const data = defineData({
     schema,
     authorizationModes: {
         defaultAuthorizationMode: 'userPool',
-        apiKeyAuthorizationMode: {
-            expiresInDays: 30,
-        },
     },
 });

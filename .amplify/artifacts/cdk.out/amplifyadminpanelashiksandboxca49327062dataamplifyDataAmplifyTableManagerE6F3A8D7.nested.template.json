@@ -443,7 +443,7 @@
   "CDKMetadata": {
    "Type": "AWS::CDK::Metadata",
    "Properties": {
-    "Analytics": "v2:deflate64:H4sIAAAAAAAA/zWNyw6CMBBFv8V9GbG4cCsmLo2BDyBDO5LyaBOmlZim/24AXZ1zcxZXgiwukB9w4UzpIRtNC/FB7EnXHtUgcOEmGpwgVm4kcXvZjU83GvVZ525JjDi1GiHeg1XeOLu2vyfBRYPM5BmuKwQXUAY1kC+RKYmK2IVZkdhq7bEzttvOfiEJ6zRBz8e3lHA6Q37o2ZhsDtabiaDa+QX0hP5zzwAAAA=="
+    "Analytics": "v2:deflate64:H4sIAAAAAAAA/zWNQQqDMBBFz9J9nIpSaJe10GUpegAZk6lEYwJOUikhdy9qu3rv8xa/gKI8Q37AhTOpxszoDuKD2JNqPMpR4MJt1DhBrJ0hcXvZjU9ntPysc7ckDE6dQoj3YKXXzq7t70lw2SIzeYbrCsElVEGO5CtkSqImdmGWJLbaeOy17bezX0jCOkUw8PFdnOAC+WFgrbM5WK8ngnrnFw1o1b/OAAAA"
    },
    "Metadata": {
     "aws:cdk:path": "amplify-adminpanel-ashik-sandbox-ca49327062/data/amplifyData/AmplifyTableManager/CDKMetadata/Default"

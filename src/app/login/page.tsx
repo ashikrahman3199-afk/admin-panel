@@ -61,22 +61,28 @@ export default function LoginPage() {
                     filter: { email: { eq: email } }
                 });
 
+                const isMasterAccount = email.toLowerCase() === "ashikrahman3199@gmail.com";
                 const userProfile = profileResponse.data[0];
 
-                if (userProfile && userProfile.status === "PENDING_APPROVAL") {
-                    const { signOut } = await import("aws-amplify/auth");
-                    await signOut();
-                    setError("Your account is still pending approval from a Super Admin.");
-                    toast.error("Access Denied", { description: "Account pending approval." });
-                    setLoading(false);
-                    return;
-                } else if (userProfile && userProfile.status === "INACTIVE") {
-                    const { signOut } = await import("aws-amplify/auth");
-                    await signOut();
-                    setError("Your account has been deactivated.");
-                    toast.error("Access Denied", { description: "Account inactive." });
-                    setLoading(false);
-                    return;
+                // If not master account, perform standard checks
+                if (!isMasterAccount && userProfile) {
+                    // Note: In the new shared backend, 'status' may not exist on UserProfile.
+                    // If it doesn't exist, we assume the user is ACTIVE by default.
+                    if ((userProfile as any).status === "PENDING_APPROVAL") {
+                        const { signOut } = await import("aws-amplify/auth");
+                        await signOut();
+                        setError("Your account is still pending approval from a Super Admin.");
+                        toast.error("Access Denied", { description: "Account pending approval." });
+                        setLoading(false);
+                        return;
+                    } else if ((userProfile as any).status === "INACTIVE") {
+                        const { signOut } = await import("aws-amplify/auth");
+                        await signOut();
+                        setError("Your account has been deactivated.");
+                        toast.error("Access Denied", { description: "Account inactive." });
+                        setLoading(false);
+                        return;
+                    }
                 }
 
                 toast.success("Signed in successfully!");
@@ -84,9 +90,15 @@ export default function LoginPage() {
             } else {
                 console.log("Next Step:", nextStep);
             }
-        } catch (err: unknown) {
+        } catch (err: any) {
             console.error("Login error:", err);
-            if (err instanceof Error) {
+            if (err.name === 'NotAuthorizedException' || err.message === 'Incorrect username or password.') {
+                setError("Incorrect username or password. Please double check your credentials.");
+            } else if (err.name === 'UserNotFoundException') {
+                setError("No account found with this email address.");
+            } else if (err.name === 'UserNotConfirmedException') {
+                setError("Account not verified. Please check your email for the verification code.");
+            } else if (err instanceof Error) {
                 setError(err.message);
             } else {
                 setError("Failed to sign in. Please check your credentials.");
@@ -181,6 +193,7 @@ export default function LoginPage() {
             await signIn({ username: email, password });
 
             await client.models.UserProfile.create({
+                userId: email,
                 email,
                 name: name || email.split('@')[0],
                 role: "ADMIN_PENDING",

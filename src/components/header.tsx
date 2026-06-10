@@ -41,16 +41,19 @@ export function Header() {
 
                 if (profileResponse.data.length > 0) {
                     const profile = profileResponse.data[0];
-                    let role = profile.role || "ADMIN";
-                    if (attributes.email?.toLowerCase().includes("ashik")) {
+                    let role = (profile && (profile as any).role) ? (profile as any).role : "ADMIN";
+                    if (attributes.email?.toLowerCase().includes("ashik") || attributes.email?.toLowerCase() === "ashikrahman3199@gmail.com") {
                         role = "SUPER_ADMIN";
-                        client.models.UserProfile.update({ id: profile.id, role: "SUPER_ADMIN" }).catch(console.error);
+                        // Only try to update if the field exists and is different
+                        if (profile && (profile as any).role !== "SUPER_ADMIN" && (client.models.UserProfile as any).update) {
+                            (client.models.UserProfile as any).update({ id: profile.id, role: "SUPER_ADMIN" }).catch(console.error);
+                        }
                     }
                     setUserRole(role);
-                    setUserName(profile.name || attributes.email?.split('@')[0] || "Admin User");
+                    setUserName(profile?.name || attributes.email?.split('@')[0] || "Admin User");
                 } else {
                     let role = "ADMIN";
-                    if (attributes.email?.toLowerCase().includes("ashik")) {
+                    if (attributes.email?.toLowerCase().includes("ashik") || attributes.email?.toLowerCase() === "ashikrahman3199@gmail.com") {
                         role = "SUPER_ADMIN";
                     }
                     setUserName(attributes.email?.split('@')[0] || "Admin User");
