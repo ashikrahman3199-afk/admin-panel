@@ -17,7 +17,8 @@ import {
 
 const sidebarItems = [
     { icon: LayoutDashboard, label: "Overview", href: "/dashboard" },
-    { icon: Users, label: "Users", href: "/dashboard/users" },
+    { icon: Users, label: "Admin Users", href: "/dashboard/admin-users" },
+    { icon: Users, label: "App Users", href: "/dashboard/app-users" },
     { icon: Store, label: "Vendors", href: "/dashboard/vendors" },
     { icon: ShieldCheck, label: "Service Verification", href: "/dashboard/verification" },
     { icon: FileText, label: "Campaigns", href: "/dashboard/campaigns" },

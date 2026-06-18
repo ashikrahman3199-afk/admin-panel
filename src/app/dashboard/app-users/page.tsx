@@ -78,7 +78,7 @@ class ErrorBoundary extends React.Component<{children: React.ReactNode}, {hasErr
 
 import React from 'react';
 
-export default function UsersPage() {
+export default function AppUsersPage() {
     return (
         <ErrorBoundary>
             <UsersPageContent />
@@ -259,9 +259,9 @@ function UsersPageContent() {
         <div className="space-y-6">
             <div className="flex items-center justify-between">
                 <div>
-                    <h1 className="text-3xl font-bold tracking-tight">User Management</h1>
+                    <h1 className="text-3xl font-bold tracking-tight">App Users</h1>
                     <p className="text-muted-foreground">
-                        Manage system users, roles, and access permissions.
+                        Manage users registered from the main application.
                     </p>
                 </div>
                 <div className="flex items-center gap-2">
@@ -335,7 +335,10 @@ function UsersPageContent() {
                     </TableHeader>
                     <TableBody>
                         {users.filter(u => {
-                            if (!u || !u.id || u.role === "VENDOR" || u.role === "VENDOR_PENDING") return false;
+                            if (!u || !u.id) return false;
+                            // Only allow USER role in this panel
+                            if (u.role !== "USER") return false;
+                            
                             if (viewFilter === "PENDING" && u.status !== "PENDING_APPROVAL") return false;
                             if (viewFilter === "REGISTERED" && u.status === "PENDING_APPROVAL") return false;
                             return true;

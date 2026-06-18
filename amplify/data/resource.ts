@@ -13,7 +13,7 @@ const schema = a.schema({
         profileViews: a.integer(),
         status: a.string(), // Keeping this for Admin Panel status tracking if needed
     }).authorization(allow => [
-        allow.authenticated().to(['read']),
+        allow.authenticated().to(['read', 'update', 'delete']),
         allow.owner(),
     ]),
 
