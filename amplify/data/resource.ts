@@ -120,6 +120,8 @@ const schema = a.schema({
         contact: a.string().required(),
         location: a.string(),
         status: a.string(),
+        owner: a.string(),
+        gstNumber: a.string(),
     }).authorization(allow => [allow.authenticated()]),
 });
 
