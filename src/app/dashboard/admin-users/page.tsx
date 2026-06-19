@@ -186,7 +186,11 @@ function UsersPageContent() {
             return;
         }
         try {
-            await client.models.UserProfile.update({ id, role: approveRole, status: "ACTIVE" });
+            const response = await client.models.UserProfile.update({ id, role: approveRole, status: "ACTIVE" });
+            if (response.errors) {
+                console.error(response.errors);
+                throw new Error("GraphQL Error: " + response.errors[0].message);
+            }
             setIsApproveDialogOpen(false);
             toast.success("Access Approved", { description: `${email} has been granted ${approveRole} access.` });
             
@@ -213,7 +217,11 @@ function UsersPageContent() {
             return;
         }
         try {
-            await client.models.UserProfile.update({ id, status: "INACTIVE" });
+            const response = await client.models.UserProfile.update({ id, status: "INACTIVE" });
+            if (response.errors) {
+                console.error(response.errors);
+                throw new Error("GraphQL Error: " + response.errors[0].message);
+            }
             toast.info("Access Rejected", { description: `${email}'s access request was denied.` });
             
             setTimeout(() => {
@@ -237,12 +245,16 @@ function UsersPageContent() {
     const handleEditUser = async () => {
         if (!selectedUser) return;
         try {
-            await client.models.UserProfile.update({
+            const response = await client.models.UserProfile.update({
                 id: selectedUser.id,
                 name: editUser.name,
                 email: editUser.email,
                 role: editUser.role,
             });
+            if (response.errors) {
+                console.error(response.errors);
+                throw new Error("GraphQL Error: " + response.errors[0].message);
+            }
             setIsEditDialogOpen(false);
             toast.success("User Updated", { description: "User details have been updated." });
         } catch (error) {
