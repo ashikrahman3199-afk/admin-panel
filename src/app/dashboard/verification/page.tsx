@@ -30,7 +30,7 @@ import type { Schema } from "../../../../amplify/data/resource";
 
 const client = generateClient<Schema>();
 
-import { getPendingServices, updateServiceStatus } from "../../actions/services";
+// Removed legacy server actions
 
 export default function VerificationPage() {
     const [mounted, setMounted] = React.useState(false);
@@ -47,11 +47,21 @@ export default function VerificationPage() {
     const fetchPendingAdSpaces = React.useCallback(async () => {
         setIsLoading(true);
         try {
-            // Fetch all listings to show history using Server Action
-            const data = await getPendingServices();
-            setAdSpaces(data);
+            const { data } = await client.models.AdSpace.list();
+            
+            // Sort: Pending first, then by date
+            const sortedData = [...data].sort((a, b) => {
+                const isPendingA = a.approvalStatus === 'PENDING' || a.approvalStatus === 'Pending';
+                const isPendingB = b.approvalStatus === 'PENDING' || b.approvalStatus === 'Pending';
+
+                if (isPendingA && !isPendingB) return -1;
+                if (!isPendingA && isPendingB) return 1;
+                return new Date(b.updatedAt || 0).getTime() - new Date(a.updatedAt || 0).getTime();
+            });
+            
+            setAdSpaces(sortedData);
         } catch (error) {
-            console.error("Error fetching pending ad spaces:", error);
+            console.error("Error fetching ad spaces:", error);
             toast.error("Failed to load listings");
         } finally {
             setIsLoading(false);
@@ -65,15 +75,23 @@ export default function VerificationPage() {
 
     const handleUpdateStatus = async (id: string, name: string, status: "Active" | "Rejected" | "Pending", reason?: string) => {
         try {
-            const res = await updateServiceStatus(id, status, reason);
-            if (res.success) {
-                toast.success(`Listing ${status}`, { description: `${name} has been ${status.toLowerCase()}.` });
-                setIsRejectionDialogOpen(false);
-                setRejectionReason("");
-                fetchPendingAdSpaces(); // Refresh data
-            } else {
-                throw new Error("Failed");
+            // Map "Active" to "APPROVED" to match schema
+            const mappedStatus = status === "Active" ? "APPROVED" : status.toUpperCase();
+            
+            const { data, errors } = await client.models.AdSpace.update({
+                id,
+                approvalStatus: mappedStatus,
+                ...(reason ? { rejectionReason: reason } : {})
+            });
+            
+            if (errors) {
+                throw new Error("GraphQL Error: " + errors[0].message);
             }
+            
+            toast.success(`Listing ${status}`, { description: `${name} has been ${status.toLowerCase()}.` });
+            setIsRejectionDialogOpen(false);
+            setRejectionReason("");
+            fetchPendingAdSpaces(); // Refresh data
         } catch (error) {
             toast.error("Error", { description: `Failed to ${status.toLowerCase()} listing.` });
         }
