@@ -81,7 +81,9 @@ export default function VerificationPage() {
             const { data, errors } = await client.models.AdSpace.update({
                 id,
                 approvalStatus: mappedStatus,
-                ...(reason ? { rejectionReason: reason } : {})
+                // TEMPORARY FIX: AWS Backend has not updated the schema to accept rejectionReason yet.
+                // Once the backend is deployed, uncomment the line below.
+                // ...(reason ? { rejectionReason: reason } : {})
             });
             
             if (errors) {
