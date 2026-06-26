@@ -93,7 +93,7 @@ export default function VerificationPage() {
             setRejectionReason("");
             fetchPendingAdSpaces(); // Refresh data
         } catch (error) {
-            toast.error("Error", { description: `Failed to ${status.toLowerCase()} listing.` });
+            toast.error("Error", { description: error instanceof Error ? error.message : `Failed to ${status.toLowerCase()} listing.` });
         }
     };
 
