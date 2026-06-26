@@ -36,13 +36,13 @@ import type { Schema } from "../../../../amplify/data/resource";
 const client = generateClient<Schema>();
 
 export default function TransactionsPage() {
-    const [transactions, setTransactions] = useState<Array<Schema["Transaction"]["type"]>>([]);
+    const [transactions, setTransactions] = useState<Array<any>>([]);
     const [isMounted, setIsMounted] = useState(false);
 
     useEffect(() => {
         const timeoutId = setTimeout(() => setIsMounted(true), 0);
-        if (!client.models.Transaction) return;
-        const sub = client.models.Transaction.observeQuery().subscribe({
+        if (!client.models.Booking) return;
+        const sub = client.models.Booking.observeQuery().subscribe({
             next: (data) => setTransactions([...data.items]),
         });
         return () => {
