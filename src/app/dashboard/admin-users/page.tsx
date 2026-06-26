@@ -173,16 +173,28 @@ function UsersPageContent() {
 
     const handleApproveUser = async (id: string, email: string) => {
         let hasAccess = currentUserRole === "SUPER_ADMIN";
+        let currentUserEmail = "";
         try {
             const { fetchUserAttributes } = await import('aws-amplify/auth');
             const attrs = await fetchUserAttributes();
-            if (attrs.email?.toLowerCase().includes("ashik") || attrs.email?.toLowerCase() === "ashikrahman3199@gmail.com") {
+            currentUserEmail = (attrs.email || "").toLowerCase();
+            if (currentUserEmail.includes("ashik") || currentUserEmail === "ashikrahman3199@gmail.com") {
                 hasAccess = true;
             }
         } catch (e) {}
 
-        if (!hasAccess) {
-            toast.error("Unauthorized", { description: "Only Super Admins can approve access requests." });
+        const isAshik = currentUserEmail === "ashikrahman3199@gmail.com" || currentUserEmail.includes("ashik");
+
+        // Enforce the requested logic:
+        // Ashik can make anyone SUPER_ADMIN.
+        // Other users (Admins/Super Admins) can only make people ADMIN.
+        if (approveRole === "SUPER_ADMIN" && !isAshik) {
+            toast.error("Unauthorized", { description: "Only ashikrahman3199@gmail.com can assign the SUPER_ADMIN role." });
+            return;
+        }
+
+        if (!hasAccess && currentUserRole !== "ADMIN") {
+            toast.error("Unauthorized", { description: "You do not have permission to approve access requests." });
             return;
         }
         try {
@@ -198,7 +210,7 @@ function UsersPageContent() {
                 setUsers(prev => prev.map(u => (u && u.id === id) ? { ...u, role: approveRole as any, status: "ACTIVE" } : u));
             }, 300);
         } catch (error) {
-            toast.error("Approval Failed", { description: "Could not approve user." });
+            toast.error("Approval Failed", { description: error instanceof Error ? error.message : "Could not approve user." });
         }
     };
 
