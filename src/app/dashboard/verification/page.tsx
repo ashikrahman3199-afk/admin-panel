@@ -245,15 +245,25 @@ export default function VerificationPage() {
                                                         )}
                                                     </div>
                                                     <DialogFooter className="gap-2">
-                                                        <Button variant="destructive" className="rounded-full px-6" onClick={() => {
-                                                            setSelectedSpaceForRejection(space);
-                                                            setIsRejectionDialogOpen(true);
-                                                        }}>
-                                                            Reject
-                                                        </Button>
-                                                        <Button className="rounded-full px-6 bg-green-600 hover:bg-green-700" onClick={() => handleUpdateStatus(space.id, space.name || space.title, "Active")}>
-                                                            Approve
-                                                        </Button>
+                                                        {(space.status === "Pending" || space.approvalStatus === "PENDING" || (!space.status && !space.approvalStatus)) ? (
+                                                            <>
+                                                                <Button variant="destructive" className="rounded-full px-6" onClick={() => {
+                                                                    setSelectedSpaceForRejection(space);
+                                                                    setIsRejectionDialogOpen(true);
+                                                                }}>
+                                                                    Reject
+                                                                </Button>
+                                                                <Button className="rounded-full px-6 bg-green-600 hover:bg-green-700" onClick={() => handleUpdateStatus(space.id, space.name || space.title, "Active")}>
+                                                                    Approve
+                                                                </Button>
+                                                            </>
+                                                        ) : (
+                                                            <div className="flex w-full justify-center">
+                                                                <span className="text-muted-foreground text-sm">
+                                                                    This listing is already <span className="font-bold">{space.status || space.approvalStatus}</span>.
+                                                                </span>
+                                                            </div>
+                                                        )}
                                                     </DialogFooter>
                                                 </DialogContent>
                                             </Dialog>
