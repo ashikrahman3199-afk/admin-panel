@@ -17,8 +17,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Admin Panel",
-  description: "Smart Admin Panel for Client & Vendor Integration",
+  title: "Ad.Agen Admin",
+  description: "Smart Ad.Agen Admin Panel for Client & Vendor Integration",
 };
 
 export default function RootLayout({

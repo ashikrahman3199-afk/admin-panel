@@ -225,7 +225,7 @@ export default function LoginPage() {
                             : step === 'NEW_PASSWORD_REQUIRED'
                                 ? 'Please set a new password provided by your administrator'
                                 : step === 'SIGN_UP'
-                                    ? 'Apply for a new Admin panel account'
+                                    ? 'Apply for a new Ad.Agen Admin account'
                                     : 'Enter the confirmation code sent to your email'}
                     </CardDescription>
                 </CardHeader>

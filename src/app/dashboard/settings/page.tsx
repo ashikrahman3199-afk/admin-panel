@@ -27,11 +27,11 @@ export default function SettingsPage() {
                     <CardContent className="space-y-4">
                         <div className="grid gap-2">
                             <Label htmlFor="site-name">Platform Name</Label>
-                            <Input id="site-name" defaultValue="AdMediLink Admin" />
+                            <Input id="site-name" defaultValue="Ad.Agen Admin" />
                         </div>
                         <div className="grid gap-2">
                             <Label htmlFor="contact-email">Support Email</Label>
-                            <Input id="contact-email" defaultValue="support@admedilink.com" />
+                            <Input id="contact-email" defaultValue="support@adagen.com" />
                         </div>
                     </CardContent>
                     <CardFooter className="border-t px-6 py-4">
