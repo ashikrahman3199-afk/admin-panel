@@ -42,15 +42,22 @@ export default function VendorsPage() {
     const fetchData = React.useCallback(async () => {
         setIsLoading(true);
         try {
-            // In the shared backend, vendors are UserProfiles with role 'VENDOR'
-            const profilesRes = await client.models.UserProfile.list();
-            setVendorsList(profilesRes.data.filter(p => p && (p.role === "VENDOR" || p.role === "VENDOR_PENDING")));
+            // Fetch vendors from the direct DynamoDB API route
+            const response = await fetch('/api/vendors');
+            const data = await response.json();
+            
+            if (data.success) {
+                setVendorsList(data.vendors);
+            } else {
+                throw new Error(data.error);
+            }
 
+            // Fetch withdrawals
             const withdrawalsRes = await client.models.WithdrawalRequest.list();
             setWithdrawals(withdrawalsRes.data.filter(Boolean));
         } catch (error) {
             console.error("Error fetching vendor data:", error);
-            toast.error("Fetch Error", { description: "Could not load vendor data from the shared backend." });
+            toast.error("Fetch Error", { description: "Could not load vendor data from the API." });
         } finally {
             setIsLoading(false);
         }
@@ -59,18 +66,17 @@ export default function VendorsPage() {
     React.useEffect(() => {
         fetchData();
         
-        // Setup subscriptions
-        const subProfiles = client.models.UserProfile.observeQuery().subscribe({
-            next: (data) => setVendorsList([...data.items].filter(p => p && (p.role === "VENDOR" || p.role === "VENDOR_PENDING"))),
-        });
-
+        // Setup subscriptions for withdrawals
         const subWithdrawals = client.models.WithdrawalRequest.observeQuery().subscribe({
             next: (data) => setWithdrawals([...data.items].filter(Boolean)),
         });
 
+        // Set up polling for vendors since observeQuery isn't supported on our custom API
+        const interval = setInterval(fetchData, 10000);
+
         return () => {
-            subProfiles.unsubscribe();
             subWithdrawals.unsubscribe();
+            clearInterval(interval);
         };
     }, [fetchData]);
 
@@ -159,8 +165,9 @@ export default function VendorsPage() {
                                     </TableCell>
                                     <TableCell>
                                         <div className="flex flex-col">
-                                            <span className="font-bold">{vendor.name || "Unnamed Vendor"}</span>
+                                            <span className="font-bold">{vendor.companyName || vendor.name || "Unnamed Vendor"}</span>
                                             <span className="text-xs text-muted-foreground">{vendor.email}</span>
+                                            {vendor.gstNumber && <span className="text-[10px] text-muted-foreground">GST: {vendor.gstNumber}</span>}
                                         </div>
                                     </TableCell>
                                     <TableCell>{vendor.phoneNumber || "No contact"}</TableCell>
@@ -185,12 +192,26 @@ export default function VendorsPage() {
                                             </DialogTrigger>
                                             <DialogContent className="max-w-md bg-card/90 backdrop-blur-xl border-none shadow-2xl" suppressHydrationWarning>
                                                 <DialogHeader>
-                                                    <DialogTitle>{vendor.name || "Vendor"} - Financials</DialogTitle>
+                                                    <DialogTitle>{vendor.companyName || vendor.name || "Vendor"} - Financials</DialogTitle>
                                                     <DialogDescription>
-                                                        Earnings and withdrawal history from the shared backend.
+                                                        Earnings, withdrawal history, and bank details.
                                                     </DialogDescription>
                                                 </DialogHeader>
                                                 <div className="grid gap-4 py-4">
+                                                    {/* Bank Details Section */}
+                                                    <div className="bg-white/5 rounded-xl p-3 border border-white/10 mb-2">
+                                                        <h4 className="font-semibold text-sm mb-2 text-primary">Bank Account Details</h4>
+                                                        {vendor.bankDetails ? (
+                                                            <div className="space-y-1 text-xs">
+                                                                <div className="flex justify-between"><span className="text-muted-foreground">Account Name:</span> <span className="font-medium">{vendor.bankDetails.accountName || "N/A"}</span></div>
+                                                                <div className="flex justify-between"><span className="text-muted-foreground">Account No:</span> <span className="font-medium">{vendor.bankDetails.accountNumber || "N/A"}</span></div>
+                                                                <div className="flex justify-between"><span className="text-muted-foreground">IFSC Code:</span> <span className="font-medium">{vendor.bankDetails.ifscCode || "N/A"}</span></div>
+                                                                <div className="flex justify-between"><span className="text-muted-foreground">Bank Name:</span> <span className="font-medium">{vendor.bankDetails.bankName || "N/A"}</span></div>
+                                                            </div>
+                                                        ) : (
+                                                            <p className="text-xs text-muted-foreground italic">No bank details provided yet.</p>
+                                                        )}
+                                                    </div>
                                                     <div className="flex justify-between border-b border-white/10 pb-2">
                                                         <span className="font-medium text-muted-foreground">Total Earnings</span>
                                                         <span className="font-bold text-green-500">₹{vendor.totalEarnings || 0}</span>

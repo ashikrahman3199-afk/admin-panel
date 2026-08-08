@@ -104,6 +104,18 @@ function UsersPageContent() {
     const [openPopoverId, setOpenPopoverId] = useState<string | null>(null);
     const [isMounted, setIsMounted] = useState(false);
 
+    const fetchData = React.useCallback(async () => {
+        try {
+            const response = await fetch('/api/users');
+            const data = await response.json();
+            if (data.success) {
+                setUsers(data.users);
+            }
+        } catch (error) {
+            console.error("Error fetching users from API:", error);
+        }
+    }, []);
+
     useEffect(() => {
         setIsMounted(true);
         // Fetch current authenticated user to check if they are SUPER_ADMIN
@@ -134,11 +146,10 @@ function UsersPageContent() {
         };
         fetchCurrentUser();
 
-        const sub = client.models.UserProfile.observeQuery().subscribe({
-            next: (data) => setUsers([...data.items]),
-        });
-        return () => sub.unsubscribe();
-    }, []);
+        fetchData();
+        const interval = setInterval(fetchData, 10000);
+        return () => clearInterval(interval);
+    }, [fetchData]);
 
     const handleAddUser = async () => {
         if (!newUser.name || !newUser.email) {
