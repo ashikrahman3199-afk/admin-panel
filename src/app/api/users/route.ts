@@ -11,20 +11,30 @@ const REGION = "ap-south-1";
 const dbClient = new DynamoDBClient({ region: REGION, credentials: CREDENTIALS });
 const docClient = DynamoDBDocumentClient.from(dbClient);
 
-export async function GET() {
-    try {
-        const scanCommand = new ScanCommand({ 
-            TableName: "UserProfile-d6pvakazenfljpsmln4xcmjx6u-NONE" 
-        });
-        
-        const response = await docClient.send(scanCommand);
-        
-        // Filter for USERS
-        const users = (response.Items || []).filter(
-            item => item.role === 'USER' || item.role === 'USER_PENDING'
-        );
+    export async function GET(request: Request) {
+        try {
+            const url = new URL(request.url);
+            const type = url.searchParams.get('type');
 
-        return NextResponse.json({ success: true, users });
+            const scanCommand = new ScanCommand({ 
+                TableName: "UserProfile-d6pvakazenfljpsmln4xcmjx6u-NONE" 
+            });
+            
+            const response = await docClient.send(scanCommand);
+            
+            let users = response.Items || [];
+            
+            if (type === 'admins') {
+                users = users.filter(
+                    item => item.role === 'ADMIN' || item.role === 'SUPER_ADMIN' || item.role === 'ADMIN_PENDING'
+                );
+            } else {
+                users = users.filter(
+                    item => item.role === 'USER' || item.role === 'USER_PENDING'
+                );
+            }
+    
+            return NextResponse.json({ success: true, users });
     } catch (error: any) {
         console.error("Error fetching users:", error);
         return NextResponse.json({ success: false, error: error.message }, { status: 500 });

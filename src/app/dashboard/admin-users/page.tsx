@@ -104,6 +104,18 @@ function UsersPageContent() {
     const [openPopoverId, setOpenPopoverId] = useState<string | null>(null);
     const [isMounted, setIsMounted] = useState(false);
 
+    const fetchData = React.useCallback(async () => {
+        try {
+            const response = await fetch('/api/users?type=admins');
+            const data = await response.json();
+            if (data.success) {
+                setUsers(data.users);
+            }
+        } catch (error) {
+            console.error("Error fetching admin users from API:", error);
+        }
+    }, []);
+
     useEffect(() => {
         setIsMounted(true);
         // Fetch current authenticated user to check if they are SUPER_ADMIN
@@ -111,16 +123,15 @@ function UsersPageContent() {
             try {
                 const { fetchUserAttributes } = await import('aws-amplify/auth');
                 const attributes = await fetchUserAttributes();
-                console.log("Current User Auth Data:", attributes);
 
-                const profileResponse = await client.models.UserProfile.list({
-                    filter: { email: { eq: attributes.email || "" } }
-                });
+                const response = await fetch('/api/users?type=admins');
+                const data = await response.json();
+                const allUsers = data.success ? data.users : [];
+                
+                const profile = allUsers.find((u: any) => u.email === attributes.email);
 
-                console.log("Fetched Role Data:", profileResponse.data);
-
-                if (profileResponse.data.length > 0) {
-                    let role = (profileResponse.data[0] as any).role || "ADMIN";
+                if (profile) {
+                    let role = profile.role || "ADMIN";
                     if (attributes.email?.toLowerCase().includes("ashik") || attributes.email?.toLowerCase() === "ashikrahman3199@gmail.com") {
                         role = "SUPER_ADMIN";
                     }
@@ -134,11 +145,10 @@ function UsersPageContent() {
         };
         fetchCurrentUser();
 
-        const sub = client.models.UserProfile.observeQuery().subscribe({
-            next: (data) => setUsers([...data.items]),
-        });
-        return () => sub.unsubscribe();
-    }, []);
+        fetchData();
+        const interval = setInterval(fetchData, 10000);
+        return () => clearInterval(interval);
+    }, [fetchData]);
 
     const handleAddUser = async () => {
         if (!newUser.name || !newUser.email) {
@@ -146,13 +156,21 @@ function UsersPageContent() {
             return;
         }
         try {
-            await client.models.UserProfile.create({
-                userId: newUser.email,
-                name: newUser.name,
-                email: newUser.email,
-                role: newUser.role,
-                status: "ACTIVE",
+            const res = await fetch('/api/users', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    id: newUser.email,
+                    updates: {
+                        userId: newUser.email,
+                        name: newUser.name,
+                        email: newUser.email,
+                        role: newUser.role,
+                        status: "ACTIVE"
+                    }
+                })
             });
+            if (!res.ok) throw new Error("API Request Failed");
             setIsAddDialogOpen(false);
             setNewUser({ name: "", email: "", role: "USER" });
             toast.success("User Added", { description: `${newUser.name} has been successfully added.` });
@@ -164,7 +182,9 @@ function UsersPageContent() {
 
     const handleDeleteUser = async (id: string) => {
         try {
-            await client.models.UserProfile.delete({ id });
+            const res = await fetch(`/api/users?id=${id}`, { method: 'DELETE' });
+            if (!res.ok) throw new Error("API Request Failed");
+            setUsers(prev => prev.filter(u => u.id !== id));
             toast.success("User Deleted", { description: "The user has been removed from the system." });
         } catch (error) {
             toast.error("Error", { description: "Failed to delete user." });
@@ -198,11 +218,12 @@ function UsersPageContent() {
             return;
         }
         try {
-            const response = await client.models.UserProfile.update({ id, role: approveRole, status: "ACTIVE" });
-            if (response.errors) {
-                console.error(response.errors);
-                throw new Error("GraphQL Error: " + response.errors[0].message);
-            }
+            const res = await fetch('/api/users', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id, updates: { role: approveRole, status: "ACTIVE" } })
+            });
+            if (!res.ok) throw new Error("API Request Failed");
             setIsApproveDialogOpen(false);
             toast.success("Access Approved", { description: `${email} has been granted ${approveRole} access.` });
             
@@ -229,11 +250,12 @@ function UsersPageContent() {
             return;
         }
         try {
-            const response = await client.models.UserProfile.update({ id, status: "INACTIVE" });
-            if (response.errors) {
-                console.error(response.errors);
-                throw new Error("GraphQL Error: " + response.errors[0].message);
-            }
+            const res = await fetch('/api/users', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id, updates: { status: "INACTIVE" } })
+            });
+            if (!res.ok) throw new Error("API Request Failed");
             toast.info("Access Rejected", { description: `${email}'s access request was denied.` });
             
             setTimeout(() => {
@@ -257,16 +279,20 @@ function UsersPageContent() {
     const handleEditUser = async () => {
         if (!selectedUser) return;
         try {
-            const response = await client.models.UserProfile.update({
-                id: selectedUser.id,
-                name: editUser.name,
-                email: editUser.email,
-                role: editUser.role,
+            const res = await fetch('/api/users', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    id: selectedUser.id,
+                    updates: {
+                        name: editUser.name,
+                        email: editUser.email,
+                        role: editUser.role,
+                    }
+                })
             });
-            if (response.errors) {
-                console.error(response.errors);
-                throw new Error("GraphQL Error: " + response.errors[0].message);
-            }
+            if (!res.ok) throw new Error("API Request Failed");
+            setUsers(prev => prev.map(u => u.id === selectedUser.id ? { ...u, name: editUser.name, email: editUser.email, role: editUser.role as any } : u));
             setIsEditDialogOpen(false);
             toast.success("User Updated", { description: "User details have been updated." });
         } catch (error) {
@@ -368,7 +394,7 @@ function UsersPageContent() {
                             return true;
                         }).map((user) => (
                             <TableRow key={user.id} className="hover:bg-white/5 border-none transition-colors group">
-                                <TableCell className="font-medium group-hover:text-primary transition-colors">{user.id.substring(0, 8)}</TableCell>
+                                <TableCell className="font-medium text-xs text-muted-foreground group-hover:text-primary transition-colors">{user.displayId || user.id.substring(0, 8)}</TableCell>
                                 <TableCell>
                                     <div className="flex items-center space-x-3">
                                         <Avatar className="h-9 w-9 ring-2 ring-transparent group-hover:ring-primary/50 transition-all">
@@ -392,11 +418,17 @@ function UsersPageContent() {
                                                 {user.status}
                                             </Badge>
                                         </PopoverTrigger>
-                                        {user.status === "PENDING_APPROVAL" && (
+                                        {user.status === "PENDING_APPROVAL" ? (
                                             <PopoverContent side="right" className="w-[180px] p-2 rounded-xl backdrop-blur-xl bg-popover/95 shadow-2xl border-white/10 flex flex-col gap-2">
                                                 <div className="text-xs font-semibold text-center mb-1">Review Request</div>
                                                 <Button size="sm" className="w-full bg-green-500 hover:bg-green-600 text-white border-none rounded-lg h-8" onClick={(e) => { e.stopPropagation(); setOpenPopoverId(null); setUserToApprove(user); setApproveRole("ADMIN"); setIsApproveDialogOpen(true); }}>Approve</Button>
                                                 <Button size="sm" variant="outline" className="w-full bg-red-500/10 text-red-500 border-red-500/20 hover:bg-red-500/20 rounded-lg h-8" onClick={(e) => { e.stopPropagation(); setOpenPopoverId(null); handleRejectUser(user.id, user.email || ""); }}>Reject</Button>
+                                            </PopoverContent>
+                                        ) : (
+                                            <PopoverContent side="right" className="w-[180px] p-2 rounded-xl backdrop-blur-xl bg-popover/95 shadow-2xl border-white/10 flex flex-col gap-2">
+                                                <div className="text-xs font-semibold text-center mb-1">Update Status</div>
+                                                <Button size="sm" className="w-full bg-green-500 hover:bg-green-600 text-white border-none rounded-lg h-8" onClick={async (e) => { e.stopPropagation(); setOpenPopoverId(null); await fetch('/api/users', { method: 'POST', body: JSON.stringify({ id: user.id, updates: { status: 'ACTIVE' } }) }); setUsers(prev => prev.map(u => u.id === user.id ? { ...u, status: 'ACTIVE' } : u)); }}>Set Active</Button>
+                                                <Button size="sm" variant="outline" className="w-full bg-red-500/10 text-red-500 border-red-500/20 hover:bg-red-500/20 rounded-lg h-8" onClick={(e) => { e.stopPropagation(); setOpenPopoverId(null); handleRejectUser(user.id, user.email || ""); }}>Set Inactive</Button>
                                             </PopoverContent>
                                         )}
                                     </Popover>
