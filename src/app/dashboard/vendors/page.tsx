@@ -12,7 +12,11 @@ import {
     TableHeader,
     TableRow,
 } from "@/components/ui/table";
-import { CheckCircle2, XCircle, Info, RefreshCw } from "lucide-react";
+import { CheckCircle2, XCircle, Info, RefreshCw, Pencil, MoreHorizontal } from "lucide-react";
+import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
+import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
 import {
     Dialog,
     DialogContent,
@@ -33,6 +37,10 @@ export default function VendorsPage() {
     const [vendorsList, setVendorsList] = React.useState<Array<any>>([]);
     const [withdrawals, setWithdrawals] = React.useState<Array<any>>([]);
     const [isLoading, setIsLoading] = React.useState(true);
+    const [openPopoverId, setOpenPopoverId] = React.useState<string | null>(null);
+    const [isEditDialogOpen, setIsEditDialogOpen] = React.useState(false);
+    const [selectedVendor, setSelectedVendor] = React.useState<any>(null);
+    const [editVendor, setEditVendor] = React.useState({ companyName: "", email: "", role: "VENDOR" });
 
     // Fix hydration mismatch by only rendering content after mount
     React.useEffect(() => {
@@ -102,10 +110,63 @@ export default function VendorsPage() {
 
     const handleUpdateStatus = async (id: string, name: string, status: string) => {
         try {
-            await client.models.UserProfile.update({ id, status });
+            const res = await fetch('/api/users', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id, updates: { status } })
+            });
+            if (!res.ok) throw new Error("API Request Failed");
+            setVendorsList(prev => prev.map(v => v.id === id ? { ...v, status } : v));
             toast.success("Status Updated", { description: `${name} is now ${status}.` });
+            setOpenPopoverId(null);
         } catch (error) {
             toast.error("Error", { description: "Failed to update vendor status." });
+        }
+    };
+
+    const handleDeleteVendor = async (id: string) => {
+        try {
+            const res = await fetch(`/api/users?id=${id}`, { method: 'DELETE' });
+            if (!res.ok) throw new Error("API Request Failed");
+            setVendorsList(prev => prev.filter(v => v.id !== id));
+            toast.success("Vendor Deleted", { description: "The vendor has been removed from the system." });
+        } catch (error) {
+            toast.error("Error", { description: "Failed to delete vendor." });
+        }
+    };
+
+    const openEditDialog = (vendor: any) => {
+        setSelectedVendor(vendor);
+        setEditVendor({
+            companyName: vendor.companyName || vendor.name || "",
+            email: vendor.email || "",
+            role: vendor.role || "VENDOR"
+        });
+        setIsEditDialogOpen(true);
+    };
+
+    const handleEditSubmit = async () => {
+        if (!selectedVendor) return;
+        try {
+            const res = await fetch('/api/users', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    id: selectedVendor.id,
+                    updates: {
+                        companyName: editVendor.companyName,
+                        name: editVendor.companyName,
+                        email: editVendor.email,
+                        role: editVendor.role,
+                    }
+                })
+            });
+            if (!res.ok) throw new Error("API Request Failed");
+            setVendorsList(prev => prev.map(v => v.id === selectedVendor.id ? { ...v, companyName: editVendor.companyName, name: editVendor.companyName, email: editVendor.email, role: editVendor.role } : v));
+            setIsEditDialogOpen(false);
+            toast.success("Vendor Updated", { description: "Vendor details have been updated." });
+        } catch (error) {
+            toast.error("Error", { description: "Failed to update vendor." });
         }
     };
 
@@ -172,16 +233,27 @@ export default function VendorsPage() {
                                     </TableCell>
                                     <TableCell>{vendor.phoneNumber || "No contact"}</TableCell>
                                     <TableCell>
-                                        <Badge 
-                                            variant="secondary" 
-                                            className={`rounded-full px-3 border-none ${
-                                                vendor.status === "ACTIVE" 
-                                                    ? "bg-green-500/10 text-green-500" 
-                                                    : "bg-yellow-500/10 text-yellow-500"
-                                            }`}
-                                        >
-                                            {vendor.status || "PENDING"}
-                                        </Badge>
+                                        <Popover open={openPopoverId === vendor.id} onOpenChange={(isOpen) => setOpenPopoverId(isOpen ? vendor.id : null)}>
+                                            <PopoverTrigger asChild>
+                                                <Badge 
+                                                    variant="outline" 
+                                                    className={`cursor-pointer rounded-full px-3 border-none ${
+                                                        vendor.status === "ACTIVE" 
+                                                            ? "bg-green-500/10 text-green-500" 
+                                                            : vendor.status === "INACTIVE"
+                                                                ? "bg-red-500/10 text-red-500"
+                                                                : "bg-yellow-500/10 text-yellow-500 hover:bg-yellow-500/20"
+                                                    }`}
+                                                >
+                                                    {vendor.status || "PENDING"}
+                                                </Badge>
+                                            </PopoverTrigger>
+                                            <PopoverContent side="right" className="w-[180px] p-2 rounded-xl backdrop-blur-xl bg-popover/95 shadow-2xl border-white/10 flex flex-col gap-2">
+                                                <div className="text-xs font-semibold text-center mb-1">Update Status</div>
+                                                <Button size="sm" className="w-full bg-green-500 hover:bg-green-600 text-white border-none rounded-lg h-8" onClick={(e) => { e.stopPropagation(); handleUpdateStatus(vendor.id, vendor.companyName || vendor.name || "", "ACTIVE"); }}>Set Active</Button>
+                                                <Button size="sm" variant="outline" className="w-full bg-red-500/10 text-red-500 border-red-500/20 hover:bg-red-500/20 rounded-lg h-8" onClick={(e) => { e.stopPropagation(); handleUpdateStatus(vendor.id, vendor.companyName || vendor.name || "", "INACTIVE"); }}>Set Inactive</Button>
+                                            </PopoverContent>
+                                        </Popover>
                                     </TableCell>
                                     <TableCell className="text-center">
                                         <Dialog>
@@ -264,26 +336,22 @@ export default function VendorsPage() {
                                         </Dialog>
                                     </TableCell>
                                     <TableCell className="text-right">
-                                        <div className="flex justify-end gap-2">
-                                            {vendor.status !== "ACTIVE" ? (
-                                                <Button 
-                                                    variant="ghost" 
-                                                    size="icon" 
-                                                    className="rounded-full hover:bg-green-500/10 text-green-500"
-                                                    onClick={() => handleUpdateStatus(vendor.id, vendor.name, "ACTIVE")}
-                                                >
-                                                    <CheckCircle2 className="h-5 w-5" />
-                                                </Button>
-                                            ) : (
-                                                <Button 
-                                                    variant="ghost" 
-                                                    size="icon" 
-                                                    className="rounded-full hover:bg-red-500/10 text-red-500"
-                                                    onClick={() => handleUpdateStatus(vendor.id, vendor.name, "INACTIVE")}
-                                                >
-                                                    <XCircle className="h-5 w-5" />
-                                                </Button>
-                                            )}
+                                        <div className="flex items-center justify-end gap-2">
+                                            <Button variant="ghost" size="icon" className="rounded-full hover:bg-white/10 text-muted-foreground hover:text-primary" onClick={() => openEditDialog(vendor)}>
+                                                <Pencil className="h-4 w-4" />
+                                            </Button>
+                                            <DropdownMenu>
+                                                <DropdownMenuTrigger asChild>
+                                                    <Button variant="ghost" size="icon" className="rounded-full hover:bg-white/10 text-muted-foreground hover:text-primary">
+                                                        <MoreHorizontal className="h-4 w-4" />
+                                                    </Button>
+                                                </DropdownMenuTrigger>
+                                                <DropdownMenuContent align="end" className="rounded-xl border-none bg-popover/80 backdrop-blur-xl shadow-2xl">
+                                                    <DropdownMenuItem onClick={() => openEditDialog(vendor)}>Edit Details</DropdownMenuItem>
+                                                    <DropdownMenuSeparator className="bg-white/10" />
+                                                    <DropdownMenuItem className="text-red-500 focus:text-red-500 focus:bg-red-500/10" onClick={() => handleDeleteVendor(vendor.id)}>Delete Vendor</DropdownMenuItem>
+                                                </DropdownMenuContent>
+                                            </DropdownMenu>
                                         </div>
                                     </TableCell>
                                 </TableRow>
@@ -292,6 +360,40 @@ export default function VendorsPage() {
                     </TableBody>
                 </Table>
             </div>
+            
+            {/* Edit Dialog */}
+            <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Edit Vendor</DialogTitle>
+                        <DialogDescription>Update vendor information.</DialogDescription>
+                    </DialogHeader>
+                    <div className="grid gap-4 py-4">
+                        <div className="grid grid-cols-4 items-center gap-4">
+                            <Label htmlFor="edit-company" className="text-right">Company</Label>
+                            <Input
+                                id="edit-company"
+                                value={editVendor.companyName}
+                                onChange={(e) => setEditVendor({ ...editVendor, companyName: e.target.value })}
+                                className="col-span-3"
+                            />
+                        </div>
+                        <div className="grid grid-cols-4 items-center gap-4">
+                            <Label htmlFor="edit-email" className="text-right">Email</Label>
+                            <Input
+                                id="edit-email"
+                                value={editVendor.email}
+                                onChange={(e) => setEditVendor({ ...editVendor, email: e.target.value })}
+                                className="col-span-3"
+                            />
+                        </div>
+                    </div>
+                    <DialogFooter>
+                        <Button variant="outline" onClick={() => setIsEditDialogOpen(false)} className="rounded-full">Cancel</Button>
+                        <Button onClick={handleEditSubmit} className="rounded-full bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg">Save Changes</Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </div>
     );
 }

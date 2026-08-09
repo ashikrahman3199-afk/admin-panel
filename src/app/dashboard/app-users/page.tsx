@@ -157,13 +157,21 @@ function UsersPageContent() {
             return;
         }
         try {
-            await client.models.UserProfile.create({
-                userId: newUser.email,
-                name: newUser.name,
-                email: newUser.email,
-                role: newUser.role,
-                status: "ACTIVE",
+            const res = await fetch('/api/users', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    id: newUser.email,
+                    updates: {
+                        userId: newUser.email,
+                        name: newUser.name,
+                        email: newUser.email,
+                        role: newUser.role,
+                        status: "ACTIVE"
+                    }
+                })
             });
+            if (!res.ok) throw new Error("API Request Failed");
             setIsAddDialogOpen(false);
             setNewUser({ name: "", email: "", role: "USER" });
             toast.success("User Added", { description: `${newUser.name} has been successfully added.` });
@@ -175,7 +183,9 @@ function UsersPageContent() {
 
     const handleDeleteUser = async (id: string) => {
         try {
-            await client.models.UserProfile.delete({ id });
+            const res = await fetch(`/api/users?id=${id}`, { method: 'DELETE' });
+            if (!res.ok) throw new Error("API Request Failed");
+            setUsers(prev => prev.filter(u => u.id !== id));
             toast.success("User Deleted", { description: "The user has been removed from the system." });
         } catch (error) {
             toast.error("Error", { description: "Failed to delete user." });
@@ -197,7 +207,12 @@ function UsersPageContent() {
             return;
         }
         try {
-            await client.models.UserProfile.update({ id, role: approveRole, status: "ACTIVE" });
+            const res = await fetch('/api/users', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id, updates: { role: approveRole, status: "ACTIVE" } })
+            });
+            if (!res.ok) throw new Error("API Request Failed");
             setIsApproveDialogOpen(false);
             toast.success("Access Approved", { description: `${email} has been granted ${approveRole} access.` });
             
@@ -224,7 +239,12 @@ function UsersPageContent() {
             return;
         }
         try {
-            await client.models.UserProfile.update({ id, status: "INACTIVE" });
+            const res = await fetch('/api/users', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id, updates: { status: "INACTIVE" } })
+            });
+            if (!res.ok) throw new Error("API Request Failed");
             toast.info("Access Rejected", { description: `${email}'s access request was denied.` });
             
             setTimeout(() => {
@@ -248,12 +268,20 @@ function UsersPageContent() {
     const handleEditUser = async () => {
         if (!selectedUser) return;
         try {
-            await client.models.UserProfile.update({
-                id: selectedUser.id,
-                name: editUser.name,
-                email: editUser.email,
-                role: editUser.role,
+            const res = await fetch('/api/users', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    id: selectedUser.id,
+                    updates: {
+                        name: editUser.name,
+                        email: editUser.email,
+                        role: editUser.role,
+                    }
+                })
             });
+            if (!res.ok) throw new Error("API Request Failed");
+            setUsers(prev => prev.map(u => u.id === selectedUser.id ? { ...u, name: editUser.name, email: editUser.email, role: editUser.role as any } : u));
             setIsEditDialogOpen(false);
             toast.success("User Updated", { description: "User details have been updated." });
         } catch (error) {
