@@ -161,7 +161,7 @@ export default function VendorsPage() {
                             vendorsList.map((vendor) => (
                                 <TableRow key={vendor.id} className="hover:bg-white/5 border-none transition-colors group">
                                     <TableCell className="font-medium text-xs text-muted-foreground group-hover:text-primary transition-colors">
-                                        {vendor.userId?.substring(0, 8) || vendor.id.substring(0, 8)}
+                                        {vendor.displayId || vendor.id.substring(0, 8)}
                                     </TableCell>
                                     <TableCell>
                                         <div className="flex flex-col">

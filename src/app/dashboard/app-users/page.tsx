@@ -355,7 +355,7 @@ function UsersPageContent() {
                             return true;
                         }).map((user) => (
                             <TableRow key={user.id} className="hover:bg-white/5 border-none transition-colors group">
-                                <TableCell className="font-medium group-hover:text-primary transition-colors">{user.id.substring(0, 8)}</TableCell>
+                                <TableCell className="font-medium group-hover:text-primary transition-colors">{user.displayId || user.id.substring(0, 8)}</TableCell>
                                 <TableCell>
                                     <div className="flex items-center space-x-3">
                                         <Avatar className="h-9 w-9 ring-2 ring-transparent group-hover:ring-primary/50 transition-all">
