@@ -85,7 +85,7 @@ export default function VerificationPage() {
             const response = await fetch('/api/adspaces', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ id, approvalStatus: mappedStatus })
+                body: JSON.stringify({ id, approvalStatus: mappedStatus, rejectionReason: reason })
             });
             const result = await response.json();
             

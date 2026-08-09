@@ -28,19 +28,30 @@ export async function GET() {
 export async function POST(request: Request) {
     try {
         const body = await request.json();
-        const { id, approvalStatus } = body;
+        const { id, approvalStatus, rejectionReason } = body;
 
         if (!id || !approvalStatus) {
             return NextResponse.json({ success: false, error: "Missing required fields" }, { status: 400 });
         }
 
+        let updateExpression = "set approvalStatus = :s, #status = :s";
+        let expressionAttributeValues: any = {
+            ":s": approvalStatus
+        };
+
+        if (rejectionReason !== undefined) {
+            updateExpression += ", rejectionReason = :r";
+            expressionAttributeValues[":r"] = rejectionReason;
+        }
+
         const updateCommand = new UpdateCommand({
             TableName: "AdSpace-d6pvakazenfljpsmln4xcmjx6u-NONE",
             Key: { id },
-            UpdateExpression: "set approvalStatus = :s",
-            ExpressionAttributeValues: {
-                ":s": approvalStatus
+            UpdateExpression: updateExpression,
+            ExpressionAttributeNames: {
+                "#status": "status"
             },
+            ExpressionAttributeValues: expressionAttributeValues,
             ReturnValues: "ALL_NEW"
         });
 
