@@ -47,7 +47,11 @@ export default function VerificationPage() {
     const fetchPendingAdSpaces = React.useCallback(async () => {
         setIsLoading(true);
         try {
-            const { data } = await client.models.AdSpace.list();
+            const response = await fetch('/api/adspaces');
+            const result = await response.json();
+            
+            if (!result.success) throw new Error(result.error);
+            const data = result.adSpaces;
             
             // Sort: Pending first, then by date
             const sortedData = [...data].sort((a, b) => {
@@ -78,16 +82,15 @@ export default function VerificationPage() {
             // Map "Active" to "APPROVED" to match schema
             const mappedStatus = status === "Active" ? "APPROVED" : status.toUpperCase();
             
-            const { data, errors } = await client.models.AdSpace.update({
-                id,
-                approvalStatus: mappedStatus,
-                // TEMPORARY FIX: AWS Backend has not updated the schema to accept rejectionReason yet.
-                // Once the backend is deployed, uncomment the line below.
-                // ...(reason ? { rejectionReason: reason } : {})
+            const response = await fetch('/api/adspaces', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id, approvalStatus: mappedStatus })
             });
+            const result = await response.json();
             
-            if (errors) {
-                throw new Error("GraphQL Error: " + errors[0].message);
+            if (!result.success) {
+                throw new Error(result.error);
             }
             
             toast.success(`Listing ${status}`, { description: `${name} has been ${status.toLowerCase()}.` });
