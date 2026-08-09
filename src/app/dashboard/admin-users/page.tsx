@@ -87,15 +87,15 @@ export default function UsersPage() {
 }
 
 function UsersPageContent() {
-    const [users, setUsers] = useState<Array<Schema["UserProfile"]["type"]>>([]);
+    const [users, setUsers] = useState<Array<any>>([]);
     const [currentUserRole, setCurrentUserRole] = useState<string>("ADMIN");
     const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
     const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
     const [isActivityDialogOpen, setIsActivityDialogOpen] = useState(false);
     const [isApproveDialogOpen, setIsApproveDialogOpen] = useState(false);
-    const [userToApprove, setUserToApprove] = useState<Schema["UserProfile"]["type"] | null>(null);
+    const [userToApprove, setUserToApprove] = useState<any>(null);
     const [approveRole, setApproveRole] = useState("ADMIN");
-    const [selectedUser, setSelectedUser] = useState<Schema["UserProfile"]["type"] | null>(null);
+    const [selectedUser, setSelectedUser] = useState<any>(null);
 
     // Form states
     const [newUser, setNewUser] = useState({ name: "", email: "", role: "USER" as "USER" | "ADMIN" | "VENDOR" | "SUPER_ADMIN" | "ADMIN_PENDING" });
@@ -266,7 +266,7 @@ function UsersPageContent() {
         }
     };
 
-    const openEditDialog = (user: Schema["UserProfile"]["type"]) => {
+    const openEditDialog = (user: any) => {
         setSelectedUser(user);
         setEditUser({
             name: user.name || "",
@@ -300,7 +300,7 @@ function UsersPageContent() {
         }
     };
 
-    const openActivityConfirm = (user: Schema["UserProfile"]["type"]) => {
+    const openActivityConfirm = (user: any) => {
         setSelectedUser(user);
         setIsActivityDialogOpen(true);
     }
