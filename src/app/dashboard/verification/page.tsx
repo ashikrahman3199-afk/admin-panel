@@ -254,7 +254,7 @@ export default function VerificationPage() {
                                                         )}
                                                     </div>
                                                     <DialogFooter className="gap-2">
-                                                        {(space.status === "Pending" || space.approvalStatus === "PENDING" || (!space.status && !space.approvalStatus)) ? (
+                                                        {(space.status?.toUpperCase() === "PENDING" || space.approvalStatus?.toUpperCase() === "PENDING" || (!space.status && !space.approvalStatus)) ? (
                                                             <>
                                                                 <Button variant="destructive" className="rounded-full px-6" onClick={() => {
                                                                     setSelectedSpaceForRejection(space);
@@ -279,7 +279,7 @@ export default function VerificationPage() {
                                                 </DialogContent>
                                             </Dialog>
 
-                                            {(space.status === "Pending" || space.approvalStatus === "PENDING") && (
+                                            {(space.status?.toUpperCase() === "PENDING" || space.approvalStatus?.toUpperCase() === "PENDING") && (
                                                 <>
                                                     <Button variant="ghost" size="icon" className="rounded-full hover:bg-green-500/10 text-green-500" onClick={() => handleUpdateStatus(space.id, space.name || space.title, "Approved")}>
                                                         <CheckCircle2 className="h-5 w-5" />
