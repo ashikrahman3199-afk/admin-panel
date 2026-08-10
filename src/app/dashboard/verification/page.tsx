@@ -77,10 +77,10 @@ export default function VerificationPage() {
         // Removed AppSync subscriptions since we are directly using DynamoDB Server Actions for now
     }, [fetchPendingAdSpaces]);
 
-    const handleUpdateStatus = async (id: string, name: string, status: "Active" | "Rejected" | "Pending", reason?: string) => {
+    const handleUpdateStatus = async (id: string, name: string, status: "Approved" | "Rejected" | "Pending", reason?: string) => {
         try {
-            // Map "Active" to "APPROVED" to match schema
-            const mappedStatus = status === "Active" ? "APPROVED" : status.toUpperCase();
+            // Use "APPROVED" to match schema but display as "Approved"
+            const mappedStatus = status === "Approved" ? "APPROVED" : status.toUpperCase();
             
             const response = await fetch('/api/adspaces', {
                 method: 'POST',
@@ -165,14 +165,18 @@ export default function VerificationPage() {
                                         <Badge 
                                             variant="secondary" 
                                             className={`rounded-full px-3 border-none ${
-                                                (space.status === "Active" || space.status === "APPROVED")
+                                                (space.status === "Active" || space.status === "APPROVED" || space.status === "Approved")
                                                     ? "bg-green-500/10 text-green-500" 
-                                                    : (space.status === "Rejected" || space.status === "REJECTED")
+                                                    : (space.status === "Rejected" || space.status === "REJECTED" || space.status === "Rejected")
                                                         ? "bg-red-500/10 text-red-500"
                                                         : "bg-yellow-500/10 text-yellow-500"
                                             }`}
                                         >
-                                            {space.status || space.approvalStatus || "Pending"}
+                                            {
+                                                (space.status === "Active" || space.status === "APPROVED" || space.status === "Approved") ? "Approved" : 
+                                                (space.status === "Rejected" || space.status === "REJECTED" || space.status === "Rejected") ? "Rejected" : 
+                                                "Pending"
+                                            }
                                         </Badge>
                                     </TableCell>
                                     <TableCell className="text-right">
@@ -258,14 +262,16 @@ export default function VerificationPage() {
                                                                 }}>
                                                                     Reject
                                                                 </Button>
-                                                                <Button className="rounded-full px-6 bg-green-600 hover:bg-green-700" onClick={() => handleUpdateStatus(space.id, space.name || space.title, "Active")}>
+                                                                <Button className="rounded-full px-6 bg-green-600 hover:bg-green-700" onClick={() => handleUpdateStatus(space.id, space.name || space.title, "Approved")}>
                                                                     Approve
                                                                 </Button>
                                                             </>
                                                         ) : (
                                                             <div className="flex w-full justify-center">
                                                                 <span className="text-muted-foreground text-sm">
-                                                                    This listing is already <span className="font-bold">{space.status || space.approvalStatus}</span>.
+                                                                    This listing is already <span className="font-bold">
+                                                                        {(space.status === "Active" || space.status === "APPROVED" || space.status === "Approved") ? "Approved" : "Rejected"}
+                                                                    </span>.
                                                                 </span>
                                                             </div>
                                                         )}
@@ -275,7 +281,7 @@ export default function VerificationPage() {
 
                                             {(space.status === "Pending" || space.approvalStatus === "PENDING") && (
                                                 <>
-                                                    <Button variant="ghost" size="icon" className="rounded-full hover:bg-green-500/10 text-green-500" onClick={() => handleUpdateStatus(space.id, space.name || space.title, "Active")}>
+                                                    <Button variant="ghost" size="icon" className="rounded-full hover:bg-green-500/10 text-green-500" onClick={() => handleUpdateStatus(space.id, space.name || space.title, "Approved")}>
                                                         <CheckCircle2 className="h-5 w-5" />
                                                     </Button>
                                                     <Button variant="ghost" size="icon" className="rounded-full hover:bg-red-500/10 text-red-500" onClick={() => {
