@@ -224,18 +224,21 @@ function UsersPageContent() {
         }
     };
 
-    const handlePromoteRole = async (id: string, role: string) => {
+    const handlePromoteRole = async (id: string, role: string, userToPromote: any) => {
         try {
-            const res = await fetch('/api/users', {
+            const res = await fetch('/api/admins', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ id, updates: { role } })
+                body: JSON.stringify({ id, updates: { 
+                    email: userToPromote.email, 
+                    name: userToPromote.name || "Admin", 
+                    role: role 
+                } })
             });
             if (!res.ok) throw new Error("API Request Failed");
-            setUsers(prev => prev.map(u => u.id === id ? { ...u, role } : u));
-            toast.success("Role Updated", { description: `User has been promoted to ${role}.` });
+            toast.success("User Promoted", { description: `${userToPromote.email} has been added to Admin Users as ${role}.` });
         } catch (error) {
-            toast.error("Error", { description: "Failed to update user role." });
+            toast.error("Error", { description: "Failed to promote user to Admin." });
         }
     };
 
@@ -381,7 +384,6 @@ function UsersPageContent() {
                         <TableRow className="hover:bg-transparent border-none">
                             <TableHead className="w-[100px] text-muted-foreground/70">ID</TableHead>
                             <TableHead className="text-muted-foreground/70">User</TableHead>
-                            <TableHead className="text-muted-foreground/70">Role</TableHead>
                             <TableHead className="text-muted-foreground/70">Status</TableHead>
                             <TableHead className="text-muted-foreground/70">Joined</TableHead>
                             <TableHead className="text-right text-muted-foreground/70">Actions</TableHead>
@@ -409,11 +411,6 @@ function UsersPageContent() {
                                             <span className="text-xs text-muted-foreground">{user.email}</span>
                                         </div>
                                     </div>
-                                </TableCell>
-                                <TableCell>
-                                    <Badge variant={user.role === "ADMIN" ? "default" : "secondary"} className="rounded-full px-3">
-                                        {user.role}
-                                    </Badge>
                                 </TableCell>
                                 <TableCell>
                                     <Popover open={openPopoverId === user.id} onOpenChange={(isOpen) => setOpenPopoverId(isOpen ? user.id : null)}>
@@ -450,11 +447,11 @@ function UsersPageContent() {
                                                     <>
                                                         <DropdownMenuSeparator className="bg-white/10" />
                                                         <DropdownMenuLabel className="text-xs text-muted-foreground uppercase">Promote Role</DropdownMenuLabel>
-                                                        <DropdownMenuItem onClick={() => handlePromoteRole(user.id, "ADMIN")}>Make Basic Admin</DropdownMenuItem>
+                                                        <DropdownMenuItem onClick={() => handlePromoteRole(user.id, "ADMIN", user)}>Make Basic Admin</DropdownMenuItem>
                                                         {currentUserRole === "SUPER_ADMIN" && (
                                                             <>
-                                                                <DropdownMenuItem onClick={() => handlePromoteRole(user.id, "MASTER_ADMIN")}>Make Master Admin</DropdownMenuItem>
-                                                                <DropdownMenuItem className="text-primary focus:text-primary focus:bg-primary/10" onClick={() => handlePromoteRole(user.id, "SUPER_ADMIN")}>Make Super Admin</DropdownMenuItem>
+                                                                <DropdownMenuItem onClick={() => handlePromoteRole(user.id, "MASTER_ADMIN", user)}>Make Master Admin</DropdownMenuItem>
+                                                                <DropdownMenuItem className="text-primary focus:text-primary focus:bg-primary/10" onClick={() => handlePromoteRole(user.id, "SUPER_ADMIN", user)}>Make Super Admin</DropdownMenuItem>
                                                             </>
                                                         )}
                                                     </>

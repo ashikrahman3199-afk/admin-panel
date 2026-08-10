@@ -106,7 +106,7 @@ function UsersPageContent() {
 
     const fetchData = React.useCallback(async () => {
         try {
-            const response = await fetch('/api/users?type=admins');
+            const response = await fetch('/api/admins');
             const data = await response.json();
             if (data.success) {
                 setUsers(data.users);
@@ -124,7 +124,7 @@ function UsersPageContent() {
                 const { fetchUserAttributes } = await import('aws-amplify/auth');
                 const attributes = await fetchUserAttributes();
 
-                const response = await fetch('/api/users?type=admins');
+                const response = await fetch('/api/admins');
                 const data = await response.json();
                 const allUsers = data.success ? data.users : [];
                 
@@ -156,7 +156,7 @@ function UsersPageContent() {
             return;
         }
         try {
-            const res = await fetch('/api/users', {
+            const res = await fetch('/api/admins', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -182,7 +182,7 @@ function UsersPageContent() {
 
     const handleDeleteUser = async (id: string) => {
         try {
-            const res = await fetch(`/api/users?id=${id}`, { method: 'DELETE' });
+            const res = await fetch(`/api/admins?id=${id}`, { method: 'DELETE' });
             if (!res.ok) throw new Error("API Request Failed");
             setUsers(prev => prev.filter(u => u.id !== id));
             toast.success("User Deleted", { description: "The user has been removed from the system." });
@@ -218,7 +218,7 @@ function UsersPageContent() {
             return;
         }
         try {
-            const res = await fetch('/api/users', {
+            const res = await fetch('/api/admins', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ id, updates: { role: approveRole, status: "ACTIVE" } })
@@ -237,7 +237,7 @@ function UsersPageContent() {
 
     const handlePromoteRole = async (id: string, role: string) => {
         try {
-            const res = await fetch('/api/users', {
+            const res = await fetch('/api/admins', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ id, updates: { role } })
@@ -265,7 +265,7 @@ function UsersPageContent() {
             return;
         }
         try {
-            const res = await fetch('/api/users', {
+            const res = await fetch('/api/admins', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ id, updates: { status: "INACTIVE" } })
@@ -294,7 +294,7 @@ function UsersPageContent() {
     const handleEditUser = async () => {
         if (!selectedUser) return;
         try {
-            const res = await fetch('/api/users', {
+            const res = await fetch('/api/admins', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -442,7 +442,7 @@ function UsersPageContent() {
                                         ) : (
                                             <PopoverContent side="right" className="w-[180px] p-2 rounded-xl backdrop-blur-xl bg-popover/95 shadow-2xl border-white/10 flex flex-col gap-2">
                                                 <div className="text-xs font-semibold text-center mb-1">Update Status</div>
-                                                <Button size="sm" className="w-full bg-green-500 hover:bg-green-600 text-white border-none rounded-lg h-8" onClick={async (e) => { e.stopPropagation(); setOpenPopoverId(null); await fetch('/api/users', { method: 'POST', body: JSON.stringify({ id: user.id, updates: { status: 'ACTIVE' } }) }); setUsers(prev => prev.map(u => u.id === user.id ? { ...u, status: 'ACTIVE' } : u)); }}>Set Active</Button>
+                                                <Button size="sm" className="w-full bg-green-500 hover:bg-green-600 text-white border-none rounded-lg h-8" onClick={async (e) => { e.stopPropagation(); setOpenPopoverId(null); await fetch('/api/admins', { method: 'POST', body: JSON.stringify({ id: user.id, updates: { status: 'ACTIVE' } }) }); setUsers(prev => prev.map(u => u.id === user.id ? { ...u, status: 'ACTIVE' } : u)); }}>Set Active</Button>
                                                 <Button size="sm" variant="outline" className="w-full bg-red-500/10 text-red-500 border-red-500/20 hover:bg-red-500/20 rounded-lg h-8" onClick={(e) => { e.stopPropagation(); setOpenPopoverId(null); handleRejectUser(user.id, user.email || ""); }}>Set Inactive</Button>
                                             </PopoverContent>
                                         )}

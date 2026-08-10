@@ -24,15 +24,9 @@ const docClient = DynamoDBDocumentClient.from(dbClient);
             
             let users = response.Items || [];
             
-            if (type === 'admins') {
-                users = users.filter(
-                    item => item.role === 'ADMIN' || item.role === 'MASTER_ADMIN' || item.role === 'SUPER_ADMIN' || item.role === 'ADMIN_PENDING'
-                );
-            } else {
-                users = users.filter(
-                    item => item.role === 'USER' || item.role === 'USER_PENDING'
-                );
-            }
+            users = users.filter(
+                item => item.role === 'USER' || item.role === 'USER_PENDING'
+            );
     
             return NextResponse.json({ success: true, users });
     } catch (error: any) {
