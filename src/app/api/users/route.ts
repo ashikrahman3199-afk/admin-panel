@@ -26,7 +26,7 @@ const docClient = DynamoDBDocumentClient.from(dbClient);
             
             if (type === 'admins') {
                 users = users.filter(
-                    item => item.role === 'ADMIN' || item.role === 'SUPER_ADMIN' || item.role === 'ADMIN_PENDING'
+                    item => item.role === 'ADMIN' || item.role === 'MASTER_ADMIN' || item.role === 'SUPER_ADMIN' || item.role === 'ADMIN_PENDING'
                 );
             } else {
                 users = users.filter(

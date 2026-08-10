@@ -235,6 +235,21 @@ function UsersPageContent() {
         }
     };
 
+    const handlePromoteRole = async (id: string, role: string) => {
+        try {
+            const res = await fetch('/api/users', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id, updates: { role } })
+            });
+            if (!res.ok) throw new Error("API Request Failed");
+            setUsers(prev => prev.map(u => u.id === id ? { ...u, role } : u));
+            toast.success("Role Updated", { description: `User has been promoted to ${role}.` });
+        } catch (error) {
+            toast.error("Error", { description: "Failed to update user role." });
+        }
+    };
+
     const handleRejectUser = async (id: string, email: string) => {
         let hasAccess = currentUserRole === "SUPER_ADMIN";
         try {
@@ -386,8 +401,8 @@ function UsersPageContent() {
                     <TableBody>
                         {users.filter(u => {
                             if (!u || !u.id) return false;
-                            // Only allow ADMIN, SUPER_ADMIN, and ADMIN_PENDING in this panel
-                            if (!["ADMIN", "SUPER_ADMIN", "ADMIN_PENDING"].includes(u.role || "")) return false;
+                            // Only allow ADMIN, MASTER_ADMIN, SUPER_ADMIN, and ADMIN_PENDING in this panel
+                            if (!["ADMIN", "MASTER_ADMIN", "SUPER_ADMIN", "ADMIN_PENDING"].includes(u.role || "")) return false;
                             
                             if (viewFilter === "PENDING" && u.status !== "PENDING_APPROVAL") return false;
                             if (viewFilter === "REGISTERED" && u.status === "PENDING_APPROVAL") return false;
@@ -448,6 +463,19 @@ function UsersPageContent() {
                                             <DropdownMenuContent align="end" className="rounded-xl border-none bg-popover/80 backdrop-blur-xl shadow-2xl">
                                                 <DropdownMenuItem onClick={() => openEditDialog(user)}>Edit Details</DropdownMenuItem>
                                                 <DropdownMenuItem onClick={() => openActivityConfirm(user)}>View Activity</DropdownMenuItem>
+                                                {(currentUserRole === "SUPER_ADMIN" || currentUserRole === "MASTER_ADMIN") && (
+                                                    <>
+                                                        <DropdownMenuSeparator className="bg-white/10" />
+                                                        <DropdownMenuLabel className="text-xs text-muted-foreground uppercase">Promote Role</DropdownMenuLabel>
+                                                        <DropdownMenuItem onClick={() => handlePromoteRole(user.id, "ADMIN")}>Make Basic Admin</DropdownMenuItem>
+                                                        {currentUserRole === "SUPER_ADMIN" && (
+                                                            <>
+                                                                <DropdownMenuItem onClick={() => handlePromoteRole(user.id, "MASTER_ADMIN")}>Make Master Admin</DropdownMenuItem>
+                                                                <DropdownMenuItem className="text-primary focus:text-primary focus:bg-primary/10" onClick={() => handlePromoteRole(user.id, "SUPER_ADMIN")}>Make Super Admin</DropdownMenuItem>
+                                                            </>
+                                                        )}
+                                                    </>
+                                                )}
                                                 <DropdownMenuSeparator className="bg-white/10" />
                                                 <DropdownMenuItem className="text-red-500 focus:text-red-500 focus:bg-red-500/10" onClick={() => handleDeleteUser(user.id)}>Delete User</DropdownMenuItem>
                                             </DropdownMenuContent>
