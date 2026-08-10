@@ -61,8 +61,11 @@ export default function VendorsPage() {
             }
 
             // Fetch withdrawals
-            const withdrawalsRes = await client.models.WithdrawalRequest.list();
-            setWithdrawals(withdrawalsRes.data.filter(Boolean));
+            const withdrawalsRes = await fetch('/api/withdrawals');
+            const withdrawalsData = await withdrawalsRes.json();
+            if (withdrawalsData.success) {
+                setWithdrawals(withdrawalsData.withdrawals);
+            }
         } catch (error) {
             console.error("Error fetching vendor data:", error);
             toast.error("Fetch Error", { description: "Could not load vendor data from the API." });
@@ -74,16 +77,10 @@ export default function VendorsPage() {
     React.useEffect(() => {
         fetchData();
         
-        // Setup subscriptions for withdrawals
-        const subWithdrawals = client.models.WithdrawalRequest.observeQuery().subscribe({
-            next: (data) => setWithdrawals([...data.items].filter(Boolean)),
-        });
-
-        // Set up polling for vendors since observeQuery isn't supported on our custom API
+        // Set up polling for vendors and withdrawals
         const interval = setInterval(fetchData, 10000);
 
         return () => {
-            subWithdrawals.unsubscribe();
             clearInterval(interval);
         };
     }, [fetchData]);
@@ -121,6 +118,23 @@ export default function VendorsPage() {
             setOpenPopoverId(null);
         } catch (error) {
             toast.error("Error", { description: "Failed to update vendor status." });
+        }
+    };
+
+    const handleUpdateWithdrawalStatus = async (id: string, newStatus: "APPROVED" | "REJECTED") => {
+        try {
+            const res = await fetch('/api/withdrawals', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id, updates: { status: newStatus } })
+            });
+            if (!res.ok) throw new Error("API Request Failed");
+            
+            // Update local state
+            setWithdrawals(prev => prev.map(w => w.id === id ? { ...w, status: newStatus } : w));
+            toast.success("Withdrawal Updated", { description: `Request has been ${newStatus.toLowerCase()}.` });
+        } catch (error) {
+            toast.error("Error", { description: "Failed to update withdrawal status." });
         }
     };
 
@@ -304,12 +318,12 @@ export default function VendorsPage() {
                                                     {getVendorFinancials(vendor.userId, vendor.totalEarnings).requests.length > 0 && (
                                                         <div className="mt-4 border-t border-white/10 pt-4">
                                                             <h4 className="font-medium mb-2 text-sm text-muted-foreground">Withdrawal Requests</h4>
-                                                            <div className="space-y-2 max-h-[150px] overflow-y-auto pr-2">
+                                                            <div className="space-y-2 max-h-[250px] overflow-y-auto pr-2">
                                                                 {getVendorFinancials(vendor.userId, vendor.totalEarnings).requests.map(req => (
-                                                                    <div key={req.id} className="flex flex-col gap-1 text-sm bg-white/5 p-3 rounded-xl border border-white/5">
+                                                                    <div key={req.id} className="flex flex-col gap-2 text-sm bg-white/5 p-3 rounded-xl border border-white/5">
                                                                         <div className="flex justify-between items-center">
-                                                                            <span className="font-bold">₹{req.amount}</span>
-                                                                            <Badge className={`text-[10px] h-5 rounded-full border-none ${
+                                                                            <span className="font-bold text-lg">₹{req.amount}</span>
+                                                                            <Badge className={`text-xs px-2 py-0.5 rounded-full border-none ${
                                                                                 req.status === 'APPROVED' || req.status === 'PROCESSED'
                                                                                     ? 'bg-green-500/10 text-green-500' 
                                                                                     : req.status === 'REJECTED' 
@@ -319,8 +333,24 @@ export default function VendorsPage() {
                                                                                 {req.status}
                                                                             </Badge>
                                                                         </div>
-                                                                        <span className="text-[10px] text-muted-foreground">{req.requestDate}</span>
-                                                                        {req.paymentMethod && <span className="text-[10px] text-muted-foreground">{req.paymentMethod}: {req.paymentDetails}</span>}
+                                                                        
+                                                                        <div className="flex justify-between items-end">
+                                                                            <div className="flex flex-col gap-1">
+                                                                                <span className="text-xs text-muted-foreground">{new Date(req.requestDate || req.createdAt).toLocaleString()}</span>
+                                                                                {req.paymentMethod && <span className="text-xs text-muted-foreground font-medium">{req.paymentMethod}: {req.paymentDetails}</span>}
+                                                                            </div>
+                                                                            
+                                                                            {req.status === 'PENDING' && (
+                                                                                <div className="flex gap-2">
+                                                                                    <Button size="sm" variant="outline" className="h-7 text-xs rounded-full border-green-500/20 text-green-500 hover:bg-green-500/10 hover:text-green-500" onClick={() => handleUpdateWithdrawalStatus(req.id, "APPROVED")}>
+                                                                                        Approve
+                                                                                    </Button>
+                                                                                    <Button size="sm" variant="outline" className="h-7 text-xs rounded-full border-red-500/20 text-red-500 hover:bg-red-500/10 hover:text-red-500" onClick={() => handleUpdateWithdrawalStatus(req.id, "REJECTED")}>
+                                                                                        Reject
+                                                                                    </Button>
+                                                                                </div>
+                                                                            )}
+                                                                        </div>
                                                                     </div>
                                                                 ))}
                                                             </div>
