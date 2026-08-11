@@ -21,7 +21,7 @@ const sidebarItems = [
     { icon: Users, label: "App Users", href: "/dashboard/app-users" },
     { icon: Store, label: "Vendors", href: "/dashboard/vendors" },
     { icon: ShieldCheck, label: "Service Verification", href: "/dashboard/verification" },
-    { icon: FileText, label: "Campaigns", href: "/dashboard/campaigns" },
+    { icon: FileText, label: "Bookings", href: "/dashboard/bookings" },
     { icon: CreditCard, label: "Transactions", href: "/dashboard/transactions" },
     { icon: AlertTriangle, label: "Disputes", href: "/dashboard/disputes" },
     { icon: Settings, label: "Settings", href: "/dashboard/settings" },
