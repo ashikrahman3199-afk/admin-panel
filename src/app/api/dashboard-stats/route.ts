@@ -47,6 +47,36 @@ export async function GET() {
             }
         });
 
+        // Combine activities for the activity stream
+        const activities: any[] = [];
+        
+        bookings.forEach(b => activities.push({ 
+            id: b.id, 
+            type: 'booking', 
+            title: `Booking #${b.id?.substring(0, 8) || 'Unknown'}`, 
+            desc: `Amount: ₹${b.totalAmount || b.amount || 0}`,
+            createdAt: b.createdAt || new Date().toISOString()
+        }));
+
+        adSpaces.forEach(s => activities.push({ 
+            id: s.id, 
+            type: 'listing', 
+            title: `Listing: ${s.name || s.title || 'Untitled'}`, 
+            desc: `Status: ${s.approvalStatus || s.status || 'Unknown'}`,
+            createdAt: s.createdAt || new Date().toISOString()
+        }));
+
+        disputes.forEach(d => activities.push({ 
+            id: d.id, 
+            type: 'dispute', 
+            title: `Dispute Raised`, 
+            desc: d.reason || 'No reason provided',
+            createdAt: d.createdAt || new Date().toISOString()
+        }));
+
+        activities.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+        const recentActivity = activities.slice(0, 6);
+
         return NextResponse.json({
             success: true,
             metrics: {
@@ -54,7 +84,8 @@ export async function GET() {
                 totalBookings,
                 activeDisputes: openDisputes,
                 revenue
-            }
+            },
+            recentActivity
         });
     } catch (error: any) {
         console.error("Error fetching dashboard stats:", error);

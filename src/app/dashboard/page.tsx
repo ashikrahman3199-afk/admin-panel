@@ -17,6 +17,7 @@ export default function DashboardPage() {
         revenue: 0,
     });
     const [loading, setLoading] = useState(true);
+    const [recentActivity, setRecentActivity] = useState<any[]>([]);
 
     useEffect(() => {
         const fetchData = async () => {
@@ -28,9 +29,10 @@ export default function DashboardPage() {
                     setMetrics({
                         pendingListings: result.metrics.pendingListings || 0,
                         totalBookings: result.metrics.totalBookings || 0,
-                        activeCampaigns: result.metrics.activeDisputes || 0, // Using activeCampaigns state for disputes count
+                        activeCampaigns: result.metrics.activeDisputes || 0,
                         revenue: result.metrics.revenue || 0,
                     });
+                    setRecentActivity(result.recentActivity || []);
                 }
             } catch (error) {
                 console.error("Error fetching dashboard data:", error);
@@ -132,11 +134,30 @@ export default function DashboardPage() {
                         <CardTitle>Recent Activity</CardTitle>
                     </CardHeader>
                     <CardContent>
-                        <div className="space-y-8">
-                            {/* Placeholder for future real activity stream */}
-                            <div className="flex items-center justify-center p-8 text-muted-foreground text-sm">
-                                Activity stream will populate as bookings occur.
-                            </div>
+                        <div className="space-y-6">
+                            {recentActivity.length === 0 ? (
+                                <div className="flex items-center justify-center p-8 text-muted-foreground text-sm">
+                                    Activity stream will populate as bookings, listings, and disputes occur.
+                                </div>
+                            ) : (
+                                recentActivity.map((activity, i) => (
+                                    <div key={i} className="flex gap-4">
+                                        <div className={`mt-1 flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 ${
+                                            activity.type === 'dispute' ? 'text-red-500' : 
+                                            activity.type === 'booking' ? 'text-blue-500' : 'text-green-500'
+                                        }`}>
+                                            <div className="h-2 w-2 rounded-full bg-current" />
+                                        </div>
+                                        <div className="space-y-1 flex-1">
+                                            <p className="text-sm font-medium leading-none">{activity.title}</p>
+                                            <p className="text-xs text-muted-foreground">{activity.desc}</p>
+                                        </div>
+                                        <div className="text-xs text-muted-foreground">
+                                            {new Date(activity.createdAt).toLocaleDateString()}
+                                        </div>
+                                    </div>
+                                ))
+                            )}
                         </div>
                     </CardContent>
                 </Card>
