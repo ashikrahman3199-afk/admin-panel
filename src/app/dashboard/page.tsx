@@ -21,22 +21,17 @@ export default function DashboardPage() {
     useEffect(() => {
         const fetchData = async () => {
             try {
-                // In the shared backend, listings are AdSpaces and revenue comes from Bookings
-                const [adSpaces, bookings, campaigns] = await Promise.all([
-                    client.models.AdSpace ? client.models.AdSpace.list({ filter: { approvalStatus: { eq: 'PENDING' } } }) : Promise.resolve({ data: [] }),
-                    client.models.Booking ? client.models.Booking.list({}) : Promise.resolve({ data: [] }),
-                    client.models.Campaign ? client.models.Campaign.list({ filter: { status: { eq: 'ACTIVE' } } }) : Promise.resolve({ data: [] }),
-                ]);
-
-                // Calculate total revenue from bookings
-                const totalRevenue = bookings.data.reduce((sum, b) => sum + (b.amount || 0), 0);
-
-                setMetrics({
-                    pendingListings: adSpaces.data.length,
-                    totalBookings: bookings.data.length,
-                    activeCampaigns: campaigns.data.length,
-                    revenue: totalRevenue,
-                });
+                const response = await fetch('/api/dashboard-stats');
+                const result = await response.json();
+                
+                if (result.success && result.metrics) {
+                    setMetrics({
+                        pendingListings: result.metrics.pendingListings || 0,
+                        totalBookings: result.metrics.totalBookings || 0,
+                        activeCampaigns: result.metrics.activeDisputes || 0, // Using activeCampaigns state for disputes count
+                        revenue: result.metrics.revenue || 0,
+                    });
+                }
             } catch (error) {
                 console.error("Error fetching dashboard data:", error);
             } finally {
@@ -85,7 +80,7 @@ export default function DashboardPage() {
                     </Card>
                 </Link>
 
-                <Link href="/dashboard/transactions"> {/* Assuming bookings page is transactions or similar, adjust if wrong */}
+                <Link href="/dashboard/bookings">
                     <Card className="bg-card/50 backdrop-blur-sm hover:bg-white/10 transition-colors shadow-sm ring-1 ring-white/10 group cursor-pointer">
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                             <CardTitle className="text-sm font-medium group-hover:text-primary transition-colors">Total Bookings</CardTitle>
@@ -100,16 +95,16 @@ export default function DashboardPage() {
                     </Card>
                 </Link>
 
-                <Link href="/dashboard/campaigns">
+                <Link href="/dashboard/disputes">
                     <Card className="bg-card/50 backdrop-blur-sm hover:bg-white/10 transition-colors shadow-sm ring-1 ring-white/10 group cursor-pointer">
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                            <CardTitle className="text-sm font-medium group-hover:text-primary transition-colors">Active Campaigns</CardTitle>
+                            <CardTitle className="text-sm font-medium group-hover:text-primary transition-colors">Disputes</CardTitle>
                             <TrendingUp className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors" />
                         </CardHeader>
                         <CardContent>
                             <div className="text-2xl font-bold group-hover:text-primary transition-colors">{loading ? "..." : metrics.activeCampaigns}</div>
                             <p className="text-xs text-muted-foreground">
-                                Currently running
+                                Open resolutions
                             </p>
                         </CardContent>
                     </Card>
