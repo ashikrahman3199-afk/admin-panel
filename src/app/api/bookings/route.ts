@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
-import { DynamoDBDocumentClient, ScanCommand, UpdateCommand } from "@aws-sdk/lib-dynamodb";
+import { DynamoDBDocumentClient, ScanCommand, UpdateCommand, GetCommand, PutCommand } from "@aws-sdk/lib-dynamodb";
 
 const CREDENTIALS = {
     accessKeyId: ["AKIAX", "T3CQ", "AESNV", "ETJM7T"].join(""),
@@ -64,6 +64,45 @@ export async function POST(request: Request) {
 
         if (!id || !updates) {
             return NextResponse.json({ success: false, error: "Missing required fields" }, { status: 400 });
+        }
+
+        // Check if we need to send notifications to vendors
+        if (updates.status === 'APPROVED' || updates.status === 'approved') {
+            try {
+                const getCommand = new GetCommand({
+                    TableName: BOOKING_TABLE,
+                    Key: { id }
+                });
+                const existingBooking = await docClient.send(getCommand);
+                
+                if (existingBooking.Item && existingBooking.Item.itemsJson) {
+                    const items = JSON.parse(existingBooking.Item.itemsJson);
+                    const vendorIds = new Set<string>();
+                    items.forEach((item: any) => {
+                        if (item.vendorId) vendorIds.add(item.vendorId);
+                    });
+
+                    for (const vendorId of vendorIds) {
+                        const notifId = `notif-${Date.now()}-${Math.random().toString(36).substring(7)}`;
+                        const putNotif = new PutCommand({
+                            TableName: "Notification-d6pvakazenfljpsmln4xcmjx6u-NONE",
+                            Item: {
+                                id: notifId,
+                                userId: vendorId,
+                                title: "New Booking Approved!",
+                                message: `You have received a new approved booking. Please check your orders.`,
+                                type: "BOOKING",
+                                read: false,
+                                createdAt: new Date().toISOString(),
+                                updatedAt: new Date().toISOString(),
+                            }
+                        });
+                        await docClient.send(putNotif);
+                    }
+                }
+            } catch (e) {
+                console.error("Failed to parse itemsJson or send notifications", e);
+            }
         }
 
         const updateExpressions: string[] = [];
