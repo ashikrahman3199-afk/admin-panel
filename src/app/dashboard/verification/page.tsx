@@ -98,7 +98,28 @@ export default function VerificationPage() {
             setRejectionReason("");
             fetchPendingAdSpaces(); // Refresh data
         } catch (error) {
-            toast.error("Error", { description: error instanceof Error ? error.message : `Failed to ${status.toLowerCase()} listing.` });
+            console.error("Error updating status:", error);
+            toast.error("Update Failed");
+        }
+    };
+
+    const handleDeleteService = async (id: string, name: string) => {
+        if (!confirm(`Are you sure you want to permanently delete ${name}? This action cannot be undone.`)) return;
+        
+        try {
+            const response = await fetch('/api/adspaces', {
+                method: 'DELETE',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id })
+            });
+            const result = await response.json();
+            
+            if (!result.success) throw new Error(result.error);
+            
+            toast.success(`Service Deleted`, { description: `${name} has been permanently removed.` });
+            fetchPendingAdSpaces();
+        } catch (error) {
+            toast.error("Deletion Failed");
         }
     };
 
@@ -165,14 +186,17 @@ export default function VerificationPage() {
                                         <Badge 
                                             variant="secondary" 
                                             className={`rounded-full px-3 border-none ${
-                                                (space.status === "Active" || space.status === "APPROVED" || space.status === "Approved")
+                                                (space.status?.toLowerCase() === "deactivated" || space.approvalStatus?.toLowerCase() === "deactivated")
+                                                    ? "bg-gray-500/10 text-gray-500" 
+                                                : (space.status === "Active" || space.status === "APPROVED" || space.status === "Approved")
                                                     ? "bg-green-500/10 text-green-500" 
-                                                    : (space.status === "Rejected" || space.status === "REJECTED" || space.status === "Rejected")
-                                                        ? "bg-red-500/10 text-red-500"
-                                                        : "bg-yellow-500/10 text-yellow-500"
+                                                : (space.status === "Rejected" || space.status === "REJECTED" || space.status === "Rejected")
+                                                    ? "bg-red-500/10 text-red-500"
+                                                    : "bg-yellow-500/10 text-yellow-500"
                                             }`}
                                         >
                                             {
+                                                (space.status?.toLowerCase() === "deactivated" || space.approvalStatus?.toLowerCase() === "deactivated") ? "Deactivated" : 
                                                 (space.status === "Active" || space.status === "APPROVED" || space.status === "Approved") ? "Approved" : 
                                                 (space.status === "Rejected" || space.status === "REJECTED" || space.status === "Rejected") ? "Rejected" : 
                                                 "Pending"
@@ -266,6 +290,15 @@ export default function VerificationPage() {
                                                                     Approve
                                                                 </Button>
                                                             </>
+                                                        ) : (space.status?.toLowerCase() === "deactivated" || space.approvalStatus?.toLowerCase() === "deactivated") ? (
+                                                            <div className="flex w-full justify-between items-center">
+                                                                <span className="text-muted-foreground text-sm font-bold">
+                                                                    Vendor Deactivated
+                                                                </span>
+                                                                <Button variant="destructive" className="rounded-full px-6" onClick={() => handleDeleteService(space.id, space.name || space.title)}>
+                                                                    Delete Service Permanently
+                                                                </Button>
+                                                            </div>
                                                         ) : (
                                                             <div className="flex w-full justify-center">
                                                                 <span className="text-muted-foreground text-sm">

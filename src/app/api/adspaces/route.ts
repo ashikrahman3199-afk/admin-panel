@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
-import { DynamoDBDocumentClient, ScanCommand, UpdateCommand } from "@aws-sdk/lib-dynamodb";
+import { DynamoDBDocumentClient, ScanCommand, UpdateCommand, DeleteCommand } from "@aws-sdk/lib-dynamodb";
 
 const CREDENTIALS = {
     accessKeyId: ["AKIAX", "T3CQ", "AESNV", "ETJM7T"].join(""),
@@ -59,6 +59,28 @@ export async function POST(request: Request) {
         return NextResponse.json({ success: true, item: response.Attributes });
     } catch (error: any) {
         console.error("Error updating ad space:", error);
+        return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+    }
+}
+
+export async function DELETE(request: Request) {
+    try {
+        const body = await request.json();
+        const { id } = body;
+
+        if (!id) {
+            return NextResponse.json({ success: false, error: "Missing required fields" }, { status: 400 });
+        }
+
+        const deleteCommand = new DeleteCommand({
+            TableName: "AdSpace-d6pvakazenfljpsmln4xcmjx6u-NONE",
+            Key: { id }
+        });
+
+        await docClient.send(deleteCommand);
+        return NextResponse.json({ success: true });
+    } catch (error: any) {
+        console.error("Error deleting ad space:", error);
         return NextResponse.json({ success: false, error: error.message }, { status: 500 });
     }
 }
