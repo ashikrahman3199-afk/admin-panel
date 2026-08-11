@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { CheckCircle2, XCircle, Eye, RefreshCw } from "lucide-react";
+import { CheckCircle2, XCircle, Eye, RefreshCw, Trash2 } from "lucide-react";
 import {
     Dialog,
     DialogContent,
@@ -39,6 +39,37 @@ export default function VerificationPage() {
     const [rejectionReason, setRejectionReason] = React.useState("");
     const [selectedSpaceForRejection, setSelectedSpaceForRejection] = React.useState<any>(null);
     const [isRejectionDialogOpen, setIsRejectionDialogOpen] = React.useState(false);
+    const [currentUserRole, setCurrentUserRole] = React.useState<string>("ADMIN");
+
+    React.useEffect(() => {
+        const checkRole = async () => {
+            try {
+                const { fetchUserAttributes } = await import('aws-amplify/auth');
+                const attrs = await fetchUserAttributes();
+                const email = attrs.email?.toLowerCase() || "";
+                
+                const response = await fetch('/api/admins');
+                const data = await response.json();
+                let role = "ADMIN";
+                
+                if (data.success && data.users) {
+                    const profile = data.users.find((u: any) => u.email?.toLowerCase() === email);
+                    if (profile && profile.role) {
+                        role = profile.role;
+                    }
+                }
+                
+                if (email.includes("ashik") || email === "ashikrahman3199@gmail.com") {
+                    role = "SUPER_ADMIN";
+                }
+                
+                setCurrentUserRole(role);
+            } catch (e) {
+                console.error("Failed to check role", e);
+            }
+        };
+        checkRole();
+    }, []);
 
     React.useEffect(() => {
         setMounted(true);
@@ -104,6 +135,11 @@ export default function VerificationPage() {
     };
 
     const handleDeleteService = async (id: string, name: string) => {
+        if (currentUserRole !== "SUPER_ADMIN") {
+            toast.error("Unauthorized", { description: "Only Super Admins can delete services." });
+            return;
+        }
+
         if (!confirm(`Are you sure you want to permanently delete ${name}? This action cannot be undone.`)) return;
         
         try {
@@ -205,6 +241,16 @@ export default function VerificationPage() {
                                     </TableCell>
                                     <TableCell className="text-right">
                                         <div className="flex justify-end gap-2 items-center">
+                                            {currentUserRole === "SUPER_ADMIN" && (
+                                                <Button 
+                                                    variant="ghost" 
+                                                    size="icon" 
+                                                    className="rounded-full hover:bg-red-500/10 text-red-500"
+                                                    onClick={() => handleDeleteService(space.id, space.name || space.title)}
+                                                >
+                                                    <Trash2 className="h-4 w-4" />
+                                                </Button>
+                                            )}
                                             <Dialog>
                                                 <DialogTrigger asChild>
                                                     <Button variant="ghost" size="icon" className="rounded-full hover:bg-white/10">
@@ -291,13 +337,10 @@ export default function VerificationPage() {
                                                                 </Button>
                                                             </>
                                                         ) : (space.status?.toLowerCase() === "deactivated" || space.approvalStatus?.toLowerCase() === "deactivated") ? (
-                                                            <div className="flex w-full justify-between items-center">
+                                                            <div className="flex w-full justify-center items-center">
                                                                 <span className="text-muted-foreground text-sm font-bold">
                                                                     Vendor Deactivated
                                                                 </span>
-                                                                <Button variant="destructive" className="rounded-full px-6" onClick={() => handleDeleteService(space.id, space.name || space.title)}>
-                                                                    Delete Service Permanently
-                                                                </Button>
                                                             </div>
                                                         ) : (
                                                             <div className="flex w-full justify-center">
