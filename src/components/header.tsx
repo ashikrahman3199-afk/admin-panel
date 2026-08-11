@@ -16,17 +16,64 @@ import type { Schema } from "../../amplify/data/resource";
 export function Header() {
     const [userName, setUserName] = useState<string>("Loading...");
     const [userRole, setUserRole] = useState<string>("");
-    const [notifications, setNotifications] = useState([
-        { id: 1, title: "New Vendor Registration", desc: "TechSolutions Ltd. requested approval", time: "5m ago", unread: true },
-        { id: 2, title: "High Value Transaction", desc: "₹50,000 payment received", time: "1h ago", unread: true },
-        { id: 3, title: "Dispute Raised", desc: "Campaign #402 reported issue", time: "2h ago", unread: false },
-    ]);
+    const [notifications, setNotifications] = useState<any[]>([]);
 
-    const markAsRead = (id: number) => {
-        setNotifications(notifications.map(n => n.id === id ? { ...n, unread: false } : n));
+    useEffect(() => {
+        const fetchNotifications = async () => {
+            try {
+                const res = await fetch('/api/notifications');
+                const data = await res.json();
+                if (data.success && data.notifications) {
+                    setNotifications(data.notifications);
+                }
+            } catch (e) {
+                console.error("Failed to fetch notifications", e);
+            }
+        };
+        fetchNotifications();
+    }, []);
+
+    const markAsRead = async (id: string) => {
+        setNotifications(notifications.map(n => n.id === id ? { ...n, read: true } : n));
+        try {
+            await fetch('/api/notifications', {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id, read: true })
+            });
+        } catch (e) {
+            console.error("Failed to mark notification as read", e);
+        }
     };
 
-    const unreadCount = notifications.filter(n => n.unread).length;
+    const markAllAsRead = async () => {
+        setNotifications(notifications.map(n => ({ ...n, read: true })));
+        try {
+            await Promise.all(notifications.filter(n => !n.read).map(n => 
+                fetch('/api/notifications', {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ id: n.id, read: true })
+                })
+            ));
+        } catch (e) {
+            console.error("Failed to mark all as read", e);
+        }
+    };
+
+    const formatTime = (dateString?: string) => {
+        if (!dateString) return "";
+        const date = new Date(dateString);
+        const now = new Date();
+        const diffMs = now.getTime() - date.getTime();
+        const diffMins = Math.round(diffMs / 60000);
+        if (diffMins < 60) return `${diffMins || 1}m ago`;
+        const diffHrs = Math.floor(diffMins / 60);
+        if (diffHrs < 24) return `${diffHrs}h ago`;
+        return `${Math.floor(diffHrs / 24)}d ago`;
+    };
+
+    const unreadCount = notifications.filter(n => !n.read).length;
 
     useEffect(() => {
         const fetchUserData = async () => {
@@ -101,23 +148,29 @@ export function Header() {
                             <span className="text-xs text-muted-foreground">{unreadCount} unread</span>
                         </div>
                         <div className="max-h-[300px] overflow-y-auto">
-                            {notifications.map((notification) => (
-                                <div
-                                    key={notification.id}
-                                    className={`flex items-start gap-4 p-4 transition-colors hover:bg-white/5 ${notification.unread ? 'bg-primary/5' : ''}`}
-                                    onClick={() => markAsRead(notification.id)}
-                                >
-                                    <div className={`mt-1 h-2 w-2 rounded-full ${notification.unread ? 'bg-primary' : 'bg-muted'}`} />
-                                    <div className="flex-1 space-y-1">
-                                        <p className="text-sm font-medium leading-none">{notification.title}</p>
-                                        <p className="text-xs text-muted-foreground">{notification.desc}</p>
-                                        <p className="text-[10px] text-muted-foreground/70">{notification.time}</p>
-                                    </div>
+                            {notifications.length === 0 ? (
+                                <div className="p-8 text-center text-sm text-muted-foreground">
+                                    No notifications yet
                                 </div>
-                            ))}
+                            ) : (
+                                notifications.map((notification) => (
+                                    <div
+                                        key={notification.id}
+                                        className={`flex items-start gap-4 p-4 transition-colors hover:bg-white/5 ${!notification.read ? 'bg-primary/5' : ''}`}
+                                        onClick={() => markAsRead(notification.id)}
+                                    >
+                                        <div className={`mt-1 h-2 w-2 rounded-full ${!notification.read ? 'bg-primary' : 'bg-muted'}`} />
+                                        <div className="flex-1 space-y-1">
+                                            <p className="text-sm font-medium leading-none">{notification.title}</p>
+                                            <p className="text-xs text-muted-foreground">{notification.message || notification.desc}</p>
+                                            <p className="text-[10px] text-muted-foreground/70">{formatTime(notification.createdAt)}</p>
+                                        </div>
+                                    </div>
+                                ))
+                            )}
                         </div>
                         <div className="p-2 border-t border-white/10">
-                            <Button variant="ghost" className="w-full text-xs h-8 rounded-xl" onClick={() => setNotifications(notifications.map(n => ({ ...n, unread: false })))}>Mark all as read</Button>
+                            <Button variant="ghost" className="w-full text-xs h-8 rounded-xl" onClick={markAllAsRead}>Mark all as read</Button>
                         </div>
                     </PopoverContent>
                 </Popover>
