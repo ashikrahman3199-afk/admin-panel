@@ -175,8 +175,9 @@ export default function BookingsPage() {
                                     <TableCell>
                                         <Badge variant="outline" className={`rounded-full px-3 border-none ${
                                             booking.status?.toLowerCase() === 'approved' ? 'bg-green-500/10 text-green-500' :
+                                            booking.status?.toLowerCase() === 'forwarded' ? 'bg-blue-500/10 text-blue-500' :
                                             booking.status?.toLowerCase() === 'pending' ? 'bg-yellow-500/10 text-yellow-500' :
-                                            'bg-blue-500/10 text-blue-500'
+                                            'bg-gray-500/10 text-gray-500'
                                         }`}>
                                             {booking.status?.toUpperCase() || "PENDING"}
                                         </Badge>
@@ -249,8 +250,9 @@ export default function BookingsPage() {
                                         <div className="text-xs text-muted-foreground mb-1">Current Status</div>
                                         <Badge variant="outline" className={`rounded-full px-3 border-none ${
                                             selectedBooking.status?.toLowerCase() === 'approved' ? 'bg-green-500/10 text-green-500' :
+                                            selectedBooking.status?.toLowerCase() === 'forwarded' ? 'bg-blue-500/10 text-blue-500' :
                                             selectedBooking.status?.toLowerCase() === 'pending' ? 'bg-yellow-500/10 text-yellow-500' :
-                                            'bg-blue-500/10 text-blue-500'
+                                            'bg-gray-500/10 text-gray-500'
                                         }`}>
                                             {selectedBooking.status?.toUpperCase() || "PENDING"}
                                         </Badge>
@@ -295,12 +297,12 @@ export default function BookingsPage() {
                                 Mark Delayed
                             </Button>
                             <Button 
-                                className="bg-green-600 hover:bg-green-700 text-white"
-                                onClick={() => handleUpdateStatus("APPROVED")}
+                                className="bg-blue-600 hover:bg-blue-700 text-white"
+                                onClick={() => handleUpdateStatus("FORWARDED")}
                                 disabled={updateLoading}
                             >
                                 <CheckCircle className="h-4 w-4 mr-2" />
-                                Approve Booking
+                                Forward to Vendor
                             </Button>
                         </div>
                     </DialogFooter>

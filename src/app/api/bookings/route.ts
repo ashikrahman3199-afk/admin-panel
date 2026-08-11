@@ -67,7 +67,7 @@ export async function POST(request: Request) {
         }
 
         // Check if we need to send notifications to vendors
-        if (updates.status === 'APPROVED' || updates.status === 'approved') {
+        if (updates.status === 'FORWARDED' || updates.status === 'forwarded') {
             try {
                 const getCommand = new GetCommand({
                     TableName: BOOKING_TABLE,
@@ -89,8 +89,8 @@ export async function POST(request: Request) {
                             Item: {
                                 id: notifId,
                                 userId: vendorId,
-                                title: "New Booking Approved!",
-                                message: `You have received a new approved booking. Please check your orders.`,
+                                title: "New Booking Forwarded!",
+                                message: `You have received a new forwarded booking from the Admin. Please review and approve it.`,
                                 type: "BOOKING",
                                 read: false,
                                 createdAt: new Date().toISOString(),
