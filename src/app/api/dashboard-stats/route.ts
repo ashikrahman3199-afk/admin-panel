@@ -36,14 +36,16 @@ export async function GET() {
         // 3. Disputes (Open disputes)
         const openDisputes = disputes.filter(d => d.status === 'OPEN').length;
 
-        // 4. Revenue (Sum of booking amounts, assuming completed or total)
-        // You can filter by booking.status === 'COMPLETED' if needed, but for now we sum all valid amounts
+        // 4. Revenue (Sum of booking amounts for completed transactions only)
         let revenue = 0;
         bookings.forEach(b => {
-            if (b.totalAmount) {
-                revenue += Number(b.totalAmount);
-            } else if (b.amount) {
-                revenue += Number(b.amount);
+            const status = (b.status || "").toUpperCase();
+            if (status === 'SUCCESS' || status === 'COMPLETED' || status === 'PAID') {
+                if (b.totalAmount) {
+                    revenue += Number(b.totalAmount);
+                } else if (b.amount) {
+                    revenue += Number(b.amount);
+                }
             }
         });
 
