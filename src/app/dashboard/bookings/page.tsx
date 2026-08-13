@@ -28,6 +28,22 @@ import type { Schema } from "../../../../amplify/data/resource";
 
 const client = generateClient<Schema>();
 
+const getStatusColor = (status?: string) => {
+    const s = (status || '').toLowerCase();
+    switch (s) {
+        case 'approved': 
+        case 'completed':
+        case 'ended':
+            return 'bg-green-500/10 text-green-500';
+        case 'forwarded': return 'bg-blue-500/10 text-blue-500';
+        case 'pending': return 'bg-yellow-500/10 text-yellow-500';
+        case 'preparing': return 'bg-orange-500/10 text-orange-500';
+        case 'live': return 'bg-purple-500/10 text-purple-500';
+        case 'extended': return 'bg-indigo-500/10 text-indigo-500';
+        default: return 'bg-gray-500/10 text-gray-500';
+    }
+};
+
 export default function BookingsPage() {
     const [mounted, setMounted] = useState(false);
     const [bookings, setBookings] = useState<Array<any>>([]);
@@ -220,12 +236,7 @@ export default function BookingsPage() {
                                         ₹{(booking.amount || 0).toLocaleString()}
                                     </TableCell>
                                     <TableCell>
-                                        <Badge variant="outline" className={`rounded-full px-3 border-none ${
-                                            booking.status?.toLowerCase() === 'approved' ? 'bg-green-500/10 text-green-500' :
-                                            booking.status?.toLowerCase() === 'forwarded' ? 'bg-blue-500/10 text-blue-500' :
-                                            booking.status?.toLowerCase() === 'pending' ? 'bg-yellow-500/10 text-yellow-500' :
-                                            'bg-gray-500/10 text-gray-500'
-                                        }`}>
+                                        <Badge variant="outline" className={`rounded-full px-3 border-none ${getStatusColor(booking.status)}`}>
                                             {booking.status?.toUpperCase() || "PENDING"}
                                         </Badge>
                                     </TableCell>
@@ -295,12 +306,7 @@ export default function BookingsPage() {
                                     </div>
                                     <div>
                                         <div className="text-xs text-muted-foreground mb-1">Current Status</div>
-                                        <Badge variant="outline" className={`rounded-full px-3 border-none ${
-                                            selectedBooking.status?.toLowerCase() === 'approved' ? 'bg-green-500/10 text-green-500' :
-                                            selectedBooking.status?.toLowerCase() === 'forwarded' ? 'bg-blue-500/10 text-blue-500' :
-                                            selectedBooking.status?.toLowerCase() === 'pending' ? 'bg-yellow-500/10 text-yellow-500' :
-                                            'bg-gray-500/10 text-gray-500'
-                                        }`}>
+                                        <Badge variant="outline" className={`rounded-full px-3 border-none ${getStatusColor(selectedBooking.status)}`}>
                                             {selectedBooking.status?.toUpperCase() || "PENDING"}
                                         </Badge>
                                     </div>
