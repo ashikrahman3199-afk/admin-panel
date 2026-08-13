@@ -66,6 +66,7 @@ const schema = a.schema({
         paymentStatus: a.string(), // 'PENDING', 'PAID', 'FAILED'
         commissionAmount: a.float(),
         vendorAmount: a.float(),
+        extensionStatus: a.string(),
     }).authorization(allow => [
         allow.authenticated().to(['read', 'update']),
         allow.owner(),

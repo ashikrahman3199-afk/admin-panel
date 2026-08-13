@@ -36,6 +36,7 @@ export default function BookingsPage() {
     const [isReviewOpen, setIsReviewOpen] = useState(false);
     const [adminNotes, setAdminNotes] = useState("");
     const [updateLoading, setUpdateLoading] = useState(false);
+    const [filterType, setFilterType] = useState<'ALL' | 'REQUESTED' | 'APPROVED'>('ALL');
 
     useEffect(() => {
         setMounted(true);
@@ -103,6 +104,13 @@ export default function BookingsPage() {
         setIsReviewOpen(true);
     };
 
+    const filteredBookings = bookings.filter(b => {
+        if (filterType === 'ALL') return true;
+        if (filterType === 'REQUESTED') return b.extensionStatus?.toLowerCase() === 'requested';
+        if (filterType === 'APPROVED') return b.extensionStatus?.toLowerCase() === 'approved';
+        return true;
+    });
+
     if (!mounted) return null;
 
     return (
@@ -114,16 +122,44 @@ export default function BookingsPage() {
                         Manage client callback requests, orders, and advances.
                     </p>
                 </div>
-                <Button
-                    variant="outline"
-                    size="sm"
-                    className="rounded-full gap-2 bg-white/5 border-none"
-                    onClick={fetchBookings}
-                    disabled={isLoading}
-                >
-                    <RefreshCw className={`h-4 w-4 ${isLoading ? "animate-spin" : ""}`} />
-                    Refresh
-                </Button>
+                <div className="flex items-center gap-2">
+                    <div className="bg-white/5 p-1 rounded-full border border-white/10 flex items-center gap-1 mr-2">
+                        <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            className={`rounded-full px-4 h-8 text-xs font-semibold ${filterType === 'ALL' ? 'bg-primary text-white' : 'text-muted-foreground hover:text-white hover:bg-white/10'}`}
+                            onClick={() => setFilterType('ALL')}
+                        >
+                            All Bookings
+                        </Button>
+                        <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            className={`rounded-full px-4 h-8 text-xs font-semibold ${filterType === 'REQUESTED' ? 'bg-orange-500 text-white' : 'text-muted-foreground hover:text-orange-400 hover:bg-orange-500/10'}`}
+                            onClick={() => setFilterType('REQUESTED')}
+                        >
+                            Extension Requests
+                        </Button>
+                        <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            className={`rounded-full px-4 h-8 text-xs font-semibold ${filterType === 'APPROVED' ? 'bg-green-500 text-white' : 'text-muted-foreground hover:text-green-400 hover:bg-green-500/10'}`}
+                            onClick={() => setFilterType('APPROVED')}
+                        >
+                            Extensions Approved
+                        </Button>
+                    </div>
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        className="rounded-full gap-2 bg-white/5 border-none"
+                        onClick={fetchBookings}
+                        disabled={isLoading}
+                    >
+                        <RefreshCw className={`h-4 w-4 ${isLoading ? "animate-spin" : ""}`} />
+                        Refresh
+                    </Button>
+                </div>
             </div>
 
             <div className="bg-white/5 rounded-3xl p-1 backdrop-blur-2xl shadow-2xl overflow-hidden border border-white/5">
@@ -159,6 +195,17 @@ export default function BookingsPage() {
                                     </TableCell>
                                     <TableCell className="font-semibold text-sm">
                                         {booking.campaignName || "Untitled"}
+                                        {booking.extensionStatus && (
+                                            <div className="mt-1">
+                                                <Badge variant="secondary" className={`text-[10px] px-1.5 py-0 border-none ${
+                                                    booking.extensionStatus.toLowerCase() === 'requested' ? 'bg-orange-500/20 text-orange-400' :
+                                                    booking.extensionStatus.toLowerCase() === 'approved' ? 'bg-green-500/20 text-green-400' :
+                                                    'bg-white/10 text-white'
+                                                }`}>
+                                                    Ext: {booking.extensionStatus.toUpperCase()}
+                                                </Badge>
+                                            </div>
+                                        )}
                                     </TableCell>
                                     <TableCell>
                                         <div className="flex flex-col">
@@ -270,6 +317,33 @@ export default function BookingsPage() {
                                     </div>
                                 </div>
                             </div>
+
+                            {/* Extension Details (Conditional) */}
+                            {selectedBooking.extensionStatus && (
+                                <div className={`rounded-xl p-4 border ${
+                                    selectedBooking.extensionStatus.toLowerCase() === 'requested' ? 'bg-orange-500/5 border-orange-500/20' :
+                                    selectedBooking.extensionStatus.toLowerCase() === 'approved' ? 'bg-green-500/5 border-green-500/20' :
+                                    'bg-white/5 border-white/10'
+                                }`}>
+                                    <h3 className="text-sm font-semibold text-muted-foreground mb-3 uppercase tracking-wider flex items-center gap-2">
+                                        Extension Status
+                                        <Badge variant="secondary" className={`text-[10px] px-1.5 py-0 border-none ${
+                                            selectedBooking.extensionStatus.toLowerCase() === 'requested' ? 'bg-orange-500/20 text-orange-400' :
+                                            selectedBooking.extensionStatus.toLowerCase() === 'approved' ? 'bg-green-500/20 text-green-400' :
+                                            'bg-white/10 text-white'
+                                        }`}>
+                                            {selectedBooking.extensionStatus.toUpperCase()}
+                                        </Badge>
+                                    </h3>
+                                    <p className="text-sm text-muted-foreground mb-3">
+                                        {selectedBooking.extensionStatus.toLowerCase() === 'requested' 
+                                            ? "A campaign extension has been requested. Please review and coordinate with the vendor or client if necessary."
+                                            : selectedBooking.extensionStatus.toLowerCase() === 'approved'
+                                            ? "The campaign extension has been approved. Ensure updated timelines and payments are tracked."
+                                            : "Extension status update recorded."}
+                                    </p>
+                                </div>
+                            )}
 
                             {/* Admin Notes */}
                             <div>
