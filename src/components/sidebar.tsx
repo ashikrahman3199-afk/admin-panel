@@ -12,7 +12,8 @@ import {
     LogOut,
     CreditCard,
     AlertTriangle,
-    ShieldCheck
+    ShieldCheck,
+    PowerOff
 } from "lucide-react";
 
 const sidebarItems = [
@@ -24,6 +25,7 @@ const sidebarItems = [
     { icon: FileText, label: "Bookings", href: "/dashboard/bookings" },
     { icon: CreditCard, label: "Transactions", href: "/dashboard/transactions" },
     { icon: AlertTriangle, label: "Disputes", href: "/dashboard/disputes" },
+    { icon: PowerOff, label: "Deactivations", href: "/dashboard/deactivations" },
     { icon: Settings, label: "Settings", href: "/dashboard/settings" },
 ];
 

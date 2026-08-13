@@ -224,6 +224,10 @@ export default function VerificationPage() {
                                             className={`rounded-full px-3 border-none ${
                                                 (space.status?.toLowerCase() === "deactivated" || space.approvalStatus?.toLowerCase() === "deactivated")
                                                     ? "bg-gray-500/10 text-gray-500" 
+                                                : (space.approvalStatus === "PENDING_DEACTIVATION")
+                                                    ? "bg-orange-500/10 text-orange-500"
+                                                : (space.approvalStatus === "DEACTIVATING_IN_30_DAYS")
+                                                    ? "bg-purple-500/10 text-purple-500"
                                                 : (space.status === "Active" || space.status === "APPROVED" || space.status === "Approved")
                                                     ? "bg-green-500/10 text-green-500" 
                                                 : (space.status === "Rejected" || space.status === "REJECTED" || space.status === "Rejected")
@@ -233,6 +237,8 @@ export default function VerificationPage() {
                                         >
                                             {
                                                 (space.status?.toLowerCase() === "deactivated" || space.approvalStatus?.toLowerCase() === "deactivated") ? "Deactivated" : 
+                                                (space.approvalStatus === "PENDING_DEACTIVATION") ? "Deactivation Req." :
+                                                (space.approvalStatus === "DEACTIVATING_IN_30_DAYS") ? "Deactivating (30d)" :
                                                 (space.status === "Active" || space.status === "APPROVED" || space.status === "Approved") ? "Approved" : 
                                                 (space.status === "Rejected" || space.status === "REJECTED" || space.status === "Rejected") ? "Rejected" : 
                                                 "Pending"
