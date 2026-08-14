@@ -20,13 +20,14 @@ export async function GET() {
         // 1. Fetch pending deactivations
         const adSpacesResponse = await docClient.send(new ScanCommand({
             TableName: ADSPACE_TABLE,
-            FilterExpression: "approvalStatus IN (:s1, :s2) OR #st IN (:s1, :s2)",
+            FilterExpression: "approvalStatus IN (:s1, :s2, :s3) OR #st IN (:s1, :s2, :s3)",
             ExpressionAttributeNames: {
                 "#st": "status"
             },
             ExpressionAttributeValues: { 
                 ":s1": "PENDING_DEACTIVATION",
-                ":s2": "deactivation_requested"
+                ":s2": "deactivation_requested",
+                ":s3": "DEACTIVATING_IN_30_DAYS"
             }
         }));
         
@@ -96,6 +97,7 @@ export async function GET() {
                 vendorName,
                 pendingBookingsCount: spaceBookings.length,
                 createdAt: space.updatedAt || space.createdAt,
+                approvalStatus: space.approvalStatus || space.status
             };
         });
 

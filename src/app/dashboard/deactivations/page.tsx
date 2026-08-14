@@ -165,26 +165,34 @@ export default function DeactivationsPage() {
                                     </TableCell>
                                     <TableCell className="text-right">
                                         <div className="flex justify-end gap-2 items-center">
-                                            <Button 
-                                                variant="ghost" 
-                                                size="sm" 
-                                                className="rounded-xl hover:bg-green-500/10 text-green-500 disabled:opacity-50"
-                                                onClick={() => handleAction(req.id, 'APPROVE')}
-                                                disabled={req.pendingBookingsCount > 0}
-                                                title={req.pendingBookingsCount > 0 ? "Cannot approve while there are pending bookings" : "Approve deactivation (takes 30 days)"}
-                                            >
-                                                <CheckCircle2 className="h-4 w-4 mr-1" />
-                                                Approve
-                                            </Button>
-                                            <Button 
-                                                variant="ghost" 
-                                                size="sm" 
-                                                className="rounded-xl hover:bg-white/10"
-                                                onClick={() => handleAction(req.id, 'REJECT')}
-                                            >
-                                                <XCircle className="h-4 w-4 mr-1" />
-                                                Reject
-                                            </Button>
+                                            {req.approvalStatus === 'DEACTIVATING_IN_30_DAYS' ? (
+                                                <Badge variant="outline" className="bg-purple-500/10 text-purple-500 border-none mr-2">
+                                                    Approved (30d Timer)
+                                                </Badge>
+                                            ) : (
+                                                <>
+                                                    <Button 
+                                                        variant="ghost" 
+                                                        size="sm" 
+                                                        className="rounded-xl hover:bg-green-500/10 text-green-500 disabled:opacity-50"
+                                                        onClick={() => handleAction(req.id, 'APPROVE')}
+                                                        disabled={req.pendingBookingsCount > 0}
+                                                        title={req.pendingBookingsCount > 0 ? "Cannot approve while there are pending bookings" : "Approve deactivation (takes 30 days)"}
+                                                    >
+                                                        <CheckCircle2 className="h-4 w-4 mr-1" />
+                                                        Approve
+                                                    </Button>
+                                                    <Button 
+                                                        variant="ghost" 
+                                                        size="sm" 
+                                                        className="rounded-xl hover:bg-white/10"
+                                                        onClick={() => handleAction(req.id, 'REJECT')}
+                                                    >
+                                                        <XCircle className="h-4 w-4 mr-1" />
+                                                        Reject
+                                                    </Button>
+                                                </>
+                                            )}
                                             {currentUserRole === "SUPER_ADMIN" && (
                                                 <Button 
                                                     variant="ghost" 
