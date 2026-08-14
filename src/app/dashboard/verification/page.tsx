@@ -40,6 +40,7 @@ export default function VerificationPage() {
     const [selectedSpaceForRejection, setSelectedSpaceForRejection] = React.useState<any>(null);
     const [isRejectionDialogOpen, setIsRejectionDialogOpen] = React.useState(false);
     const [currentUserRole, setCurrentUserRole] = React.useState<string>("ADMIN");
+    const [allBookings, setAllBookings] = React.useState<Array<any>>([]);
 
     React.useEffect(() => {
         const checkRole = async () => {
@@ -100,6 +101,17 @@ export default function VerificationPage() {
             toast.error("Failed to load listings");
         } finally {
             setIsLoading(false);
+        }
+        
+        // Also fetch bookings
+        try {
+            const bRes = await fetch('/api/bookings');
+            const bData = await bRes.json();
+            if (bData.success) {
+                setAllBookings(bData.bookings || []);
+            }
+        } catch(e) {
+            console.error("Failed to fetch bookings", e);
         }
     }, []);
 
@@ -303,6 +315,60 @@ export default function VerificationPage() {
                                                                         <Badge key={i} variant="secondary" className="rounded-full bg-white/5">{f}</Badge>
                                                                     ))}
                                                                 </div>
+                                                                {(() => {
+                                                            const spaceBookings = allBookings.filter(b => {
+                                                                if (b.itemsJson) {
+                                                                    try {
+                                                                        const items = JSON.parse(b.itemsJson);
+                                                                        if (items.some((item: any) => item.id === space.id)) return true;
+                                                                    } catch (e) {}
+                                                                } else if (b.services && Array.isArray(b.services)) {
+                                                                    if (b.services.includes(space.id) || b.services.includes(space.title) || b.services.includes(space.name)) return true;
+                                                                }
+                                                                return false;
+                                                            });
+                                                            
+                                                            return (
+                                                                <div className="mt-6 pt-6 border-t border-white/10">
+                                                                    <h3 className="text-sm font-semibold text-white mb-4">Booking History & Status</h3>
+                                                                    {spaceBookings.length === 0 ? (
+                                                                        <div className="text-sm text-muted-foreground p-4 bg-white/5 rounded-xl text-center border border-white/5">
+                                                                            No bookings found for this service.
+                                                                        </div>
+                                                                    ) : (
+                                                                        <div className="space-y-3">
+                                                                            {spaceBookings.map((b, idx) => {
+                                                                                const isCompleted = b.status?.toLowerCase() === 'completed' || b.status?.toLowerCase() === 'ended';
+                                                                                const isFuture = new Date(b.startDate || 0) > new Date();
+                                                                                const isCurrent = !isCompleted && !isFuture && new Date(b.endDate || 0) > new Date();
+                                                                                
+                                                                                let statusColor = "bg-gray-500/10 text-gray-400 border-gray-500/20";
+                                                                                if (isCurrent) statusColor = "bg-purple-500/10 text-purple-400 border-purple-500/20";
+                                                                                else if (isFuture) statusColor = "bg-blue-500/10 text-blue-400 border-blue-500/20";
+                                                                                else if (isCompleted) statusColor = "bg-green-500/10 text-green-400 border-green-500/20";
+
+                                                                                return (
+                                                                                    <div key={b.id || idx} className="flex flex-col bg-black/20 p-3 rounded-xl border border-white/5">
+                                                                                        <div className="flex justify-between items-start mb-1">
+                                                                                            <span className="font-semibold text-sm text-white">{b.campaignName || "Untitled Campaign"}</span>
+                                                                                            <Badge variant="outline" className={`text-[10px] uppercase ${statusColor}`}>
+                                                                                                {isCurrent ? "Currently Running" : isFuture ? "Upcoming" : "Past/Completed"}
+                                                                                            </Badge>
+                                                                                        </div>
+                                                                                        <div className="text-xs text-muted-foreground">
+                                                                                            {new Date(b.startDate || b.createdAt).toLocaleDateString()} - {b.endDate ? new Date(b.endDate).toLocaleDateString() : 'TBD'}
+                                                                                        </div>
+                                                                                        <div className="text-xs font-medium text-white/70 mt-2">
+                                                                                            Booked by: {b.clientName || "Unknown"}
+                                                                                        </div>
+                                                                                    </div>
+                                                                                );
+                                                                            })}
+                                                                        </div>
+                                                                    )}
+                                                                </div>
+                                                            );
+                                                        })()}
                                                             </div>
                                                         )}
                                                         {space.optionsJson && (
