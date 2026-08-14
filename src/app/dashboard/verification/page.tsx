@@ -224,23 +224,23 @@ export default function VerificationPage() {
                                             className={`rounded-full px-3 border-none ${
                                                 (space.status?.toLowerCase() === "deactivated" || space.approvalStatus?.toLowerCase() === "deactivated")
                                                     ? "bg-gray-500/10 text-gray-500" 
-                                                : (space.approvalStatus === "PENDING_DEACTIVATION")
+                                                : (space.approvalStatus === "PENDING_DEACTIVATION" || space.approvalStatus === "deactivation_requested" || space.status === "deactivation_requested")
                                                     ? "bg-orange-500/10 text-orange-500"
-                                                : (space.approvalStatus === "DEACTIVATING_IN_30_DAYS")
+                                                : (space.approvalStatus === "DEACTIVATING_IN_30_DAYS" || space.status === "DEACTIVATING_IN_30_DAYS")
                                                     ? "bg-purple-500/10 text-purple-500"
-                                                : (space.status === "Active" || space.status === "APPROVED" || space.status === "Approved")
+                                                : (space.status === "Active" || space.status === "APPROVED" || space.status === "Approved" || space.status === "active")
                                                     ? "bg-green-500/10 text-green-500" 
-                                                : (space.status === "Rejected" || space.status === "REJECTED" || space.status === "Rejected")
+                                                : (space.status === "Rejected" || space.status === "REJECTED" || space.status === "Rejected" || space.status === "rejected")
                                                     ? "bg-red-500/10 text-red-500"
                                                     : "bg-yellow-500/10 text-yellow-500"
                                             }`}
                                         >
                                             {
                                                 (space.status?.toLowerCase() === "deactivated" || space.approvalStatus?.toLowerCase() === "deactivated") ? "Deactivated" : 
-                                                (space.approvalStatus === "PENDING_DEACTIVATION") ? "Deactivation Req." :
-                                                (space.approvalStatus === "DEACTIVATING_IN_30_DAYS") ? "Deactivating (30d)" :
-                                                (space.status === "Active" || space.status === "APPROVED" || space.status === "Approved") ? "Approved" : 
-                                                (space.status === "Rejected" || space.status === "REJECTED" || space.status === "Rejected") ? "Rejected" : 
+                                                (space.approvalStatus === "PENDING_DEACTIVATION" || space.approvalStatus === "deactivation_requested" || space.status === "deactivation_requested") ? "Deactivation Req." :
+                                                (space.approvalStatus === "DEACTIVATING_IN_30_DAYS" || space.status === "DEACTIVATING_IN_30_DAYS") ? "Deactivating (30d)" :
+                                                (space.status === "Active" || space.status === "APPROVED" || space.status === "Approved" || space.status === "active") ? "Approved" : 
+                                                (space.status === "Rejected" || space.status === "REJECTED" || space.status === "Rejected" || space.status === "rejected") ? "Rejected" : 
                                                 "Pending"
                                             }
                                         </Badge>

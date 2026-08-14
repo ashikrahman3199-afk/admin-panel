@@ -20,8 +20,14 @@ export async function GET() {
         // 1. Fetch pending deactivations
         const adSpacesResponse = await docClient.send(new ScanCommand({
             TableName: ADSPACE_TABLE,
-            FilterExpression: "approvalStatus = :status",
-            ExpressionAttributeValues: { ":status": "PENDING_DEACTIVATION" }
+            FilterExpression: "approvalStatus IN (:s1, :s2) OR #st IN (:s1, :s2)",
+            ExpressionAttributeNames: {
+                "#st": "status"
+            },
+            ExpressionAttributeValues: { 
+                ":s1": "PENDING_DEACTIVATION",
+                ":s2": "deactivation_requested"
+            }
         }));
         
         const adSpaces = adSpacesResponse.Items || [];
