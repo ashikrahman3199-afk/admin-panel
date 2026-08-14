@@ -243,6 +243,7 @@ export default function BookingsPage() {
                         <TableRow className="hover:bg-transparent border-none">
                             <TableHead className="w-[120px] text-muted-foreground/70">Order Date</TableHead>
                             <TableHead className="text-muted-foreground/70">Campaign Name</TableHead>
+                            <TableHead className="text-muted-foreground/70">Service ID</TableHead>
                             <TableHead className="text-muted-foreground/70">Client Info</TableHead>
                             <TableHead className="text-muted-foreground/70">Amount Paid</TableHead>
                             <TableHead className="text-muted-foreground/70">Status</TableHead>
@@ -252,13 +253,13 @@ export default function BookingsPage() {
                     <TableBody>
                         {isLoading ? (
                             <TableRow>
-                                <TableCell colSpan={6} className="text-center py-20 text-muted-foreground">
+                                <TableCell colSpan={7} className="text-center py-20 text-muted-foreground">
                                     Loading bookings...
                                 </TableCell>
                             </TableRow>
                         ) : bookings.length === 0 ? (
                             <TableRow>
-                                <TableCell colSpan={6} className="text-center py-20 text-muted-foreground">
+                                <TableCell colSpan={7} className="text-center py-20 text-muted-foreground">
                                     No bookings found.
                                 </TableCell>
                             </TableRow>
@@ -281,6 +282,19 @@ export default function BookingsPage() {
                                                 </Badge>
                                             </div>
                                         )}
+                                    </TableCell>
+                                    <TableCell className="font-medium text-xs text-muted-foreground font-mono">
+                                        {(() => {
+                                            try {
+                                                if (booking.itemsJson) {
+                                                    const items = JSON.parse(booking.itemsJson);
+                                                    if (items && items.length > 0 && items[0].id) {
+                                                        return items[0].id;
+                                                    }
+                                                }
+                                            } catch (e) {}
+                                            return "N/A";
+                                        })()}
                                     </TableCell>
                                     <TableCell>
                                         <div className="flex flex-col">
