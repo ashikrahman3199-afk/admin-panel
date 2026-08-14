@@ -10,7 +10,7 @@ import {
     TableHeader,
     TableRow,
 } from "@/components/ui/table";
-import { Eye, RefreshCw, Phone, CheckCircle, Clock } from "lucide-react";
+import { Eye, RefreshCw, Phone, CheckCircle, Clock, CheckCircle2, Play, Activity, FastForward, ArrowRight } from "lucide-react";
 import {
     Dialog,
     DialogContent,
@@ -42,6 +42,65 @@ const getStatusColor = (status?: string) => {
         case 'extended': return 'bg-indigo-500/10 text-indigo-500';
         default: return 'bg-gray-500/10 text-gray-500';
     }
+};
+
+const ProgressTimeline = ({ status }: { status?: string }) => {
+    const s = (status || '').toLowerCase();
+    
+    // Mapping current status to a progress level (0-4)
+    let progressLevel = 0;
+    if (['forwarded'].includes(s)) progressLevel = 1;
+    if (['preparing'].includes(s)) progressLevel = 2;
+    if (['live'].includes(s)) progressLevel = 3;
+    if (['extended'].includes(s)) progressLevel = 3.5; 
+    if (['ended', 'completed'].includes(s)) progressLevel = 4;
+
+    const stages = [
+        { level: 1, label: 'Forwarded', icon: ArrowRight },
+        { level: 2, label: 'Preparing', icon: Clock },
+        { level: 3, label: 'Live', icon: Activity },
+        { level: 4, label: 'Completed', icon: CheckCircle2 },
+    ];
+
+    if (progressLevel === 0) return null; // Don't show timeline if pending/unforwarded
+
+    return (
+        <div className="border border-white/5 rounded-xl p-6 bg-black/20">
+            <h3 className="text-xs font-semibold text-muted-foreground mb-6 uppercase tracking-wider text-center">Fulfillment Progress</h3>
+            <div className="relative flex justify-between items-center px-2">
+                {/* Connecting line */}
+                <div className="absolute left-[10%] right-[10%] top-4 h-[2px] bg-white/10 z-0">
+                    <div 
+                        className="h-full bg-primary transition-all duration-500 ease-in-out"
+                        style={{ width: `${Math.max(0, Math.min(100, (progressLevel - 1) * 33.33))}%` }}
+                    />
+                </div>
+                
+                {/* Stage Nodes */}
+                {stages.map((stage) => {
+                    const isActive = progressLevel >= stage.level;
+                    const isExtended = progressLevel === 3.5 && stage.level === 3;
+                    const Icon = stage.icon;
+                    
+                    return (
+                        <div key={stage.label} className="relative z-10 flex flex-col items-center gap-2">
+                            <div className={`w-8 h-8 rounded-full flex items-center justify-center transition-colors duration-300 ${
+                                isActive 
+                                    ? isExtended ? 'bg-indigo-500 text-white shadow-[0_0_15px_rgba(99,102,241,0.5)]' 
+                                    : 'bg-primary text-white shadow-[0_0_15px_rgba(59,130,246,0.5)]'
+                                : 'bg-[#1a1a1a] text-muted-foreground border border-white/10'
+                            }`}>
+                                <Icon className="w-4 h-4" />
+                            </div>
+                            <div className={`text-[10px] font-semibold ${isActive ? (isExtended ? 'text-indigo-400' : 'text-white') : 'text-muted-foreground'}`}>
+                                {isExtended ? 'EXTENDED' : stage.label.toUpperCase()}
+                            </div>
+                        </div>
+                    );
+                })}
+            </div>
+        </div>
+    );
 };
 
 export default function BookingsPage() {
@@ -263,6 +322,8 @@ export default function BookingsPage() {
 
                     {selectedBooking && (
                         <div className="space-y-6 py-4">
+                            <ProgressTimeline status={selectedBooking.status} />
+
                             {/* Contact Info Card */}
                             <div className="bg-white/5 rounded-xl p-4 border border-white/10">
                                 <h3 className="text-sm font-semibold text-muted-foreground mb-3 uppercase tracking-wider">Client Contact</h3>
