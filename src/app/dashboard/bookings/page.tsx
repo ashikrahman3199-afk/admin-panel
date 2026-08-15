@@ -241,6 +241,7 @@ export default function BookingsPage() {
                 <Table>
                     <TableHeader>
                         <TableRow className="hover:bg-transparent border-none">
+                            <TableHead className="w-[100px] text-muted-foreground/70">Booking ID</TableHead>
                             <TableHead className="w-[120px] text-muted-foreground/70">Order Date</TableHead>
                             <TableHead className="text-muted-foreground/70">Campaign Name</TableHead>
                             <TableHead className="text-muted-foreground/70">Service ID</TableHead>
@@ -253,19 +254,22 @@ export default function BookingsPage() {
                     <TableBody>
                         {isLoading ? (
                             <TableRow>
-                                <TableCell colSpan={7} className="text-center py-20 text-muted-foreground">
+                                <TableCell colSpan={8} className="text-center py-20 text-muted-foreground">
                                     Loading bookings...
                                 </TableCell>
                             </TableRow>
                         ) : bookings.length === 0 ? (
                             <TableRow>
-                                <TableCell colSpan={7} className="text-center py-20 text-muted-foreground">
+                                <TableCell colSpan={8} className="text-center py-20 text-muted-foreground">
                                     No bookings found.
                                 </TableCell>
                             </TableRow>
                         ) : (
                             bookings.map((booking) => (
                                 <TableRow key={booking.id} className="hover:bg-white/5 border-none transition-colors group">
+                                    <TableCell className="font-medium text-xs text-muted-foreground font-mono uppercase" title={booking.id}>
+                                        {booking.id.substring(0, 8)}
+                                    </TableCell>
                                     <TableCell className="font-medium text-xs text-muted-foreground">
                                         {new Date(booking.orderDate || booking.createdAt).toLocaleDateString()}
                                     </TableCell>
