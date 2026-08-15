@@ -289,7 +289,7 @@ export default function BookingsPage() {
                                                 if (booking.itemsJson) {
                                                     const items = JSON.parse(booking.itemsJson);
                                                     if (items && items.length > 0 && items[0].id) {
-                                                        return items[0].id;
+                                                        return String(items[0].id).substring(0, 8);
                                                     }
                                                 }
                                             } catch (e) {}
