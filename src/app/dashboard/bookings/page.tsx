@@ -370,7 +370,7 @@ export default function BookingsPage() {
                                 <div className="grid grid-cols-2 gap-4 mb-4">
                                     <div>
                                         <div className="text-xs text-muted-foreground mb-1">Booking ID</div>
-                                        <div className="font-medium text-sm font-mono">{selectedBooking.id}</div>
+                                        <div className="font-medium text-sm font-mono">{selectedBooking.id.replace(/^booking-/i, '')}</div>
                                     </div>
                                     <div>
                                         <div className="text-xs text-muted-foreground mb-1">Service ID</div>
