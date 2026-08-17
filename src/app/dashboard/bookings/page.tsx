@@ -268,7 +268,7 @@ export default function BookingsPage() {
                             bookings.map((booking) => (
                                 <TableRow key={booking.id} className="hover:bg-white/5 border-none transition-colors group">
                                     <TableCell className="font-medium text-xs text-muted-foreground font-mono uppercase" title={booking.id}>
-                                        {booking.id.replace('BOOKING-', '').substring(0, 8)}
+                                        {booking.id.replace(/^booking-/i, '').substring(0, 8)}
                                     </TableCell>
                                     <TableCell className="font-medium text-xs text-muted-foreground">
                                         {new Date(booking.orderDate || booking.createdAt).toLocaleDateString()}
@@ -369,8 +369,29 @@ export default function BookingsPage() {
                                 <h3 className="text-sm font-semibold text-muted-foreground mb-3 uppercase tracking-wider">Order Overview</h3>
                                 <div className="grid grid-cols-2 gap-4 mb-4">
                                     <div>
+                                        <div className="text-xs text-muted-foreground mb-1">Booking ID</div>
+                                        <div className="font-medium text-sm font-mono">{selectedBooking.id}</div>
+                                    </div>
+                                    <div>
+                                        <div className="text-xs text-muted-foreground mb-1">Service ID</div>
+                                        <div className="font-medium text-sm font-mono">
+                                            {(() => {
+                                                try {
+                                                    if (selectedBooking.itemsJson) {
+                                                        const items = JSON.parse(selectedBooking.itemsJson);
+                                                        if (items && items.length > 0 && items[0].id) {
+                                                            return items[0].id;
+                                                        }
+                                                    }
+                                                } catch (e) {}
+                                                return "N/A";
+                                            })()}
+                                        </div>
+                                    </div>
+                                    <div className="col-span-2 border-t border-white/10 pt-4 mt-2"></div>
+                                    <div>
                                         <div className="text-xs text-muted-foreground mb-1">Campaign</div>
-                                        <div className="font-medium text-sm">{selectedBooking.campaignName || "N/A"}</div>
+                                        <div className="font-medium text-sm">{selectedBooking.campaignName || "Untitled"}</div>
                                     </div>
                                     <div>
                                         <div className="text-xs text-muted-foreground mb-1">Advance Paid</div>
