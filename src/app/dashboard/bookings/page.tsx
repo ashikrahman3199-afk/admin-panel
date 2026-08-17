@@ -268,7 +268,7 @@ export default function BookingsPage() {
                             bookings.map((booking) => (
                                 <TableRow key={booking.id} className="hover:bg-white/5 border-none transition-colors group">
                                     <TableCell className="font-medium text-xs text-muted-foreground font-mono uppercase" title={booking.id}>
-                                        {booking.id.substring(0, 8)}
+                                        {booking.id.replace('BOOKING-', '').substring(0, 8)}
                                     </TableCell>
                                     <TableCell className="font-medium text-xs text-muted-foreground">
                                         {new Date(booking.orderDate || booking.createdAt).toLocaleDateString()}
