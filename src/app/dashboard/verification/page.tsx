@@ -284,6 +284,10 @@ export default function VerificationPage() {
                                                     </DialogHeader>
                                                     <div className="grid gap-4 py-4">
                                                         <div className="grid grid-cols-2 gap-4 text-sm">
+                                                            <div className="flex flex-col col-span-2 border-b border-white/5 pb-3">
+                                                                <span className="font-bold text-muted-foreground">Service ID</span>
+                                                                <span className="font-mono mt-1 text-white/90">{space.id}</span>
+                                                            </div>
                                                             <div className="flex flex-col">
                                                                 <span className="font-bold text-muted-foreground">Category</span>
                                                                 <span>{space.categoryId || space.category}</span>
