@@ -415,8 +415,8 @@ function UsersPageContent() {
                                 <TableCell>
                                     <Popover open={openPopoverId === user.id} onOpenChange={(isOpen) => setOpenPopoverId(isOpen ? user.id : null)}>
                                         <PopoverTrigger asChild>
-                                            <Badge variant="outline" className={`cursor-pointer rounded-full px-3 border-none ${user.status === "ACTIVE" ? "bg-green-500/10 text-green-500" : user.status === "PENDING_APPROVAL" ? "bg-yellow-500/10 text-yellow-500 hover:bg-yellow-500/20" : "bg-red-500/10 text-red-500"}`}>
-                                                {user.status}
+                                            <Badge variant="outline" className={`cursor-pointer rounded-full px-3 border-none ${(user.status || "ACTIVE") === "ACTIVE" ? "bg-green-500/10 text-green-500" : user.status === "PENDING_APPROVAL" ? "bg-yellow-500/10 text-yellow-500 hover:bg-yellow-500/20" : "bg-red-500/10 text-red-500"}`}>
+                                                {user.status || "ACTIVE"}
                                             </Badge>
                                         </PopoverTrigger>
                                         {user.status === "PENDING_APPROVAL" && (
@@ -428,7 +428,7 @@ function UsersPageContent() {
                                         )}
                                     </Popover>
                                 </TableCell>
-                                <TableCell className="font-medium text-muted-foreground">{isMounted && user.createdAt ? new Date(user.createdAt).toLocaleDateString() : "Loading..."}</TableCell>
+                                <TableCell className="font-medium text-muted-foreground">{isMounted ? (user.createdAt ? new Date(user.createdAt).toLocaleDateString() : (user.updatedAt ? new Date(user.updatedAt).toLocaleDateString() : "N/A")) : "Loading..."}</TableCell>
                                 <TableCell className="text-right">
                                     <div className="flex items-center justify-end gap-2">
                                         <Button variant="ghost" size="icon" className="rounded-full hover:bg-white/10 text-muted-foreground hover:text-primary" onClick={() => openEditDialog(user)}>
@@ -443,19 +443,6 @@ function UsersPageContent() {
                                             <DropdownMenuContent align="end" className="rounded-xl border-none bg-popover/80 backdrop-blur-xl shadow-2xl">
                                                 <DropdownMenuItem onClick={() => openEditDialog(user)}>Edit Details</DropdownMenuItem>
                                                 <DropdownMenuItem onClick={() => openActivityConfirm(user)}>View Activity</DropdownMenuItem>
-                                                {(currentUserRole === "SUPER_ADMIN" || currentUserRole === "MASTER_ADMIN") && (
-                                                    <>
-                                                        <DropdownMenuSeparator className="bg-white/10" />
-                                                        <DropdownMenuLabel className="text-xs text-muted-foreground uppercase">Promote Role</DropdownMenuLabel>
-                                                        <DropdownMenuItem onClick={() => handlePromoteRole(user.id, "ADMIN", user)}>Make Basic Admin</DropdownMenuItem>
-                                                        {currentUserRole === "SUPER_ADMIN" && (
-                                                            <>
-                                                                <DropdownMenuItem onClick={() => handlePromoteRole(user.id, "MASTER_ADMIN", user)}>Make Master Admin</DropdownMenuItem>
-                                                                <DropdownMenuItem className="text-primary focus:text-primary focus:bg-primary/10" onClick={() => handlePromoteRole(user.id, "SUPER_ADMIN", user)}>Make Super Admin</DropdownMenuItem>
-                                                            </>
-                                                        )}
-                                                    </>
-                                                )}
                                                 <DropdownMenuSeparator className="bg-white/10" />
                                                 <DropdownMenuItem className="text-red-500 focus:text-red-500 focus:bg-red-500/10" onClick={() => handleDeleteUser(user.id)}>Delete User</DropdownMenuItem>
                                             </DropdownMenuContent>
