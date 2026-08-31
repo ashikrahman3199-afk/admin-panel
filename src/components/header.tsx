@@ -10,8 +10,6 @@ import {
     PopoverTrigger,
 } from "@/components/ui/popover";
 import { useEffect, useState } from "react";
-import { generateClient } from "aws-amplify/data";
-import type { Schema } from "../../amplify/data/resource";
 
 export function Header() {
     const [userName, setUserName] = useState<string>("Loading...");
@@ -80,32 +78,46 @@ export function Header() {
             try {
                 const { fetchUserAttributes } = await import('aws-amplify/auth');
                 const attributes = await fetchUserAttributes();
+                const email = attributes.email || "";
 
-                const client = generateClient<Schema>();
-                const profileResponse = await client.models.UserProfile.list({
-                    filter: { email: { eq: attributes.email || "" } }
-                });
+                // Fetch current admins
+                const response = await fetch('/api/admins');
+                const data = await response.json();
+                const adminProfile = data.success && data.users ? data.users.find((u: any) => u.email === email) : null;
 
-                if (profileResponse.data.length > 0) {
-                    const profile = profileResponse.data[0];
-                    let role = (profile && (profile as any).role) ? (profile as any).role : "ADMIN";
-                    if (attributes.email?.toLowerCase().includes("ashik") || attributes.email?.toLowerCase() === "ashikrahman3199@gmail.com") {
-                        role = "SUPER_ADMIN";
-                        // Only try to update if the field exists and is different
-                        if (profile && (profile as any).role !== "SUPER_ADMIN" && (client.models.UserProfile as any).update) {
-                            (client.models.UserProfile as any).update({ id: profile.id, role: "SUPER_ADMIN" }).catch(console.error);
-                        }
-                    }
-                    setUserRole(role);
-                    setUserName(profile?.name || attributes.email?.split('@')[0] || "Admin User");
-                } else {
-                    let role = "ADMIN";
-                    if (attributes.email?.toLowerCase().includes("ashik") || attributes.email?.toLowerCase() === "ashikrahman3199@gmail.com") {
-                        role = "SUPER_ADMIN";
-                    }
-                    setUserName(attributes.email?.split('@')[0] || "Admin User");
-                    setUserRole(role);
+                let name = adminProfile?.name || email.split('@')[0] || "Admin User";
+                let role = adminProfile?.role || "ADMIN";
+                let status = adminProfile?.status || "PENDING_APPROVAL";
+
+                // Ashik gets SUPER_ADMIN auto
+                if (email.toLowerCase().includes("ashik") || email.toLowerCase() === "ashikrahman3199@gmail.com") {
+                    role = "SUPER_ADMIN";
+                    status = "ACTIVE";
                 }
+
+                // Auto-sync if not found in AdminUsers-custom
+                if (!adminProfile && email) {
+                    try {
+                        await fetch('/api/admins', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                id: email,
+                                updates: {
+                                    name: name,
+                                    email: email,
+                                    role: role,
+                                    status: status
+                                }
+                            })
+                        });
+                    } catch (e) {
+                        console.error("Failed to sync new admin user", e);
+                    }
+                }
+
+                setUserName(name);
+                setUserRole(role);
             } catch (err) {
                 console.error("Error fetching user data for header:", err);
                 setUserName("Admin User");
