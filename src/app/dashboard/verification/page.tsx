@@ -15,7 +15,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 
 import { Label } from "@/components/ui/label";
-import { CheckCircle2, XCircle, Eye, RefreshCw, Trash2, Pencil } from "lucide-react";
+import { CheckCircle2, XCircle, Eye, RefreshCw, Trash2, Pencil, Plus, Trash } from "lucide-react";
 import {
     Dialog,
     DialogContent,
@@ -124,7 +124,11 @@ export default function VerificationPage() {
     }, [fetchPendingAdSpaces]);
 
     const openEditDialog = (space: any) => {
-        setEditSpace({ ...space });
+        let imgs = space.images || [];
+        if (imgs.length === 0 && space.image) {
+            imgs = [space.image];
+        }
+        setEditSpace({ ...space, images: imgs });
         setIsEditDialogOpen(true);
     };
 
@@ -142,8 +146,9 @@ export default function VerificationPage() {
                         price: Number(editSpace.price),
                         location: editSpace.location,
                         description: editSpace.description,
-                        image: editSpace.image,
-                        images: editSpace.images || []
+                        image: (editSpace.images && editSpace.images.length > 0) ? editSpace.images[0] : editSpace.image,
+                        images: editSpace.images || [],
+                        details: editSpace.details
                     }
                 })
             });
@@ -557,9 +562,36 @@ export default function VerificationPage() {
                                 <Textarea value={editSpace.description || ""} onChange={(e) => setEditSpace({...editSpace, description: e.target.value})} className="bg-white/5 border-white/10 h-24" />
                             </div>
                             <div className="grid gap-2">
-                                <Label>Main Image URL</Label>
-                                <Input value={editSpace.image || ""} onChange={(e) => setEditSpace({...editSpace, image: e.target.value})} className="bg-white/5 border-white/10" />
+                                <div className="flex items-center justify-between">
+                                    <Label>Images</Label>
+                                    <Button variant="ghost" size="sm" className="h-6 text-xs rounded-full" onClick={() => setEditSpace({...editSpace, images: [...(editSpace.images || []), ""]})}>
+                                        <Plus className="h-3 w-3 mr-1" /> Add Image
+                                    </Button>
+                                </div>
+                                {(editSpace.images || []).map((imgUrl: string, idx: number) => (
+                                    <div key={idx} className="flex gap-2 items-center">
+                                        <Input 
+                                            value={imgUrl} 
+                                            onChange={(e) => {
+                                                const newImgs = [...editSpace.images];
+                                                newImgs[idx] = e.target.value;
+                                                setEditSpace({...editSpace, images: newImgs});
+                                            }} 
+                                            placeholder="https://..." 
+                                            className="bg-white/5 border-white/10" 
+                                        />
+                                        <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0 text-red-500 hover:bg-red-500/10" onClick={() => {
+                                            const newImgs = [...editSpace.images];
+                                            newImgs.splice(idx, 1);
+                                            setEditSpace({...editSpace, images: newImgs});
+                                        }}>
+                                            <Trash className="h-4 w-4" />
+                                        </Button>
+                                    </div>
+                                ))}
                             </div>
+                            
+                            
                         </div>
                     )}
                     <DialogFooter>
