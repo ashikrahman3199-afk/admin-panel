@@ -28,29 +28,47 @@ export async function GET() {
 export async function POST(request: Request) {
     try {
         const body = await request.json();
-        const { id, approvalStatus, rejectionReason } = body;
+        // Support either legacy (approvalStatus) or generic (updates)
+        const { id, approvalStatus, rejectionReason, updates } = body;
 
-        if (!id || !approvalStatus) {
+        if (!id) {
             return NextResponse.json({ success: false, error: "Missing required fields" }, { status: 400 });
         }
 
-        let updateExpression = "set approvalStatus = :s, #status = :s";
-        let expressionAttributeValues: any = {
-            ":s": approvalStatus
-        };
+        let updateExpressions: string[] = [];
+        let expressionAttributeValues: any = {};
+        let expressionAttributeNames: any = {};
+
+        if (updates) {
+            Object.keys(updates).forEach((key, index) => {
+                const attributeKey = `#attr${index}`;
+                const valueKey = `:val${index}`;
+                updateExpressions.push(`${attributeKey} = ${valueKey}`);
+                expressionAttributeNames[attributeKey] = key;
+                expressionAttributeValues[valueKey] = updates[key];
+            });
+        }
+
+        if (approvalStatus) {
+            updateExpressions.push("#status = :s, approvalStatus = :s");
+            expressionAttributeNames["#status"] = "status";
+            expressionAttributeValues[":s"] = approvalStatus;
+        }
 
         if (rejectionReason !== undefined) {
-            updateExpression += ", rejectionReason = :r";
+            updateExpressions.push("rejectionReason = :r");
             expressionAttributeValues[":r"] = rejectionReason;
+        }
+
+        if (updateExpressions.length === 0) {
+            return NextResponse.json({ success: false, error: "No updates provided" }, { status: 400 });
         }
 
         const updateCommand = new UpdateCommand({
             TableName: "AdSpace-d6pvakazenfljpsmln4xcmjx6u-NONE",
             Key: { id },
-            UpdateExpression: updateExpression,
-            ExpressionAttributeNames: {
-                "#status": "status"
-            },
+            UpdateExpression: `set ${updateExpressions.join(", ")}`,
+            ExpressionAttributeNames: expressionAttributeNames,
             ExpressionAttributeValues: expressionAttributeValues,
             ReturnValues: "ALL_NEW"
         });
@@ -65,11 +83,11 @@ export async function POST(request: Request) {
 
 export async function DELETE(request: Request) {
     try {
-        const body = await request.json();
-        const { id } = body;
+        const { searchParams } = new URL(request.url);
+        const id = searchParams.get('id');
 
         if (!id) {
-            return NextResponse.json({ success: false, error: "Missing required fields" }, { status: 400 });
+            return NextResponse.json({ success: false, error: "Missing ID" }, { status: 400 });
         }
 
         const deleteCommand = new DeleteCommand({
@@ -78,7 +96,7 @@ export async function DELETE(request: Request) {
         });
 
         await docClient.send(deleteCommand);
-        return NextResponse.json({ success: true });
+        return NextResponse.json({ success: true, message: "Ad space deleted successfully" });
     } catch (error: any) {
         console.error("Error deleting ad space:", error);
         return NextResponse.json({ success: false, error: error.message }, { status: 500 });
