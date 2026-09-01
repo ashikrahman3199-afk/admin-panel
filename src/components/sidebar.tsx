@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import {
-    LayoutDashboard,
+    ShoppingCart, LayoutDashboard,
     Users,
     Store,
     FileText,
@@ -23,6 +23,7 @@ const sidebarItems = [
     { icon: Store, label: "Vendors", href: "/dashboard/vendors" },
     { icon: ShieldCheck, label: "Service Verification", href: "/dashboard/verification" },
     { icon: FileText, label: "Bookings", href: "/dashboard/bookings" },
+    { icon: ShoppingCart, label: "Active Carts", href: "/dashboard/carts" },
     { icon: CreditCard, label: "Transactions", href: "/dashboard/transactions" },
     { icon: AlertTriangle, label: "Disputes", href: "/dashboard/disputes" },
     { icon: PowerOff, label: "Deactivations", href: "/dashboard/deactivations" },
