@@ -14,6 +14,7 @@ export default function DashboardPage() {
         pendingListings: 0,
         totalBookings: 0,
         activeCampaigns: 0,
+        clearedDisputes: 0,
         revenue: 0,
     });
     const [loading, setLoading] = useState(true);
@@ -29,7 +30,8 @@ export default function DashboardPage() {
                     setMetrics({
                         pendingListings: result.metrics.pendingListings || 0,
                         totalBookings: result.metrics.totalBookings || 0,
-                        activeCampaigns: result.metrics.activeDisputes || 0,
+                        activeCampaigns: result.metrics.activeDisputes ?? 0,
+                        clearedDisputes: result.metrics.clearedDisputes ?? 0,
                         revenue: result.metrics.revenue || 0,
                     });
                     setRecentActivity(result.recentActivity || []);
@@ -100,13 +102,24 @@ export default function DashboardPage() {
                 <Link href="/dashboard/disputes">
                     <Card className="bg-card/50 backdrop-blur-sm hover:bg-white/10 transition-colors shadow-sm ring-1 ring-white/10 group cursor-pointer">
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                            <CardTitle className="text-sm font-medium group-hover:text-primary transition-colors">Disputes</CardTitle>
+                            <CardTitle className="text-sm font-medium group-hover:text-primary transition-colors flex items-center gap-2">
+                                Disputes
+                                {metrics.activeCampaigns > 0 ? (
+                                    <span className="flex h-2 w-2 rounded-full bg-amber-500 animate-pulse mt-0.5" />
+                                ) : (
+                                    <span className="flex h-2 w-2 rounded-full bg-green-500 mt-0.5" />
+                                )}
+                            </CardTitle>
                             <TrendingUp className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors" />
                         </CardHeader>
                         <CardContent>
                             <div className="text-2xl font-bold group-hover:text-primary transition-colors">{loading ? "..." : metrics.activeCampaigns}</div>
-                            <p className="text-xs text-muted-foreground">
-                                Open resolutions
+                            <p className="text-xs text-muted-foreground mt-1">
+                                {metrics.activeCampaigns === 0 ? (
+                                    <span className="text-green-500 font-medium">All cleared</span>
+                                ) : (
+                                    <span className="text-amber-500/90 font-medium">{metrics.activeCampaigns} open {metrics.activeCampaigns === 1 ? 'resolution' : 'resolutions'}</span>
+                                )}
                             </p>
                         </CardContent>
                     </Card>

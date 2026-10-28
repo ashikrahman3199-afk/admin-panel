@@ -34,7 +34,11 @@ export async function GET() {
         const totalBookings = bookings.length;
 
         // 3. Disputes (Open disputes)
-        const openDisputes = disputes.filter(d => d.status === 'OPEN').length;
+        const openDisputes = disputes.filter(d => (d.status || "").toUpperCase() === 'OPEN').length;
+        const clearedDisputes = disputes.filter(d => {
+            const s = (d.status || "").toUpperCase();
+            return s === 'CLEARED' || s === 'RESOLVED';
+        }).length;
 
         // 4. Revenue (Sum of booking amounts for completed transactions only)
         let revenue = 0;
@@ -68,13 +72,16 @@ export async function GET() {
             createdAt: s.createdAt || new Date().toISOString()
         }));
 
-        disputes.forEach(d => activities.push({ 
-            id: d.id, 
-            type: 'dispute', 
-            title: `Dispute Raised`, 
-            desc: d.reason || 'No reason provided',
-            createdAt: d.createdAt || new Date().toISOString()
-        }));
+        disputes.forEach(d => {
+            const isCleared = (d.status || '').toUpperCase() === 'CLEARED' || (d.status || '').toUpperCase() === 'RESOLVED';
+            activities.push({ 
+                id: d.id, 
+                type: 'dispute', 
+                title: isCleared ? `Dispute Cleared` : `Dispute Raised`, 
+                desc: d.reason || 'No reason provided',
+                createdAt: d.updatedAt || d.createdAt || new Date().toISOString()
+            });
+        });
 
         activities.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
         const recentActivity = activities.slice(0, 6);
@@ -85,6 +92,8 @@ export async function GET() {
                 pendingListings,
                 totalBookings,
                 activeDisputes: openDisputes,
+                clearedDisputes,
+                totalDisputes: disputes.length,
                 revenue
             },
             recentActivity
