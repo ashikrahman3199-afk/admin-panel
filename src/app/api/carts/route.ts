@@ -65,11 +65,16 @@ export async function GET() {
             const userPhone = cart.userPhone || user?.phoneNumber || "No phone";
             const userEmail = cart.userId || user?.email || "Unknown";
 
-            // Calculate budget/value
-            let budget = cart.budget || 0;
-            if (!budget && items.length > 0) {
-                budget = items.reduce((sum: number, it: any) => sum + (Number(it.price) || Number(it.minSpend) || 0), 0);
-            }
+            // Calculate actual total amount directly from the items in the cart
+            const calculatedTotal = items.reduce((sum: number, it: any) => {
+                const itemPrice = Number(it.price) || Number(it.minSpend) || 0;
+                const qty = Number(it.quantity) || 1;
+                return sum + (itemPrice * qty);
+            }, 0);
+
+            // Always prioritize the calculated items total so the estimated cart total
+            // and the individual service prices in the cart list are always identical.
+            const budget = items.length > 0 ? calculatedTotal : (Number(cart.budget) || 0);
 
             return {
                 id: cart.id,

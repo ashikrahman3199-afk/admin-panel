@@ -60,7 +60,12 @@ export default function CartsPage() {
         setIsDialogOpen(true);
     };
 
-    const totalPotentialValue = carts.reduce((acc, c) => acc + (c.budget || 0), 0);
+    const totalPotentialValue = carts.reduce((acc, c) => {
+        const cTotal = (c.items && c.items.length > 0)
+            ? c.items.reduce((sum: number, it: any) => sum + ((Number(it.price) || Number(it.minSpend) || 0) * (Number(it.quantity) || 1)), 0)
+            : Number(c.budget || 0);
+        return acc + cTotal;
+    }, 0);
     const totalServicesCount = carts.reduce((acc, c) => acc + (c.totalItems || (c.items?.length || 0)), 0);
 
     const filteredCarts = carts.filter(cart => {
@@ -234,7 +239,11 @@ export default function CartsPage() {
                                         </TableCell>
 
                                         <TableCell className="font-semibold text-sm text-emerald-400">
-                                            {formatCurrency(cart.budget)}
+                                            {formatCurrency(
+                                                items.length > 0
+                                                    ? items.reduce((sum: number, it: any) => sum + ((Number(it.price) || Number(it.minSpend) || 0) * (Number(it.quantity) || 1)), 0)
+                                                    : Number(cart.budget || 0)
+                                            )}
                                         </TableCell>
 
                                         <TableCell className="text-muted-foreground text-xs whitespace-nowrap">
@@ -338,7 +347,7 @@ export default function CartsPage() {
                                             </div>
                                             <div className="text-right shrink-0">
                                                 <div className="font-bold text-base text-primary">
-                                                    {formatCurrency(Number(item.price || item.minSpend || 0))}
+                                                    {formatCurrency((Number(item.price || item.minSpend || 0)) * (Number(item.quantity) || 1))}
                                                 </div>
                                                 <div className="text-xs text-muted-foreground mt-0.5">
                                                     Qty: {item.quantity || 1} • {item.duration || 30} days
@@ -360,7 +369,11 @@ export default function CartsPage() {
                                     <span className="text-xs text-muted-foreground">Pending customer checkout</span>
                                 </div>
                                 <div className="text-2xl font-black text-primary">
-                                    {formatCurrency(selectedCart.budget)}
+                                    {formatCurrency(
+                                        selectedCart.items && selectedCart.items.length > 0
+                                            ? selectedCart.items.reduce((sum: number, it: any) => sum + ((Number(it.price) || Number(it.minSpend) || 0) * (Number(it.quantity) || 1)), 0)
+                                            : Number(selectedCart.budget || 0)
+                                    )}
                                 </div>
                             </div>
                         </div>
