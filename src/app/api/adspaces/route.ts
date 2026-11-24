@@ -28,8 +28,8 @@ export async function GET() {
 export async function POST(request: Request) {
     try {
         const body = await request.json();
-        // Support either legacy (approvalStatus) or generic (updates)
-        const { id, approvalStatus, rejectionReason, updates } = body;
+        // Support either legacy (approvalStatus), generic (updates), or toggleLive
+        const { id, approvalStatus, rejectionReason, updates, toggleLive } = body;
 
         if (!id) {
             return NextResponse.json({ success: false, error: "Missing required fields" }, { status: 400 });
@@ -38,6 +38,27 @@ export async function POST(request: Request) {
         let updateExpressions: string[] = [];
         let expressionAttributeValues: any = {};
         let expressionAttributeNames: any = {};
+
+        if (toggleLive !== undefined) {
+            const isLive = Boolean(toggleLive);
+            const targetStatus = isLive ? "APPROVED" : "DEACTIVATED";
+            const now = new Date().toISOString();
+
+            updateExpressions.push("#status = :targetStatus, approvalStatus = :targetStatus, isActive = :isActive, isAvailable = :isAvailable, adminDisabled = :adminDisabled, updatedAt = :now");
+            expressionAttributeNames["#status"] = "status";
+            expressionAttributeValues[":targetStatus"] = targetStatus;
+            expressionAttributeValues[":isActive"] = isLive;
+            expressionAttributeValues[":isAvailable"] = isLive;
+            expressionAttributeValues[":adminDisabled"] = !isLive;
+            expressionAttributeValues[":now"] = now;
+
+            if (isLive) {
+                updateExpressions.push("turnedOnAt = :now");
+            } else {
+                updateExpressions.push("turnedOffAt = :now, deactivationReason = :reason");
+                expressionAttributeValues[":reason"] = "Turned off by Admin";
+            }
+        }
 
         if (updates) {
             Object.keys(updates).forEach((key, index) => {
@@ -49,7 +70,7 @@ export async function POST(request: Request) {
             });
         }
 
-        if (approvalStatus) {
+        if (approvalStatus && toggleLive === undefined) {
             updateExpressions.push("#status = :s, approvalStatus = :s");
             expressionAttributeNames["#status"] = "status";
             expressionAttributeValues[":s"] = approvalStatus;
