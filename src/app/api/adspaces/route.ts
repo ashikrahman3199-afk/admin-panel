@@ -70,7 +70,7 @@ export async function POST(request: Request) {
             });
         }
 
-        if (approvalStatus && toggleLive === undefined) {
+        if (approvalStatus && toggleLive === undefined && (!updates || (updates.approvalStatus === undefined && updates.status === undefined))) {
             updateExpressions.push("#status = :s, approvalStatus = :s");
             expressionAttributeNames["#status"] = "status";
             expressionAttributeValues[":s"] = approvalStatus;
