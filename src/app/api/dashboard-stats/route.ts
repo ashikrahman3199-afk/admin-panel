@@ -30,8 +30,15 @@ export async function GET() {
         // 1. Pending Listings
         const pendingListings = adSpaces.filter(s => s.approvalStatus === 'PENDING' || s.approvalStatus === 'Pending').length;
 
-        // 2. Total Bookings
+        // 2. Total Bookings & Callbacks
         const totalBookings = bookings.length;
+        const callbackBookings = bookings.filter(b => (b.paymentType || '').toLowerCase() === 'callback');
+        const totalCallbacks = callbackBookings.length;
+        const pendingCallbacks = callbackBookings.filter(b => {
+            const s = (b.status || '').toLowerCase();
+            const cs = (b.callbackStatus || '').toLowerCase();
+            return (s === 'pending' || cs === 'pending' || !cs) && cs !== 'contacted' && cs !== 'completed';
+        }).length;
 
         // 3. Disputes (Open disputes)
         const openDisputes = disputes.filter(d => (d.status || "").toUpperCase() === 'OPEN').length;
@@ -56,19 +63,35 @@ export async function GET() {
         // Combine activities for the activity stream
         const activities: any[] = [];
         
-        bookings.forEach(b => activities.push({ 
-            id: b.id, 
-            type: 'booking', 
-            title: `Booking #${b.id?.substring(0, 8) || 'Unknown'}`, 
-            desc: `Amount: ₹${b.totalAmount || b.amount || 0}`,
-            createdAt: b.createdAt || new Date().toISOString()
-        }));
+        bookings.forEach(b => {
+            const isCallback = (b.paymentType || '').toLowerCase() === 'callback';
+            const cleanId = b.id ? b.id.replace(/^booking-/i, '').substring(0, 8) : 'Unknown';
+            const campTitle = b.campaignName || 'Campaign';
+            const clientName = b.userName || 'Client';
+            const clientPhone = b.userPhone || '';
+            const amountVal = Number(b.totalAmount || b.amount || 0).toLocaleString();
+
+            activities.push({ 
+                id: b.id, 
+                type: isCallback ? 'callback' : 'booking', 
+                title: isCallback ? `📞 Callback: ${campTitle}` : `Booking #${cleanId}: ${campTitle}`, 
+                desc: isCallback 
+                    ? `From ${clientName}${clientPhone ? ` (${clientPhone})` : ''} • ₹${amountVal} • ${(b.status || 'PENDING').toUpperCase()}`
+                    : `By ${clientName} • Amount: ₹${amountVal} • ${(b.status || 'PENDING').toUpperCase()}`,
+                createdAt: b.orderDate || b.createdAt || new Date().toISOString(),
+                clientName,
+                clientPhone,
+                isCallback,
+                status: b.status || 'PENDING',
+                amount: b.amount || 0
+            });
+        });
 
         adSpaces.forEach(s => activities.push({ 
             id: s.id, 
             type: 'listing', 
-            title: `Listing: ${s.name || s.title || 'Untitled'}`, 
-            desc: `Status: ${s.approvalStatus || s.status || 'Unknown'}`,
+            title: `Listing: ${s.title || s.name || 'Untitled'}`, 
+            desc: `Status: ${(s.approvalStatus || s.status || 'Unknown').toUpperCase()} • ₹${(s.price || 0).toLocaleString()}/${s.priceUnit || 'mo'}`,
             createdAt: s.createdAt || new Date().toISOString()
         }));
 
@@ -84,13 +107,15 @@ export async function GET() {
         });
 
         activities.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-        const recentActivity = activities.slice(0, 6);
+        const recentActivity = activities.slice(0, 8);
 
         return NextResponse.json({
             success: true,
             metrics: {
                 pendingListings,
                 totalBookings,
+                totalCallbacks,
+                pendingCallbacks,
                 activeDisputes: openDisputes,
                 clearedDisputes,
                 totalDisputes: disputes.length,

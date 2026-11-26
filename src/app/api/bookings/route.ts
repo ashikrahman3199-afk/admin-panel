@@ -35,11 +35,15 @@ export async function GET(request: Request) {
         // 4. Join Data
         const enrichedBookings: any[] = bookings.map(booking => {
             const user = userMap.get(booking.userId);
+            const isCallback = (booking.paymentType || '').toLowerCase() === 'callback';
             return {
                 ...booking,
-                clientName: user?.name || "Unknown",
-                clientPhone: user?.phoneNumber || "N/A",
-                clientEmail: user?.email || booking.userId
+                clientName: booking.userName || user?.name || "Unknown",
+                clientPhone: booking.userPhone || user?.phoneNumber || "N/A",
+                clientEmail: user?.email || booking.userId || "N/A",
+                isCallback,
+                paymentType: booking.paymentType || "advance",
+                callbackStatus: booking.callbackStatus || (isCallback ? (booking.status?.toLowerCase() === 'pending' ? 'PENDING' : 'CONTACTED') : undefined)
             };
         });
 
@@ -60,23 +64,111 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
     try {
         const body = await request.json();
-        const { id, updates } = body;
+        const { id, updates, sendUserNotification, userNotification, create, newBooking } = body;
 
-        if (!id || !updates) {
-            return NextResponse.json({ success: false, error: "Missing required fields" }, { status: 400 });
+        // 1. Manual Creation of Booking or Callback Request
+        if (create && newBooking) {
+            const now = new Date().toISOString();
+            const bookingId = newBooking.id || `booking-${Date.now()}-${Math.random().toString(36).substring(7)}`;
+            const isCallback = (newBooking.paymentType || '').toLowerCase() === 'callback';
+
+            const itemToSave: any = {
+                id: bookingId,
+                userId: newBooking.userId || newBooking.clientEmail || "direct-client",
+                userName: newBooking.userName || newBooking.clientName || "Direct Client",
+                userPhone: newBooking.userPhone || newBooking.clientPhone || "N/A",
+                campaignName: newBooking.campaignName || "Custom Campaign",
+                amount: Number(newBooking.amount || 0),
+                orderDate: newBooking.orderDate || now,
+                startDate: newBooking.startDate || now,
+                endDate: newBooking.endDate || now,
+                status: newBooking.status || (isCallback ? 'PENDING' : 'CONFIRMED'),
+                paymentType: newBooking.paymentType || (isCallback ? 'callback' : 'advance'),
+                callbackStatus: isCallback ? 'PENDING' : undefined,
+                services: newBooking.services || [newBooking.campaignName || "Ad Space Service"],
+                itemsJson: newBooking.itemsJson || "[]",
+                adminNotes: newBooking.adminNotes || (isCallback ? "Direct callback request logged by admin" : "Direct booking created by admin"),
+                createdAt: now,
+                updatedAt: now,
+            };
+
+            const putCommand = new PutCommand({
+                TableName: BOOKING_TABLE,
+                Item: itemToSave
+            });
+            await docClient.send(putCommand);
+
+            // Send In-App notification to the user if requested and user has email
+            if (sendUserNotification && itemToSave.userId && itemToSave.userId.includes('@')) {
+                const notifId = `notif-${Date.now()}-${Math.random().toString(36).substring(7)}`;
+                const putNotif = new PutCommand({
+                    TableName: "Notification-d6pvakazenfljpsmln4xcmjx6u-NONE",
+                    Item: {
+                        id: notifId,
+                        userId: itemToSave.userId,
+                        title: userNotification?.title || (isCallback ? "Callback Request Registered!" : "New Booking Created!"),
+                        message: userNotification?.message || `Your booking for "${itemToSave.campaignName}" has been logged. Our administration team is coordinating details with you.`,
+                        type: isCallback ? "CALLBACK" : "BOOKING",
+                        read: false,
+                        createdAt: now,
+                        updatedAt: now,
+                    }
+                });
+                await docClient.send(putNotif);
+            }
+
+            return NextResponse.json({ success: true, booking: itemToSave });
         }
 
-        // Check if we need to send notifications to vendors
-        if (updates.status === 'FORWARDED' || updates.status === 'forwarded') {
+        if (!id) {
+            return NextResponse.json({ success: false, error: "Missing booking ID" }, { status: 400 });
+        }
+
+        // 2. Fetch existing booking to get details for notifications
+        let existingBookingItem: any = null;
+        try {
+            const getCommand = new GetCommand({
+                TableName: BOOKING_TABLE,
+                Key: { id }
+            });
+            const existingRes = await docClient.send(getCommand);
+            existingBookingItem = existingRes.Item;
+        } catch (e) {
+            console.error("Could not fetch existing booking:", e);
+        }
+
+        // 3. Check if user requested an in-app notification to the customer
+        if (sendUserNotification && userNotification) {
+            const targetUserId = userNotification.userId || existingBookingItem?.userId;
+            if (targetUserId) {
+                try {
+                    const now = new Date().toISOString();
+                    const notifId = `notif-${Date.now()}-${Math.random().toString(36).substring(7)}`;
+                    const putUserNotif = new PutCommand({
+                        TableName: "Notification-d6pvakazenfljpsmln4xcmjx6u-NONE",
+                        Item: {
+                            id: notifId,
+                            userId: targetUserId,
+                            title: userNotification.title || "Booking & Callback Update",
+                            message: userNotification.message || "Your booking has received an update from the administration team.",
+                            type: userNotification.type || "CALLBACK",
+                            read: false,
+                            createdAt: now,
+                            updatedAt: now,
+                        }
+                    });
+                    await docClient.send(putUserNotif);
+                } catch (notifErr) {
+                    console.error("Failed to send in-app notification to user:", notifErr);
+                }
+            }
+        }
+
+        // 4. Vendor Notification when Forwarded
+        if (updates?.status === 'FORWARDED' || updates?.status === 'forwarded') {
             try {
-                const getCommand = new GetCommand({
-                    TableName: BOOKING_TABLE,
-                    Key: { id }
-                });
-                const existingBooking = await docClient.send(getCommand);
-                
-                if (existingBooking.Item && existingBooking.Item.itemsJson) {
-                    const items = JSON.parse(existingBooking.Item.itemsJson);
+                if (existingBookingItem && existingBookingItem.itemsJson) {
+                    const items = JSON.parse(existingBookingItem.itemsJson);
                     const vendorIds = new Set<string>();
                     items.forEach((item: any) => {
                         if (item.vendorId) vendorIds.add(item.vendorId);
@@ -100,9 +192,32 @@ export async function POST(request: Request) {
                         await docClient.send(putNotif);
                     }
                 }
+
+                // Also notify the user that their booking was verified and forwarded to the vendor
+                if (existingBookingItem?.userId && existingBookingItem.userId.includes('@')) {
+                    const userNotifId = `notif-${Date.now()}-${Math.random().toString(36).substring(7)}`;
+                    await docClient.send(new PutCommand({
+                        TableName: "Notification-d6pvakazenfljpsmln4xcmjx6u-NONE",
+                        Item: {
+                            id: userNotifId,
+                            userId: existingBookingItem.userId,
+                            title: "Booking Forwarded to Vendor",
+                            message: `Your booking for "${existingBookingItem.campaignName || 'campaign'}" has been verified and forwarded to the vendor for fulfillment.`,
+                            type: "BOOKING",
+                            read: false,
+                            createdAt: new Date().toISOString(),
+                            updatedAt: new Date().toISOString(),
+                        }
+                    }));
+                }
             } catch (e) {
                 console.error("Failed to parse itemsJson or send notifications", e);
             }
+        }
+
+        // If updates is empty but user notification was sent, return success
+        if (!updates || Object.keys(updates).length === 0) {
+            return NextResponse.json({ success: true, message: "User notified successfully", booking: existingBookingItem });
         }
 
         const updateExpressions: string[] = [];
