@@ -44,7 +44,13 @@ import {
     Navigation,
     Lock,
     Unlock,
-    Info
+    Info,
+    UploadCloud,
+    Video,
+    Play,
+    Star,
+    LocateFixed,
+    Compass
 } from "lucide-react";
 import {
     Dialog,
@@ -72,6 +78,146 @@ const CITY_PRESETS = [
     { name: "Pune", lat: 18.5204, lng: 73.8567 },
 ];
 
+// Robust Parser for Google Maps links, shared links, and coordinate strings
+function parseGoogleMapsInput(input: string): { lat: number; lng: number } | null {
+    if (!input) return null;
+    const clean = input.trim();
+
+    // 1. Direct comma or space separated numbers: "13.0827, 80.2707"
+    const coordPattern = /^([+-]?\d+(?:\.\d+)?)[,\s]+([+-]?\d+(?:\.\d+)?)$/;
+    const coordMatch = clean.match(coordPattern);
+    if (coordMatch) {
+        const lat = parseFloat(coordMatch[1]);
+        const lng = parseFloat(coordMatch[2]);
+        if (!isNaN(lat) && !isNaN(lng) && lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180) {
+            return { lat: Number(lat.toFixed(6)), lng: Number(lng.toFixed(6)) };
+        }
+    }
+
+    // 2. Google Maps @lat,lng: https://www.google.com/maps/.../@13.08268,80.270718,17z/...
+    const atMatch = clean.match(/@([+-]?\d+(?:\.\d+)?),([+-]?\d+(?:\.\d+)?)/);
+    if (atMatch) {
+        const lat = parseFloat(atMatch[1]);
+        const lng = parseFloat(atMatch[2]);
+        if (!isNaN(lat) && !isNaN(lng)) {
+            return { lat: Number(lat.toFixed(6)), lng: Number(lng.toFixed(6)) };
+        }
+    }
+
+    // 3. Query params: ?q=lat,lng or &ll=lat,lng or query=lat,lng or destination=lat,lng
+    const qMatch = clean.match(/[?&](?:q|ll|query|destination)=([+-]?\d+(?:\.\d+)?)[,+]+([+-]?\d+(?:\.\d+)?)/);
+    if (qMatch) {
+        const lat = parseFloat(qMatch[1]);
+        const lng = parseFloat(qMatch[2]);
+        if (!isNaN(lat) && !isNaN(lng)) {
+            return { lat: Number(lat.toFixed(6)), lng: Number(lng.toFixed(6)) };
+        }
+    }
+
+    // 4. DMS (Degrees, Minutes, Seconds) e.g. 13°04'57.7"N 80°16'14.5"E
+    const dmsRegex = /(\d+)°(\d+)'([\d.]+)"?([NSEW])[,\s]+(\d+)°(\d+)'([\d.]+)"?([NSEW])/i;
+    const dmsMatch = clean.match(dmsRegex);
+    if (dmsMatch) {
+        let lat = parseInt(dmsMatch[1], 10) + parseInt(dmsMatch[2], 10) / 60 + parseFloat(dmsMatch[3]) / 3600;
+        if (dmsMatch[4].toUpperCase() === 'S') lat = -lat;
+        let lng = parseInt(dmsMatch[5], 10) + parseInt(dmsMatch[6], 10) / 60 + parseFloat(dmsMatch[7]) / 3600;
+        if (dmsMatch[8].toUpperCase() === 'W') lng = -lng;
+        return { lat: Number(lat.toFixed(6)), lng: Number(lng.toFixed(6)) };
+    }
+
+    // 5. Look anywhere in string for a pair of decimals like 13.082718, 80.270712
+    const generalMatch = clean.match(/([+-]?\d+\.\d{3,})[,\s]+([+-]?\d+\.\d{3,})/);
+    if (generalMatch) {
+        const lat = parseFloat(generalMatch[1]);
+        const lng = parseFloat(generalMatch[2]);
+        if (!isNaN(lat) && !isNaN(lng) && lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180) {
+            return { lat: Number(lat.toFixed(6)), lng: Number(lng.toFixed(6)) };
+        }
+    }
+
+    return null;
+}
+
+// Generate interactive Leaflet HTML inside iframe srcDoc for instant click-to-pin
+function generateMapIframeSrcDoc(lat?: number, lng?: number) {
+    const validLat = (lat !== undefined && !isNaN(lat) && lat >= -90 && lat <= 90) ? lat : 13.0827;
+    const validLng = (lng !== undefined && !isNaN(lng) && lng >= -180 && lng <= 180) ? lng : 80.2707;
+    const hasPin = lat !== undefined && lng !== undefined && !isNaN(lat) && !isNaN(lng);
+
+    return `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <style>
+    html, body, #map { height: 100%; width: 100%; margin: 0; padding: 0; background: #090d16; }
+    .leaflet-control-attribution { display: none; }
+  </style>
+</head>
+<body>
+  <div id="map"></div>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script>
+    var initialLat = ${validLat};
+    var initialLng = ${validLng};
+    var hasPin = ${hasPin ? 'true' : 'false'};
+
+    var map = L.map('map', { zoomControl: true }).setView([initialLat, initialLng], hasPin ? 15 : 12);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 19
+    }).addTo(map);
+
+    var pinIcon = L.divIcon({
+      className: 'custom-pin-wrap',
+      html: '<div style="width:24px;height:24px;background:#ef4444;border:3px solid #fff;border-radius:50% 50% 50% 0;transform:rotate(-45deg);box-shadow:0 0 15px rgba(239,68,68,0.8);"></div>',
+      iconSize: [24, 24],
+      iconAnchor: [12, 24]
+    });
+
+    var marker = null;
+    if (hasPin) {
+      marker = L.marker([initialLat, initialLng], { icon: pinIcon, draggable: true }).addTo(map);
+      marker.on('dragend', function(e) {
+        var pos = e.target.getLatLng();
+        window.parent.postMessage({ type: 'PIN_SELECTED', lat: pos.lat, lng: pos.lng }, '*');
+      });
+    }
+
+    map.on('click', function(e) {
+      if (marker) {
+        marker.setLatLng(e.latlng);
+      } else {
+        marker = L.marker(e.latlng, { icon: pinIcon, draggable: true }).addTo(map);
+        marker.on('dragend', function(ev) {
+          var pos = ev.target.getLatLng();
+          window.parent.postMessage({ type: 'PIN_SELECTED', lat: pos.lat, lng: pos.lng }, '*');
+        });
+      }
+      window.parent.postMessage({ type: 'PIN_SELECTED', lat: e.latlng.lat, lng: e.latlng.lng }, '*');
+    });
+
+    window.addEventListener('message', function(event) {
+      if (event.data && event.data.type === 'UPDATE_PIN') {
+        var nLat = event.data.lat;
+        var nLng = event.data.lng;
+        if (marker) {
+          marker.setLatLng([nLat, nLng]);
+        } else {
+          marker = L.marker([nLat, nLng], { icon: pinIcon, draggable: true }).addTo(map);
+          marker.on('dragend', function(ev) {
+            var pos = ev.target.getLatLng();
+            window.parent.postMessage({ type: 'PIN_SELECTED', lat: pos.lat, lng: pos.lng }, '*');
+          });
+        }
+        map.setView([nLat, nLng], 15);
+      }
+    });
+  </script>
+</body>
+</html>`;
+}
+
 export default function VerificationPage() {
     const [mounted, setMounted] = React.useState(false);
     const [adSpaces, setAdSpaces] = React.useState<Array<any>>([]);
@@ -95,6 +241,42 @@ export default function VerificationPage() {
     const [newOptionName, setNewOptionName] = React.useState("");
     const [newOptionPrice, setNewOptionPrice] = React.useState<number | "">("");
     const [newOptionDuration, setNewOptionDuration] = React.useState<number | "">("");
+
+    // Map Pinning & Google Maps Sync States
+    const [googleMapsUrlInput, setGoogleMapsUrlInput] = React.useState("");
+    const [addressSearchQuery, setAddressSearchQuery] = React.useState("");
+    const [isGeocoding, setIsGeocoding] = React.useState(false);
+    const mapIframeRef = React.useRef<HTMLIFrameElement | null>(null);
+
+    // Direct Media Upload States (Photos & Videos)
+    const [isUploadingMedia, setIsUploadingMedia] = React.useState(false);
+    const [uploadProgressText, setUploadProgressText] = React.useState("");
+    const [newImageUrlInput, setNewImageUrlInput] = React.useState("");
+    const fileInputRef = React.useRef<HTMLInputElement | null>(null);
+
+    // Window message listener for interactive map pin drops
+    React.useEffect(() => {
+        const handleWindowMessage = (event: MessageEvent) => {
+            if (event.data && event.data.type === 'PIN_SELECTED') {
+                const lat = Number(Number(event.data.lat).toFixed(6));
+                const lng = Number(Number(event.data.lng).toFixed(6));
+                setEditSpace((prev: any) => {
+                    if (!prev) return prev;
+                    return {
+                        ...prev,
+                        latitude: lat,
+                        longitude: lng
+                    };
+                });
+                toast.success("Location Pinned on Map!", { 
+                    description: `Latitude: ${lat}, Longitude: ${lng}`,
+                    duration: 1800 
+                });
+            }
+        };
+        window.addEventListener('message', handleWindowMessage);
+        return () => window.removeEventListener('message', handleWindowMessage);
+    }, []);
 
     // Navigation and filters
     const [searchQuery, setSearchQuery] = React.useState("");
@@ -259,6 +441,11 @@ export default function VerificationPage() {
             imgs = [space.image];
         }
 
+        let vids = space.videos || [];
+        if (vids.length === 0 && space.video) {
+            vids = [space.video];
+        }
+
         // Parse blocked dates
         let blocked: string[] = [];
         let blockedReasons: Record<string, string> = {};
@@ -294,6 +481,7 @@ export default function VerificationPage() {
         setEditSpace({
             ...space,
             images: imgs,
+            videos: vids,
             blockedDates: blocked,
             blockedReasons: blockedReasons,
             options: parsedOptions,
@@ -314,6 +502,9 @@ export default function VerificationPage() {
         setNewOptionName("");
         setNewOptionPrice("");
         setNewOptionDuration("");
+        setGoogleMapsUrlInput("");
+        setAddressSearchQuery("");
+        setNewImageUrlInput("");
         setEditActiveTab("general");
         setIsEditDialogOpen(true);
     };
@@ -478,6 +669,214 @@ export default function VerificationPage() {
         });
     };
 
+    // Pull Coordinates from Google Maps URL or pasted text
+    const handlePullFromGoogleMaps = () => {
+        if (!googleMapsUrlInput.trim()) {
+            toast.error("Please paste a Google Maps link or coordinates.");
+            return;
+        }
+        const coords = parseGoogleMapsInput(googleMapsUrlInput);
+        if (coords) {
+            setEditSpace((prev: any) => ({
+                ...prev,
+                latitude: coords.lat,
+                longitude: coords.lng
+            }));
+            if (mapIframeRef.current?.contentWindow) {
+                mapIframeRef.current.contentWindow.postMessage({
+                    type: 'UPDATE_PIN',
+                    lat: coords.lat,
+                    lng: coords.lng
+                }, '*');
+            }
+            toast.success("Coordinates Extracted from Google Maps!", {
+                description: `Latitude: ${coords.lat}, Longitude: ${coords.lng}`
+            });
+            setGoogleMapsUrlInput("");
+        } else {
+            toast.error("Could not parse coordinates", {
+                description: "Please paste a valid Google Maps link (@lat,lng or ?q=lat,lng) or raw coordinates (e.g. 13.0827, 80.2707)."
+            });
+        }
+    };
+
+    // Landmark / Address Search via OpenStreetMap Geocoding
+    const handleSearchAddress = async () => {
+        if (!addressSearchQuery.trim()) return;
+        setIsGeocoding(true);
+        try {
+            const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(addressSearchQuery)}&limit=1`);
+            const data = await res.json();
+            if (data && data.length > 0) {
+                const lat = Number(parseFloat(data[0].lat).toFixed(6));
+                const lng = Number(parseFloat(data[0].lon).toFixed(6));
+                setEditSpace((prev: any) => ({
+                    ...prev,
+                    latitude: lat,
+                    longitude: lng,
+                    location: prev.location || data[0].display_name
+                }));
+                if (mapIframeRef.current?.contentWindow) {
+                    mapIframeRef.current.contentWindow.postMessage({
+                        type: 'UPDATE_PIN',
+                        lat,
+                        lng
+                    }, '*');
+                }
+                toast.success("Location Found on Map!", {
+                    description: `Pinned at ${data[0].display_name.slice(0, 45)}...`
+                });
+            } else {
+                toast.error("Location not found", { description: "Try searching with city, road, or landmark." });
+            }
+        } catch (e: any) {
+            toast.error("Search failed", { description: e.message });
+        } finally {
+            setIsGeocoding(false);
+        }
+    };
+
+    // Use Device Geolocation
+    const handleUseCurrentLocation = () => {
+        if (typeof window === 'undefined' || !navigator.geolocation) {
+            toast.error("Geolocation not supported by this browser.");
+            return;
+        }
+        toast.info("Fetching current GPS location...");
+        navigator.geolocation.getCurrentPosition(
+            (pos) => {
+                const lat = Number(pos.coords.latitude.toFixed(6));
+                const lng = Number(pos.coords.longitude.toFixed(6));
+                setEditSpace((prev: any) => ({
+                    ...prev,
+                    latitude: lat,
+                    longitude: lng
+                }));
+                if (mapIframeRef.current?.contentWindow) {
+                    mapIframeRef.current.contentWindow.postMessage({
+                        type: 'UPDATE_PIN',
+                        lat,
+                        lng
+                    }, '*');
+                }
+                toast.success("Current Location Pinned!", { description: `Coordinates: ${lat}, ${lng}` });
+            },
+            (err) => {
+                toast.error("Location error", { description: err.message });
+            }
+        );
+    };
+
+    // Direct File Upload for Photos & Videos to Cloud Storage (S3)
+    const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const files = e.target.files;
+        if (!files || files.length === 0) return;
+
+        setIsUploadingMedia(true);
+        setUploadProgressText(`Uploading ${files.length} file(s) to cloud storage...`);
+
+        const newImages: string[] = [];
+        const newVideos: string[] = [];
+
+        try {
+            for (let i = 0; i < files.length; i++) {
+                const file = files[i];
+                setUploadProgressText(`Uploading ${file.name} (${i + 1}/${files.length})...`);
+                const formData = new FormData();
+                formData.append('file', file);
+
+                const res = await fetch('/api/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await res.json();
+                if (!data.success) {
+                    throw new Error(data.error || `Failed to upload ${file.name}`);
+                }
+
+                if (data.type === 'video') {
+                    newVideos.push(data.url);
+                } else {
+                    newImages.push(data.url);
+                }
+            }
+
+            setEditSpace((prev: any) => ({
+                ...prev,
+                images: [...(prev.images || []), ...newImages],
+                videos: [...(prev.videos || []), ...newVideos]
+            }));
+
+            toast.success("Files Uploaded Successfully!", {
+                description: `Added ${newImages.length} photo(s) and ${newVideos.length} video(s) to service media.`
+            });
+        } catch (err: any) {
+            console.error("Upload failure:", err);
+            toast.error("Upload Failed", { description: err.message });
+        } finally {
+            setIsUploadingMedia(false);
+            setUploadProgressText("");
+            if (fileInputRef.current) fileInputRef.current.value = "";
+        }
+    };
+
+    // Set Chosen Photo as Primary Cover Photo (Index 0)
+    const handleSetAsCoverPhoto = (index: number) => {
+        const imgs = [...(editSpace.images || [])];
+        if (index > 0 && index < imgs.length) {
+            const [chosen] = imgs.splice(index, 1);
+            imgs.unshift(chosen);
+            setEditSpace({
+                ...editSpace,
+                images: imgs,
+                image: chosen
+            });
+            toast.success("Cover Photo Updated", { description: "This image will be displayed on user app search cards." });
+        }
+    };
+
+    const handleRemovePhoto = (index: number) => {
+        const imgs = [...(editSpace.images || [])];
+        imgs.splice(index, 1);
+        setEditSpace({
+            ...editSpace,
+            images: imgs,
+            image: imgs.length > 0 ? imgs[0] : ""
+        });
+        toast.info("Photo removed.");
+    };
+
+    const handleRemoveVideo = (index: number) => {
+        const vids = [...(editSpace.videos || [])];
+        vids.splice(index, 1);
+        setEditSpace({
+            ...editSpace,
+            videos: vids,
+            video: vids.length > 0 ? vids[0] : ""
+        });
+        toast.info("Video removed.");
+    };
+
+    const handleAddImageUrl = () => {
+        if (!newImageUrlInput.trim()) return;
+        const url = newImageUrlInput.trim();
+        const isVid = url.includes('.mp4') || url.includes('.mov') || url.includes('.webm');
+        if (isVid) {
+            setEditSpace({
+                ...editSpace,
+                videos: [...(editSpace.videos || []), url]
+            });
+            toast.success("Video URL added.");
+        } else {
+            setEditSpace({
+                ...editSpace,
+                images: [...(editSpace.images || []), url]
+            });
+            toast.success("Image URL added.");
+        }
+        setNewImageUrlInput("");
+    };
+
     // Save All Changes (Comprehensive Multi-Field Update)
     const handleUpdateDetails = async () => {
         if (!editSpace) return;
@@ -521,6 +920,12 @@ export default function VerificationPage() {
                 features: editSpace.features || [],
                 image: (editSpace.images && editSpace.images.length > 0) ? editSpace.images[0] : (editSpace.image || ""),
                 images: editSpace.images || [],
+                videos: editSpace.videos || [],
+                video: (editSpace.videos && editSpace.videos.length > 0) ? editSpace.videos[0] : (editSpace.video || ""),
+                media: [
+                    ...(editSpace.images || []).map((url: string) => ({ type: 'image', url })),
+                    ...(editSpace.videos || []).map((url: string) => ({ type: 'video', url }))
+                ],
                 details: editSpace.details || {},
                 options: updatedOptions,
                 optionsJson: JSON.stringify(updatedOptions),
@@ -1169,7 +1574,7 @@ export default function VerificationPage() {
 
             {/* Comprehensive Service Management & Editor Dialog */}
             <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-                <DialogContent className="max-w-3xl bg-card/95 backdrop-blur-2xl border-white/10 shadow-2xl rounded-3xl max-h-[92vh] overflow-y-auto p-6">
+                <DialogContent className="max-w-4xl bg-card/95 backdrop-blur-2xl border-white/10 shadow-2xl rounded-3xl max-h-[92vh] overflow-y-auto p-6">
                     <DialogHeader className="border-b border-white/10 pb-3">
                         <div className="flex items-center justify-between">
                             <div>
@@ -1212,8 +1617,13 @@ export default function VerificationPage() {
                                         Options
                                     </TabsTrigger>
                                     <TabsTrigger value="media" className="rounded-xl text-xs flex items-center gap-1.5 py-2">
-                                        <ImageIcon className="h-3.5 w-3.5" />
-                                        Photos
+                                        <UploadCloud className="h-3.5 w-3.5" />
+                                        Photos & Videos
+                                        {((editSpace.images || []).length + (editSpace.videos || []).length) > 0 && (
+                                            <span className="ml-1 px-1.5 py-0.2 rounded-full bg-primary/20 text-primary text-[10px] font-bold">
+                                                {(editSpace.images || []).length + (editSpace.videos || []).length}
+                                            </span>
+                                        )}
                                     </TabsTrigger>
                                 </TabsList>
 
@@ -1332,22 +1742,118 @@ export default function VerificationPage() {
 
                                 {/* TAB 2: MAP PIN & LOCATION */}
                                 <TabsContent value="location" className="space-y-4">
-                                    <div className="bg-white/5 p-4 rounded-2xl border border-white/10 space-y-3">
-                                        <div className="flex items-center gap-2">
-                                            <MapPin className="h-4 w-4 text-primary" />
-                                            <h4 className="font-bold text-sm">Map Pin Coordinates & Location</h4>
+                                    <div className="bg-white/5 p-4 rounded-2xl border border-white/10 space-y-4">
+                                        <div className="flex items-center justify-between">
+                                            <div className="flex items-center gap-2">
+                                                <MapPin className="h-4 w-4 text-primary" />
+                                                <h4 className="font-bold text-sm">Interactive Map Pinning & Google Maps Extraction</h4>
+                                            </div>
+                                            {editSpace.latitude && editSpace.longitude && !isNaN(Number(editSpace.latitude)) && (
+                                                <span className="text-xs font-mono font-bold text-emerald-400 bg-emerald-500/10 px-2.5 py-1 rounded-full border border-emerald-500/20">
+                                                    📍 {Number(editSpace.latitude).toFixed(4)}, {Number(editSpace.longitude).toFixed(4)}
+                                                </span>
+                                            )}
                                         </div>
+
                                         <p className="text-xs text-muted-foreground">
-                                            Set the exact latitude and longitude coordinates. The user app map will drop the location pin directly at this position.
+                                            Directly click anywhere on the map or drag the pin to set exact coordinates. You can also paste any Google Maps URL or search by landmark.
                                         </p>
 
-                                        <div className="grid gap-2">
+                                        {/* Google Maps Link / Coordinates Extractor */}
+                                        <div className="p-3.5 rounded-2xl bg-black/30 border border-white/10 space-y-2">
+                                            <Label className="text-xs font-semibold text-white/90 flex items-center gap-1.5">
+                                                <ExternalLink className="h-3.5 w-3.5 text-primary" />
+                                                Pull Lat & Long from Google Maps Link or Coordinates
+                                            </Label>
+                                            <div className="flex gap-2">
+                                                <Input
+                                                    placeholder="Paste Google Maps URL (@lat,lng or ?q=...) or comma-separated coordinates (e.g. 13.0827, 80.2707)"
+                                                    value={googleMapsUrlInput}
+                                                    onChange={(e) => setGoogleMapsUrlInput(e.target.value)}
+                                                    onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handlePullFromGoogleMaps(); } }}
+                                                    className="bg-white/5 border-white/10 text-xs h-9"
+                                                />
+                                                <Button
+                                                    type="button"
+                                                    size="sm"
+                                                    className="h-9 px-4 rounded-xl bg-primary hover:bg-primary/90 text-white text-xs shrink-0 font-semibold"
+                                                    onClick={handlePullFromGoogleMaps}
+                                                >
+                                                    Extract & Pin
+                                                </Button>
+                                            </div>
+                                        </div>
+
+                                        {/* Interactive Click-to-Pin Map */}
+                                        <div className="space-y-1.5">
+                                            <div className="flex items-center justify-between text-xs text-muted-foreground">
+                                                <span className="flex items-center gap-1 font-semibold text-white/90">
+                                                    <Compass className="h-3.5 w-3.5 text-amber-400" />
+                                                    Click anywhere on the map to place the location pin:
+                                                </span>
+                                                <span className="text-[11px] text-amber-400 font-mono">
+                                                    Click or drag red marker to fine-tune
+                                                </span>
+                                            </div>
+
+                                            <div className="relative w-full h-[280px] rounded-2xl overflow-hidden border border-white/10 shadow-inner bg-[#090d16]">
+                                                <iframe
+                                                    ref={mapIframeRef}
+                                                    title="Interactive Location Pin Map"
+                                                    srcDoc={generateMapIframeSrcDoc(
+                                                        editSpace.latitude ? Number(editSpace.latitude) : undefined,
+                                                        editSpace.longitude ? Number(editSpace.longitude) : undefined
+                                                    )}
+                                                    className="w-full h-full border-none"
+                                                />
+                                            </div>
+                                        </div>
+
+                                        {/* Address Search & Device GPS Tools */}
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
+                                            <div className="flex gap-1.5">
+                                                <Input
+                                                    placeholder="Search landmark, road, city..."
+                                                    value={addressSearchQuery}
+                                                    onChange={(e) => setAddressSearchQuery(e.target.value)}
+                                                    onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleSearchAddress(); } }}
+                                                    className="bg-white/5 border-white/10 text-xs h-8"
+                                                />
+                                                <Button
+                                                    type="button"
+                                                    size="sm"
+                                                    variant="outline"
+                                                    className="h-8 px-3 rounded-xl text-xs bg-white/5 border-white/10 hover:bg-white/10 shrink-0"
+                                                    onClick={handleSearchAddress}
+                                                    disabled={isGeocoding}
+                                                >
+                                                    <Search className="h-3 w-3 mr-1" />
+                                                    {isGeocoding ? "..." : "Find"}
+                                                </Button>
+                                            </div>
+
+                                            <div className="flex justify-end">
+                                                <Button
+                                                    type="button"
+                                                    size="sm"
+                                                    variant="outline"
+                                                    className="h-8 px-3 rounded-xl text-xs bg-white/5 border-white/10 hover:bg-white/10 flex items-center gap-1.5"
+                                                    onClick={handleUseCurrentLocation}
+                                                >
+                                                    <LocateFixed className="h-3.5 w-3.5 text-blue-400" />
+                                                    Use Current Device Location
+                                                </Button>
+                                            </div>
+                                        </div>
+
+                                        {/* Display Address & Coordinate Fields */}
+                                        <div className="grid gap-2 pt-2 border-t border-white/10">
                                             <Label className="text-xs">Location Name / Display Address</Label>
                                             <Input 
                                                 value={editSpace.location || ""} 
                                                 onChange={(e) => setEditSpace({...editSpace, location: e.target.value})} 
                                                 placeholder="e.g. Anna Nagar 2nd Avenue, Chennai"
-                                                className="bg-white/5 border-white/10" 
+                                                className="bg-white/5 border-white/10 text-xs" 
                                             />
                                         </div>
 
@@ -1358,7 +1864,17 @@ export default function VerificationPage() {
                                                     type="number"
                                                     step="any"
                                                     value={editSpace.latitude ?? ""} 
-                                                    onChange={(e) => setEditSpace({...editSpace, latitude: e.target.value})} 
+                                                    onChange={(e) => {
+                                                        const val = e.target.value;
+                                                        setEditSpace({...editSpace, latitude: val});
+                                                        if (mapIframeRef.current?.contentWindow && val && !isNaN(Number(val))) {
+                                                            mapIframeRef.current.contentWindow.postMessage({
+                                                                type: 'UPDATE_PIN',
+                                                                lat: Number(val),
+                                                                lng: Number(editSpace.longitude || 80.2707)
+                                                            }, '*');
+                                                        }
+                                                    }} 
                                                     placeholder="e.g. 13.0827"
                                                     className="bg-white/5 border-white/10 font-mono text-xs" 
                                                 />
@@ -1369,7 +1885,17 @@ export default function VerificationPage() {
                                                     type="number"
                                                     step="any"
                                                     value={editSpace.longitude ?? ""} 
-                                                    onChange={(e) => setEditSpace({...editSpace, longitude: e.target.value})} 
+                                                    onChange={(e) => {
+                                                        const val = e.target.value;
+                                                        setEditSpace({...editSpace, longitude: val});
+                                                        if (mapIframeRef.current?.contentWindow && val && !isNaN(Number(val))) {
+                                                            mapIframeRef.current.contentWindow.postMessage({
+                                                                type: 'UPDATE_PIN',
+                                                                lat: Number(editSpace.latitude || 13.0827),
+                                                                lng: Number(val)
+                                                            }, '*');
+                                                        }
+                                                    }} 
                                                     placeholder="e.g. 80.2707"
                                                     className="bg-white/5 border-white/10 font-mono text-xs" 
                                                 />
@@ -1378,7 +1904,7 @@ export default function VerificationPage() {
 
                                         {/* City Presets */}
                                         <div className="space-y-1.5 pt-1">
-                                            <Label className="text-[11px] text-muted-foreground uppercase font-bold">Quick City GPS Presets</Label>
+                                            <Label className="text-[11px] text-muted-foreground uppercase font-bold">Quick City Center Presets</Label>
                                             <div className="flex flex-wrap gap-1.5">
                                                 {CITY_PRESETS.map(city => (
                                                     <Button
@@ -1387,7 +1913,16 @@ export default function VerificationPage() {
                                                         variant="outline"
                                                         size="sm"
                                                         className="h-7 text-xs rounded-xl bg-white/5 border-white/10 hover:bg-white/10"
-                                                        onClick={() => handleSetCityPreset(city)}
+                                                        onClick={() => {
+                                                            handleSetCityPreset(city);
+                                                            if (mapIframeRef.current?.contentWindow) {
+                                                                mapIframeRef.current.contentWindow.postMessage({
+                                                                    type: 'UPDATE_PIN',
+                                                                    lat: city.lat,
+                                                                    lng: city.lng
+                                                                }, '*');
+                                                            }
+                                                        }}
                                                     >
                                                         {city.name}
                                                     </Button>
@@ -1395,12 +1930,12 @@ export default function VerificationPage() {
                                             </div>
                                         </div>
 
-                                        {/* Verification Link Card */}
-                                        {editSpace.latitude && editSpace.longitude && !isNaN(Number(editSpace.latitude)) && !isNaN(Number(editSpace.longitude)) ? (
+                                        {/* External Google Maps Verification */}
+                                        {editSpace.latitude && editSpace.longitude && !isNaN(Number(editSpace.latitude)) && !isNaN(Number(editSpace.longitude)) && (
                                             <div className="flex items-center justify-between p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-xs text-emerald-400">
                                                 <div className="flex items-center gap-2">
                                                     <Navigation className="h-4 w-4 shrink-0 text-emerald-400" />
-                                                    <span>Active Pin: {Number(editSpace.latitude).toFixed(4)}, {Number(editSpace.longitude).toFixed(4)}</span>
+                                                    <span>Pin Coordinates: {Number(editSpace.latitude).toFixed(4)}, {Number(editSpace.longitude).toFixed(4)}</span>
                                                 </div>
                                                 <a 
                                                     href={`https://www.google.com/maps?q=${editSpace.latitude},${editSpace.longitude}`}
@@ -1408,13 +1943,8 @@ export default function VerificationPage() {
                                                     rel="noreferrer"
                                                     className="hover:underline flex items-center gap-1 font-semibold text-primary"
                                                 >
-                                                    Verify on Google Maps <ExternalLink className="h-3 w-3" />
+                                                    Open in Google Maps <ExternalLink className="h-3 w-3" />
                                                 </a>
-                                            </div>
-                                        ) : (
-                                            <div className="p-3 rounded-xl bg-white/5 border border-white/5 text-xs text-muted-foreground flex items-center gap-2">
-                                                <Info className="h-4 w-4 shrink-0" />
-                                                <span>Enter latitude and longitude coordinates above to accurately locate this service on the user app map.</span>
                                             </div>
                                         )}
                                     </div>
@@ -1686,67 +2216,211 @@ export default function VerificationPage() {
 
                                 {/* TAB 5: PHOTOS & MEDIA */}
                                 <TabsContent value="media" className="space-y-4">
-                                    <div className="bg-white/5 p-4 rounded-2xl border border-white/10 space-y-3">
-                                        <div className="flex items-center justify-between">
-                                            <div>
-                                                <h4 className="font-bold text-sm">Service Images & Gallery</h4>
-                                                <p className="text-xs text-muted-foreground mt-0.5">
-                                                    First image is used as the cover photo on search cards in the user app.
-                                                </p>
-                                            </div>
-                                            <Button 
-                                                type="button" 
-                                                variant="outline" 
-                                                size="sm" 
-                                                className="h-7 text-xs rounded-xl"
-                                                onClick={() => setEditSpace({...editSpace, images: [...(editSpace.images || []), ""]})}
-                                            >
-                                                <Plus className="h-3 w-3 mr-1" /> Add Image URL
-                                            </Button>
+                                    <div className="bg-white/5 p-4 rounded-2xl border border-white/10 space-y-4">
+                                        <div>
+                                            <h4 className="font-bold text-sm flex items-center gap-2">
+                                                <UploadCloud className="h-4 w-4 text-primary" />
+                                                Direct Media Upload (Photos & Videos)
+                                            </h4>
+                                            <p className="text-xs text-muted-foreground mt-0.5">
+                                                Upload high-resolution billboard photos and promotional video clips directly from your computer to AWS cloud storage.
+                                            </p>
                                         </div>
 
-                                        <div className="space-y-2.5">
-                                            {(editSpace.images || []).map((imgUrl: string, idx: number) => (
-                                                <div key={idx} className="flex gap-2.5 items-center bg-black/20 p-2.5 rounded-xl border border-white/5">
-                                                    {imgUrl ? (
-                                                        <img 
-                                                            src={imgUrl} 
-                                                            alt="Preview" 
-                                                            className="w-12 h-12 rounded-lg object-cover bg-white/10 shrink-0" 
-                                                            onError={(e) => { (e.target as any).style.display = 'none'; }}
-                                                        />
-                                                    ) : (
-                                                        <div className="w-12 h-12 rounded-lg bg-white/10 flex items-center justify-center shrink-0">
-                                                            <ImageIcon className="h-5 w-5 text-muted-foreground" />
+                                        {/* Hidden File Input */}
+                                        <input 
+                                            type="file" 
+                                            ref={fileInputRef} 
+                                            onChange={handleFileUpload} 
+                                            multiple 
+                                            accept="image/*,video/*" 
+                                            className="hidden" 
+                                        />
+
+                                        {/* Direct Upload Dropzone */}
+                                        <div 
+                                            onClick={() => fileInputRef.current?.click()}
+                                            className="border-2 border-dashed border-white/20 hover:border-primary/60 rounded-2xl p-6 flex flex-col items-center justify-center gap-2 cursor-pointer bg-black/20 hover:bg-black/30 transition-all group"
+                                        >
+                                            <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center group-hover:scale-110 transition-transform">
+                                                <UploadCloud className="h-6 w-6 text-primary" />
+                                            </div>
+                                            <div className="text-center">
+                                                <p className="text-sm font-semibold text-white">
+                                                    {isUploadingMedia ? uploadProgressText : "Click to select or drop photos & videos here from your device"}
+                                                </p>
+                                                <p className="text-xs text-muted-foreground mt-1">
+                                                    Supports Photos (JPG, PNG, WEBP) & Video Loops (MP4, MOV, WEBM)
+                                                </p>
+                                            </div>
+                                            {isUploadingMedia && (
+                                                <div className="flex items-center gap-2 text-xs text-amber-400 animate-pulse mt-1">
+                                                    <RefreshCw className="h-3.5 w-3.5 animate-spin" />
+                                                    <span>{uploadProgressText || "Uploading to AWS S3 storage..."}</span>
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        {/* PHOTOS SECTION */}
+                                        <div className="space-y-2 pt-2">
+                                            <div className="flex items-center justify-between">
+                                                <Label className="text-xs font-bold text-muted-foreground uppercase flex items-center gap-1.5">
+                                                    <ImageIcon className="h-3.5 w-3.5 text-primary" />
+                                                    Photos & Gallery ({(editSpace.images || []).length})
+                                                </Label>
+                                                <span className="text-[11px] text-muted-foreground">
+                                                    ★ First photo is the primary cover photo in user app
+                                                </span>
+                                            </div>
+
+                                            {(editSpace.images || []).length === 0 ? (
+                                                <div className="p-4 rounded-xl bg-white/5 border border-white/5 text-center text-xs text-muted-foreground">
+                                                    No photos uploaded yet. Use the upload box above to add photos from your computer.
+                                                </div>
+                                            ) : (
+                                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                                    {(editSpace.images || []).map((imgUrl: string, idx: number) => {
+                                                        const isCover = idx === 0;
+                                                        return (
+                                                            <div key={idx} className={`relative p-2.5 rounded-xl border transition-all flex gap-3 items-center ${
+                                                                isCover 
+                                                                    ? 'bg-amber-500/10 border-amber-500/30 ring-1 ring-amber-500/20' 
+                                                                    : 'bg-black/20 border-white/5 hover:border-white/10'
+                                                            }`}>
+                                                                <div className="relative w-16 h-16 rounded-lg overflow-hidden bg-white/10 shrink-0">
+                                                                    <img 
+                                                                        src={imgUrl} 
+                                                                        alt={`Service Photo ${idx + 1}`} 
+                                                                        className="w-full h-full object-cover" 
+                                                                        onError={(e) => { (e.target as any).src = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64"><rect width="100%" height="100%" fill="%23222"/><text x="50%" y="50%" fill="%23666" text-anchor="middle" dy=".3em" font-size="10">Image</text></svg>'; }}
+                                                                    />
+                                                                    {isCover && (
+                                                                        <div className="absolute top-1 left-1 bg-amber-500 text-black p-0.5 rounded shadow">
+                                                                            <Star className="h-3 w-3 fill-black" />
+                                                                        </div>
+                                                                    )}
+                                                                </div>
+
+                                                                <div className="flex-1 min-w-0 space-y-1">
+                                                                    <div className="flex items-center gap-1.5">
+                                                                        {isCover ? (
+                                                                            <Badge variant="secondary" className="bg-amber-500/20 text-amber-300 text-[10px] font-bold px-1.5 py-0">
+                                                                                ★ COVER PHOTO
+                                                                            </Badge>
+                                                                        ) : (
+                                                                            <span className="text-xs text-muted-foreground font-medium">Photo #{idx + 1}</span>
+                                                                        )}
+                                                                    </div>
+                                                                    <p className="text-[11px] text-muted-foreground font-mono truncate" title={imgUrl}>
+                                                                        {imgUrl}
+                                                                    </p>
+                                                                    {!isCover && (
+                                                                        <button
+                                                                            type="button"
+                                                                            className="text-[11px] text-primary hover:underline font-semibold flex items-center gap-1 pt-0.5 cursor-pointer"
+                                                                            onClick={() => handleSetAsCoverPhoto(idx)}
+                                                                        >
+                                                                            <Star className="h-3 w-3" /> Set as Cover
+                                                                        </button>
+                                                                    )}
+                                                                </div>
+
+                                                                <Button
+                                                                    type="button"
+                                                                    variant="ghost"
+                                                                    size="icon"
+                                                                    className="h-8 w-8 text-red-400 hover:bg-red-500/20 rounded-full shrink-0"
+                                                                    title="Delete Photo"
+                                                                    onClick={() => handleRemovePhoto(idx)}
+                                                                >
+                                                                    <Trash2 className="h-4 w-4" />
+                                                                </Button>
+                                                            </div>
+                                                        );
+                                                    })}
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        {/* VIDEOS SECTION */}
+                                        <div className="space-y-2 pt-2 border-t border-white/10">
+                                            <div className="flex items-center justify-between">
+                                                <Label className="text-xs font-bold text-muted-foreground uppercase flex items-center gap-1.5">
+                                                    <Video className="h-3.5 w-3.5 text-purple-400" />
+                                                    Video Clips & Motion Loops ({(editSpace.videos || []).length})
+                                                </Label>
+                                                <span className="text-[11px] text-muted-foreground">
+                                                    Plays on screen preview card in user app
+                                                </span>
+                                            </div>
+
+                                            {(editSpace.videos || []).length === 0 ? (
+                                                <div className="p-4 rounded-xl bg-white/5 border border-white/5 text-center text-xs text-muted-foreground">
+                                                    No videos uploaded yet. Use the upload box above to select MP4 or MOV clips directly from your computer.
+                                                </div>
+                                            ) : (
+                                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                                    {(editSpace.videos || []).map((vidUrl: string, vIdx: number) => (
+                                                        <div key={vIdx} className="p-2.5 rounded-xl bg-black/30 border border-purple-500/20 space-y-2">
+                                                            <div className="relative w-full h-32 rounded-lg overflow-hidden bg-black flex items-center justify-center">
+                                                                <video 
+                                                                    src={vidUrl} 
+                                                                    controls 
+                                                                    preload="metadata" 
+                                                                    className="w-full h-full object-cover" 
+                                                                />
+                                                            </div>
+                                                            <div className="flex items-center justify-between">
+                                                                <div className="min-w-0 pr-2">
+                                                                    <Badge variant="secondary" className="bg-purple-500/20 text-purple-300 text-[10px] font-semibold">
+                                                                        VIDEO CLIP #{vIdx + 1}
+                                                                    </Badge>
+                                                                    <p className="text-[10px] text-muted-foreground font-mono truncate mt-0.5" title={vidUrl}>
+                                                                        {vidUrl}
+                                                                    </p>
+                                                                </div>
+                                                                <Button
+                                                                    type="button"
+                                                                    variant="ghost"
+                                                                    size="icon"
+                                                                    className="h-8 w-8 text-red-400 hover:bg-red-500/20 rounded-full shrink-0"
+                                                                    title="Delete Video"
+                                                                    onClick={() => handleRemoveVideo(vIdx)}
+                                                                >
+                                                                    <Trash2 className="h-4 w-4" />
+                                                                </Button>
+                                                            </div>
                                                         </div>
-                                                    )}
-                                                    <div className="flex-1 min-w-0">
-                                                        <Input 
-                                                            value={imgUrl} 
-                                                            onChange={(e) => {
-                                                                const newImgs = [...editSpace.images];
-                                                                newImgs[idx] = e.target.value;
-                                                                setEditSpace({...editSpace, images: newImgs});
-                                                            }} 
-                                                            placeholder="https://..." 
-                                                            className="bg-white/5 border-white/10 text-xs h-9" 
-                                                        />
-                                                    </div>
-                                                    <Button 
-                                                        type="button" 
-                                                        variant="ghost" 
-                                                        size="icon" 
-                                                        className="h-8 w-8 shrink-0 text-red-400 hover:bg-red-500/10 rounded-full" 
-                                                        onClick={() => {
-                                                            const newImgs = [...editSpace.images];
-                                                            newImgs.splice(idx, 1);
-                                                            setEditSpace({...editSpace, images: newImgs});
-                                                        }}
+                                                    ))}
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        {/* Option to Add via URL */}
+                                        <div className="pt-2 border-t border-white/10">
+                                            <details className="text-xs text-muted-foreground group">
+                                                <summary className="cursor-pointer hover:text-white font-medium list-none flex items-center justify-between py-1">
+                                                    <span>Or paste an external image or video web link URL</span>
+                                                    <Plus className="h-3.5 w-3.5 group-open:rotate-45 transition-transform" />
+                                                </summary>
+                                                <div className="flex gap-2 pt-2">
+                                                    <Input
+                                                        placeholder="Paste image URL (https://...jpg, png) or video URL (.mp4)"
+                                                        value={newImageUrlInput}
+                                                        onChange={(e) => setNewImageUrlInput(e.target.value)}
+                                                        className="bg-white/5 border-white/10 text-xs h-8"
+                                                    />
+                                                    <Button
+                                                        type="button"
+                                                        size="sm"
+                                                        variant="outline"
+                                                        className="h-8 rounded-xl text-xs bg-white/5 border-white/10 shrink-0"
+                                                        onClick={handleAddImageUrl}
                                                     >
-                                                        <Trash className="h-4 w-4" />
+                                                        Add URL
                                                     </Button>
                                                 </div>
-                                            ))}
+                                            </details>
                                         </div>
                                     </div>
                                 </TabsContent>
